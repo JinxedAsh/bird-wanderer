@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { BirdSpecies, ScreenType } from '../types';
 
 interface SpeciesDetailScreenProps {
@@ -17,14 +17,21 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [isSightingsExpanded, setIsSightingsExpanded] = useState(true);
+  const audioTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => () => {
+    if (audioTimer.current) clearTimeout(audioTimer.current);
+  }, []);
 
   const toggleAudio = () => {
     const nextState = !isPlayingAudio;
+    if (audioTimer.current) clearTimeout(audioTimer.current);
     setIsPlayingAudio(nextState);
     if (nextState) {
-      showToast(`Playing ${species.name} territorial call`);
-      setTimeout(() => {
+      showToast('Audio preview is simulated. Recorded calls are not connected yet.');
+      audioTimer.current = setTimeout(() => {
         setIsPlayingAudio(false);
+        audioTimer.current = null;
       }, 4000);
     }
   };
@@ -176,7 +183,7 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
           <div className="mt-2">
             <div className="flex items-baseline gap-1">
               <span className="text-[16px] font-bold text-[#181c20]">
-                {species.sightingsThisWeek || 12}
+                {species.sightingsThisWeek ?? 0}
               </span>
               <span className="text-[12px] text-[#42493e]">this week</span>
             </div>
@@ -219,7 +226,7 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
         </button>
 
         <button
-          onClick={() => showToast(`Early morning photo session planned for ${species.name}`)}
+          onClick={() => showToast(`Suggested early morning session for ${species.name}. Trip saving is not connected yet.`)}
           className="flex-1 h-12 rounded-xl bg-[#2d5a27] text-white font-semibold text-[13px] flex items-center justify-center gap-2 shadow-sm hover:opacity-95 active:scale-[0.98] transition-all"
         >
           <span className="material-symbols-outlined text-[18px]">add_a_photo</span>

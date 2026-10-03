@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { CommunityPost, ScreenType, BirdSpecies } from '../types';
+import { CommunityPost, ScreenType } from '../types';
+import { useDialogFocus } from '../lib/useDialogFocus';
 
 interface CommunityScreenProps {
   posts: CommunityPost[];
@@ -24,7 +25,8 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
 
   // Selected post for details sheet
-  const [selectedPostForDetails, setSelectedPostForDetails] = useState<CommunityPost | null>(null);
+  const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+  const selectedPostForDetails = posts.find((post) => post.id === selectedPostId);
   const [newCommentInput, setNewCommentInput] = useState('');
 
   // Selected photographer for bio sheet
@@ -41,6 +43,10 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
   } | null>(null);
 
   const [followingMap, setFollowingMap] = useState<Record<string, boolean>>({});
+
+  const postDialogRef = useDialogFocus(Boolean(selectedPostForDetails), () => setSelectedPostId(null));
+  const photographerDialogRef = useDialogFocus(Boolean(selectedPhotographer), () => setSelectedPhotographer(null));
+  const isFollowing = (handle: string) => followingMap[handle] ?? posts.some((post) => post.authorHandle === handle && post.authorBadge === 'Pro');
 
   const filterOptions: Array<{ id: typeof activeFilter; label: string }> = [
     { id: 'all', label: 'All' },
@@ -61,13 +67,13 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
       if (!matches) return false;
     }
     if (activeFilter === 'following') {
-      return followingMap[post.authorHandle] || post.authorBadge === 'Pro';
+      return isFollowing(post.authorHandle);
     }
     return true;
   });
 
   const openPhotographerBio = (post: CommunityPost) => {
-    if (post.authorName === 'Sourabh') {
+    if (post.authorHandle === '@sourabh') {
       setSelectedPhotographer({
         name: 'Sourabh',
         handle: '@sourabh',
@@ -79,7 +85,7 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
         bio: 'Naturalist and field researcher. Tracking resident and migratory species along the Yamuna floodplain.',
         isFollowing: followingMap['@sourabh'],
       });
-    } else {
+    } else if (post.authorHandle === '@mayasingh') {
       setSelectedPhotographer({
         name: 'Maya Singh',
         handle: '@mayasingh',
@@ -91,15 +97,25 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
         bio: 'Ornithology enthusiast and wetland conservationist. Specializes in kingfishers, waders, and raptor migrations.',
         isFollowing: followingMap['@mayasingh'],
       });
+    } else {
+      const authorPosts = posts.filter((item) => item.authorHandle === post.authorHandle);
+      setSelectedPhotographer({
+        name: post.authorName,
+        handle: post.authorHandle,
+        avatar: post.authorAvatar,
+        location: post.location,
+        sightings: authorPosts.length,
+        lifers: new Set(authorPosts.map((item) => item.speciesId)).size,
+        followers: '—',
+        bio: 'Community observer. Profile details are not available in this prototype.',
+      });
     }
   };
 
   const handleToggleFollow = (handle: string) => {
-    setFollowingMap((prev) => {
-      const next = !prev[handle];
-      showToast(next ? `Following ${handle}` : `Unfollowed ${handle}`);
-      return { ...prev, [handle]: next };
-    });
+    const next = !isFollowing(handle);
+    setFollowingMap((prev) => ({ ...prev, [handle]: next }));
+    showToast(next ? `Following ${handle}` : `Unfollowed ${handle}`);
   };
 
   const handlePostCommentSubmit = (e: React.FormEvent) => {
@@ -120,6 +136,7 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
               search
             </span>
             <input
+              aria-label="Search community posts"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search birds or photographers"
@@ -128,6 +145,7 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
             />
             {searchQuery && (
               <button
+                aria-label="Clear community search"
                 onClick={() => setSearchQuery('')}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-[#42493e]"
               >
@@ -217,7 +235,7 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
 
               <button
                 aria-label="Post options"
-                onClick={() => setSelectedPostForDetails(post)}
+                onClick={() => setSelectedPostId(post.id)}
                 className="w-8 h-8 rounded-full flex items-center justify-center text-[#42493e] hover:bg-[#ebeef3] transition-colors"
               >
                 <span className="material-symbols-outlined text-[18px]">more_horiz</span>
@@ -227,16 +245,19 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
             {/* Bird Image with Tap to Open Details */}
             <div
               className="relative w-full aspect-[4/3] bg-[#ebeef3] cursor-pointer overflow-hidden group"
-              onClick={() => setSelectedPostForDetails(post)}
+              onClick={() => setSelectedPostId(post.id)}
             >
-              <img
-                src={post.imageUrl}
-                alt={post.speciesName}
-                className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500"
-              />
+              <button type="button" aria-label={`View ${post.speciesName} post details`} className="block w-full h-full">
+                <img
+                  src={post.imageUrl}
+                  alt={post.speciesName}
+                  className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500"
+                />
+              </button>
 
               {/* Species Badge */}
-              <div
+              <button
+                type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   onSelectSpeciesById(post.speciesId);
@@ -248,7 +269,7 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
                 <span className="text-[11px] italic text-[#42493e]/80 ml-0.5">
                   {post.speciesScientific}
                 </span>
-              </div>
+              </button>
 
               {/* Tap Hint */}
               <div className="absolute top-3 right-3 bg-black/40 backdrop-blur-md w-7 h-7 rounded-full flex items-center justify-center text-white">
@@ -281,6 +302,8 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
               <div className="pt-1 flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <button
+                    aria-label={post.isLiked ? "Unlike sighting" : "Like sighting"}
+                    aria-pressed={Boolean(post.isLiked)}
                     onClick={() => onToggleLike(post.id)}
                     className="flex items-center gap-1.5 text-[#42493e] hover:text-[#ba1a1a] transition-colors group"
                   >
@@ -296,7 +319,8 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
                   </button>
 
                   <button
-                    onClick={() => setSelectedPostForDetails(post)}
+                    aria-label="Open sighting comments"
+                    onClick={() => setSelectedPostId(post.id)}
                     className="flex items-center gap-1.5 text-[#42493e] hover:text-[#154212] transition-colors"
                   >
                     <span className="material-symbols-outlined text-[20px]">chat_bubble_outline</span>
@@ -310,9 +334,11 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
                           title: post.speciesName,
                           text: post.caption,
                           url: window.location.href,
-                        }).catch(() => {});
+                        }).catch((error) => {
+                          if (error.name !== 'AbortError') showToast('Could not share this sighting. Please try again.');
+                        });
                       } else {
-                        showToast('Sighting link copied to clipboard');
+                        showToast('Sharing is not supported by this browser yet.');
                       }
                     }}
                     aria-label="Share sighting"
@@ -341,6 +367,10 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
           </article>
         ))}
 
+        {filteredPosts.length === 0 && (
+          <p role="status" className="py-8 text-center text-[13px] text-[#42493e]">No posts match this search and filter.</p>
+        )}
+
         {/* Field Etiquette Quote Card */}
         <div className="bg-[#ebeef3] rounded-2xl p-4 flex items-center gap-3 text-[#42493e]">
           <span className="material-symbols-outlined text-[#2d5a27] text-[24px] flex-shrink-0">
@@ -360,14 +390,23 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-xs transition-opacity animate-in fade-in duration-200">
           <div
             className="absolute inset-0"
-            onClick={() => setSelectedPostForDetails(null)}
+            onClick={() => setSelectedPostId(null)}
           ></div>
 
-          <div className="relative w-full max-w-md bg-white rounded-t-3xl shadow-xl flex flex-col max-h-[85vh] overflow-hidden z-10 animate-in slide-in-from-bottom duration-300">
+          <div ref={postDialogRef} role="dialog" aria-modal="true" aria-label="Sighting details and comments" tabIndex={-1} className="relative w-full max-w-md bg-white rounded-t-3xl shadow-xl flex flex-col max-h-[85dvh] overflow-hidden z-10 animate-in slide-in-from-bottom duration-300">
             {/* Handle */}
             <div
+              role="button"
+              tabIndex={0}
+              aria-label="Close sighting details"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setSelectedPostId(null);
+                }
+              }}
               className="pt-3 pb-2 flex justify-center cursor-pointer"
-              onClick={() => setSelectedPostForDetails(null)}
+              onClick={() => setSelectedPostId(null)}
             >
               <div className="w-10 h-1.5 rounded-full bg-[#e0e3e8]"></div>
             </div>
@@ -383,7 +422,8 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
                 </span>
               </div>
               <button
-                onClick={() => setSelectedPostForDetails(null)}
+                aria-label="Close sighting details"
+                onClick={() => setSelectedPostId(null)}
                 className="w-8 h-8 rounded-full bg-[#ebeef3] flex items-center justify-center text-[#181c20] hover:bg-[#e0e3e8]"
               >
                 <span className="material-symbols-outlined text-[20px]">close</span>
@@ -492,12 +532,16 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
                 {/* Inline Comment Form */}
                 <form onSubmit={handlePostCommentSubmit} className="relative mt-2">
                   <input
+                    aria-label="Add observation note"
+                    maxLength={1000}
                     value={newCommentInput}
                     onChange={(e) => setNewCommentInput(e.target.value)}
                     placeholder="Add observation note..."
                     className="w-full h-10 pl-3 pr-10 bg-[#ebeef3] text-[#181c20] placeholder:text-[#42493e]/60 text-[13px] rounded-lg focus:outline-none focus:bg-white shadow-xs transition-colors"
                   />
                   <button
+                    aria-label="Submit observation note"
+                    disabled={!newCommentInput.trim()}
                     type="submit"
                     className="absolute right-2 top-1/2 -translate-y-1/2 text-[#2d5a27] hover:opacity-80 p-1"
                   >
@@ -518,7 +562,7 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
             onClick={() => setSelectedPhotographer(null)}
           ></div>
 
-          <div className="relative w-full max-w-md bg-white rounded-t-3xl shadow-xl flex flex-col p-5 items-center text-center z-10 animate-in slide-in-from-bottom duration-300">
+          <div ref={photographerDialogRef} role="dialog" aria-modal="true" aria-label="Photographer profile" tabIndex={-1} className="relative w-full max-w-md bg-white rounded-t-3xl shadow-xl flex flex-col p-5 items-center text-center max-h-[85dvh] overflow-y-auto z-10 animate-in slide-in-from-bottom duration-300">
             <div className="w-10 h-1.5 rounded-full bg-[#e0e3e8] mb-3"></div>
 
             <img
@@ -565,16 +609,16 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
               <button
                 onClick={() => handleToggleFollow(selectedPhotographer.handle)}
                 className={`flex-1 h-11 font-semibold text-[14px] rounded-xl shadow-sm active:scale-98 transition-all flex items-center justify-center gap-1.5 ${
-                  followingMap[selectedPhotographer.handle]
+                  isFollowing(selectedPhotographer.handle)
                     ? 'bg-[#ebeef3] text-[#181c20]'
                     : 'bg-[#2d5a27] text-white'
                 }`}
               >
                 <span className="material-symbols-outlined text-[18px]">
-                  {followingMap[selectedPhotographer.handle] ? 'check' : 'person_add'}
+                  {isFollowing(selectedPhotographer.handle) ? 'check' : 'person_add'}
                 </span>
                 <span>
-                  {followingMap[selectedPhotographer.handle] ? 'Following' : 'Follow'}
+                  {isFollowing(selectedPhotographer.handle) ? 'Following' : 'Follow'}
                 </span>
               </button>
 

@@ -28,6 +28,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ currentScreen, onNavigate 
             <button
               key={tab.id}
               onClick={() => onNavigate(tab.id)}
+              aria-current={isActive ? 'page' : undefined}
               className={`flex flex-col items-center justify-center min-w-[56px] min-h-[44px] py-1 transition-all duration-150 rounded-lg ${
                 isActive
                   ? 'text-[#2d5a27] font-semibold'

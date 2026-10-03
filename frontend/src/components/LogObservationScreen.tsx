@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { BirdSpecies, ScreenType, CommunityPost, JournalEntry } from '../types';
+import { BirdSpecies, ScreenType, CommunityPost, JournalEntry, UserProfile } from '../types';
 
 interface LogObservationScreenProps {
   initialSpecies?: BirdSpecies;
+  userProfile: UserProfile;
   onPostObservation: (newPost: CommunityPost, newEntry: JournalEntry) => void;
   onNavigate: (screen: ScreenType) => void;
   showToast: (message: string) => void;
@@ -10,6 +11,7 @@ interface LogObservationScreenProps {
 
 export const LogObservationScreen: React.FC<LogObservationScreenProps> = ({
   initialSpecies,
+  userProfile,
   onPostObservation,
   onNavigate,
   showToast,
@@ -75,11 +77,10 @@ export const LogObservationScreen: React.FC<LogObservationScreenProps> = ({
 
       const newPost: CommunityPost = {
         id: newPostId,
-        authorName: 'Sourabh',
-        authorHandle: '@sourabh',
+        authorName: userProfile.name,
+        authorHandle: userProfile.handle,
         authorBadge: 'Pro',
-        authorAvatar:
-          'https://lh3.googleusercontent.com/aida-public/AB6AXuDP4qeow9KNi_54b2k3PDK2eGJfYFSc5AX8AN68UgIzBnZOX5vJIHKatsI99Tk895FWvscOKMrQvfpb24mdVYZFK7DP7k7rX9XmZcdrgkPj8o1qeFMiI0lssZ6kEzwXrLi-Fr9C2NbOgbp6gvo35hSxu-gvDC3Kd4V3CPOiS18jMX_EV7aNl9kVQhbD5iRKvUHqPzmN7gfI2K31WBy4vJiNgSBfz8c5kSf2PGsmXQmhRQAn4ST6aXWWdw',
+        authorAvatar: userProfile.avatarUrl,
         location: location.split(',')[0].trim() + ' · Just now',
         timeAgo: 'Just now',
         speciesName,

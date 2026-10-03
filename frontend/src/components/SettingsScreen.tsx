@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useDialogFocus } from '../lib/useDialogFocus';
 import { UserProfile, ScreenType } from '../types';
 
 interface SettingsScreenProps {
@@ -29,6 +30,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   const [profileVis, setProfileVis] = useState<'public' | 'followers'>(
     userProfile.profileVisibility
   );
+
+  const dialogRef = useDialogFocus(isSheetOpen, () => setIsSheetOpen(false));
 
   const optionLabels = {
     approximate: 'Show approximate location (Recommended)',
@@ -77,11 +80,11 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                 {userProfile.title}
               </span>
             </div>
-            <p className="text-[12px] text-[#42493e] truncate">sourabh@wanderer.in</p>
+            <p className="text-[12px] text-[#42493e] truncate">{email}</p>
             <div className="flex items-center gap-1.5 mt-1">
               <span className="w-2 h-2 rounded-full bg-[#154212] animate-pulse"></span>
               <span className="text-[11px] font-medium text-[#42493e]">
-                Live telemetry sync active
+                Signed in
               </span>
             </div>
           </div>
@@ -131,7 +134,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                 <span className="text-[13px] font-bold text-[#181c20]">Email</span>
               </div>
               <span className="text-[12px] text-[#42493e] truncate max-w-[180px]">
-                sourabh@wanderer.in
+                {email}
               </span>
             </div>
           </div>
@@ -149,7 +152,10 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
           <div className="bg-white rounded-2xl shadow-xs flex flex-col overflow-hidden border border-[#f1f4f9]">
             {/* Location Privacy */}
             <button
-              onClick={() => setIsSheetOpen(true)}
+              onClick={() => {
+                setSelectedOption(userProfile.locationPrivacy);
+                setIsSheetOpen(true);
+              }}
               className="w-full px-4 py-3.5 flex items-center justify-between text-left bg-[#f1f4f9]/80 active:bg-[#ebeef3] transition-colors border-b border-[#f1f4f9]"
             >
               <div className="flex items-center gap-3 min-w-0">
@@ -338,7 +344,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-xs transition-opacity animate-in fade-in duration-200">
           <div className="absolute inset-0" onClick={() => setIsSheetOpen(false)}></div>
 
-          <div className="relative w-full max-w-md bg-white rounded-t-3xl shadow-xl flex flex-col p-5 z-10 animate-in slide-in-from-bottom duration-300">
+          <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Location privacy" tabIndex={-1} className="relative w-full max-w-md bg-white rounded-t-3xl shadow-xl max-h-[85dvh] overflow-y-auto flex flex-col p-5 z-10 animate-in slide-in-from-bottom duration-300">
             <div className="w-10 h-1.5 rounded-full bg-[#e0e3e8] mx-auto mb-3"></div>
 
             <div className="flex items-start justify-between pb-2">
@@ -349,6 +355,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                 <h3 className="text-[17px] font-bold text-[#181c20]">Protect sensitive species</h3>
               </div>
               <button
+                aria-label="Close location privacy"
                 onClick={() => setIsSheetOpen(false)}
                 className="w-8 h-8 rounded-full bg-[#ebeef3] flex items-center justify-center text-[#42493e]"
               >
@@ -365,6 +372,15 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             <div className="flex flex-col gap-2.5 pb-5">
               {/* Option 1: Approximate */}
               <div
+                role="button"
+                tabIndex={0}
+                aria-pressed={selectedOption === 'approximate'}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setSelectedOption('approximate');
+                  }
+                }}
                 onClick={() => setSelectedOption('approximate')}
                 className={`cursor-pointer p-3.5 rounded-2xl transition-all flex items-start gap-3 border ${
                   selectedOption === 'approximate'
@@ -400,6 +416,15 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
 
               {/* Option 2: Hide exact */}
               <div
+                role="button"
+                tabIndex={0}
+                aria-pressed={selectedOption === 'hide'}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setSelectedOption('hide');
+                  }
+                }}
                 onClick={() => setSelectedOption('hide')}
                 className={`cursor-pointer p-3.5 rounded-2xl transition-all flex items-start gap-3 border ${
                   selectedOption === 'hide'
@@ -428,6 +453,15 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
 
               {/* Option 3: Keep private */}
               <div
+                role="button"
+                tabIndex={0}
+                aria-pressed={selectedOption === 'private'}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setSelectedOption('private');
+                  }
+                }}
                 onClick={() => setSelectedOption('private')}
                 className={`cursor-pointer p-3.5 rounded-2xl transition-all flex items-start gap-3 border ${
                   selectedOption === 'private'

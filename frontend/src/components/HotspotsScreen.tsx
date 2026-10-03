@@ -20,12 +20,13 @@ export const HotspotsScreen: React.FC<HotspotsScreenProps> = ({
 
   const filteredHotspots = hotspots.filter((h) => {
     if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      return (
+      const q = searchQuery.trim().toLowerCase();
+      const matches = (
         h.name.toLowerCase().includes(q) ||
         h.region.toLowerCase().includes(q) ||
         h.trailDifficulty.toLowerCase().includes(q)
       );
+      if (!matches) return false;
     }
     if (activeFilter === 'popular') {
       return h.speciesCount >= 15;
@@ -57,6 +58,7 @@ export const HotspotsScreen: React.FC<HotspotsScreenProps> = ({
             search
           </span>
           <input
+            aria-label="Search hotspots"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search locations"
@@ -64,7 +66,7 @@ export const HotspotsScreen: React.FC<HotspotsScreenProps> = ({
             type="text"
           />
           <button
-            onClick={() => showToast('Locating nearby wetland corridors (GPS active)...')}
+            onClick={() => showToast('Nearby locations are sample data. Live GPS is not connected yet.')}
             aria-label="Current location"
             className="absolute right-3 w-8 h-8 flex items-center justify-center rounded-full text-[#42493e] hover:text-[#154212] transition-colors"
           >
@@ -164,6 +166,14 @@ export const HotspotsScreen: React.FC<HotspotsScreenProps> = ({
               id={`hotspot-card-${hotspot.id}`}
               key={hotspot.id}
               onClick={() => onSelectHotspot(hotspot)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  onSelectHotspot(hotspot);
+                }
+              }}
               className={`bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-all active:scale-[0.99] flex items-center justify-between gap-3 cursor-pointer border ${
                 isHighlighted ? 'border-[#154212] ring-2 ring-[#154212]/30' : 'border-transparent'
               }`}
@@ -185,6 +195,11 @@ export const HotspotsScreen: React.FC<HotspotsScreenProps> = ({
             </div>
           );
         })}
+        {filteredHotspots.length === 0 && (
+          <p role="status" className="py-8 text-center text-[13px] text-[#42493e]">
+            No hotspots match this search and filter.
+          </p>
+        )}
       </div>
     </div>
   );

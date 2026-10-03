@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useDialogFocus } from '../lib/useDialogFocus';
 import { UserProfile, ScreenType, BirdSpecies } from '../types';
 
 interface ProfileScreenProps {
@@ -18,6 +19,8 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<'photos' | 'lifelist' | 'activity'>('photos');
   const [isEditDrawerOpen, setIsEditDrawerOpen] = useState(false);
+
+  const dialogRef = useDialogFocus(isEditDrawerOpen, () => setIsEditDrawerOpen(false));
 
   // Edit form local state
   const [nameInput, setNameInput] = useState(userProfile.name);
@@ -58,13 +61,17 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   ];
 
   const handleSaveProfile = () => {
+    if (nameInput.trim().length < 2 || nameInput.trim().length > 80) {
+      showToast('Display name must be between 2 and 80 characters.');
+      return;
+    }
     onUpdateProfile({
-      name: nameInput,
+      name: nameInput.trim(),
       bio: bioInput,
       primaryRig: gearInput,
     });
     setIsEditDrawerOpen(false);
-    showToast('Profile updated successfully');
+    showToast('Profile updated for this session');
   };
 
   return (
@@ -132,7 +139,12 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
         {/* Quick Action Row */}
         <div className="grid grid-cols-3 gap-2 w-full mt-4 max-w-sm">
           <button
-            onClick={() => setIsEditDrawerOpen(true)}
+            onClick={() => {
+              setNameInput(userProfile.name);
+              setBioInput(userProfile.bio);
+              setGearInput(userProfile.primaryRig);
+              setIsEditDrawerOpen(true);
+            }}
             className="h-10 px-2 bg-[#2d5a27] hover:bg-[#154212] text-white rounded-xl text-[12px] font-semibold flex items-center justify-center gap-1 shadow-xs active:scale-[0.98] transition-transform"
           >
             <span className="material-symbols-outlined text-[16px]">edit</span>
@@ -237,6 +249,14 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
             {photoGrid.map((photo, i) => (
               <div
                 key={i}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    onSelectSpeciesByName(photo.name);
+                  }
+                }}
                 onClick={() => onSelectSpeciesByName(photo.name)}
                 className="group relative aspect-square rounded-xl overflow-hidden bg-[#ebeef3] shadow-xs cursor-pointer"
               >
@@ -356,7 +376,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-xs transition-opacity animate-in fade-in duration-200">
           <div className="absolute inset-0" onClick={() => setIsEditDrawerOpen(false)}></div>
 
-          <div className="relative w-full max-w-md bg-white rounded-t-3xl shadow-xl flex flex-col p-5 z-10 animate-in slide-in-from-bottom duration-300">
+          <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Quick edit profile" tabIndex={-1} className="relative w-full max-w-md bg-white rounded-t-3xl shadow-xl max-h-[85dvh] overflow-y-auto flex flex-col p-5 z-10 animate-in slide-in-from-bottom duration-300">
             <div className="w-10 h-1.5 rounded-full bg-[#e0e3e8] mx-auto mb-3"></div>
 
             <div className="flex items-center justify-between pb-3">
@@ -365,6 +385,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
                 <span className="text-[17px] font-bold text-[#181c20]">Quick Edit Profile</span>
               </div>
               <button
+                aria-label="Close quick edit profile"
                 onClick={() => setIsEditDrawerOpen(false)}
                 className="w-8 h-8 rounded-full bg-[#ebeef3] flex items-center justify-center text-[#42493e]"
               >
@@ -382,6 +403,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
                     person
                   </span>
                   <input
+                    aria-label="Display name"
                     value={nameInput}
                     onChange={(e) => setNameInput(e.target.value)}
                     className="w-full bg-transparent text-[13px] text-[#181c20] font-semibold focus:outline-none"
@@ -398,6 +420,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
                     description
                   </span>
                   <input
+                    aria-label="Bio"
                     value={bioInput}
                     onChange={(e) => setBioInput(e.target.value)}
                     className="w-full bg-transparent text-[13px] text-[#181c20] focus:outline-none"
@@ -414,6 +437,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
                     photo_camera
                   </span>
                   <input
+                    aria-label="Primary gear"
                     value={gearInput}
                     onChange={(e) => setGearInput(e.target.value)}
                     className="w-full bg-transparent text-[13px] text-[#181c20] focus:outline-none"
@@ -424,6 +448,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
 
             <div className="flex gap-2.5">
               <button
+                aria-label="Close quick edit profile"
                 onClick={() => setIsEditDrawerOpen(false)}
                 className="flex-1 h-11 bg-[#ebeef3] hover:bg-[#e0e3e8] text-[#181c20] font-semibold text-[13px] rounded-xl"
               >
