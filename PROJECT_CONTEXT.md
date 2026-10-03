@@ -10,6 +10,7 @@ The team updates this document during development. When the user asks to check d
 
 ## Confirmed constraints
 
+- Keep https://github.com/JinxedAsh/bird-wanderer updated as work proceeds. The user authorizes committing and pushing completed work increments without asking again. Run relevant checks before pushing, inspect GitHub CI afterward, and report any failure or blocker. Keep commits focused; exclude secrets, databases, dependencies and generated output. This does not authorize making the private repository public or force-pushing history.
 - All four documented phases are required.
 - Tuesday 6 October 2026: demonstrate Phase 1. A fully refined frontend and working login backend are the stated bare minimum; this does not remove the document's Phase 1 discovery, species, hotspot and photography-logistics requirements.
 - Full development deadline: 20 October 2026. A possible extension is unconfirmed and must not be assumed in planning.
