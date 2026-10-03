@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useDialogFocus } from '../lib/useDialogFocus';
 import { BirdSpecies, ScreenType } from '../types';
 
 interface LifeListScreenProps {
@@ -15,6 +16,8 @@ export const LifeListScreen: React.FC<LifeListScreenProps> = ({
   const [activeFilter, setActiveFilter] = useState<'all' | 'photographed' | 'wishlist'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDrawerSpecies, setSelectedDrawerSpecies] = useState<BirdSpecies | null>(null);
+
+  const dialogRef = useDialogFocus(Boolean(selectedDrawerSpecies), () => setSelectedDrawerSpecies(null));
 
   const filteredList = speciesList.filter((item) => {
     if (searchQuery.trim()) {
@@ -66,6 +69,7 @@ export const LifeListScreen: React.FC<LifeListScreenProps> = ({
             search
           </span>
           <input
+            aria-label="Search life list"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search species or scientific name..."
@@ -73,6 +77,7 @@ export const LifeListScreen: React.FC<LifeListScreenProps> = ({
           />
           {searchQuery && (
             <button
+              aria-label="Clear life list search"
               onClick={() => setSearchQuery('')}
               className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-[#e0e3e8] text-[#42493e] flex items-center justify-center text-[14px]"
             >
@@ -123,6 +128,14 @@ export const LifeListScreen: React.FC<LifeListScreenProps> = ({
           return (
             <div
               key={item.id}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setSelectedDrawerSpecies(item);
+                }
+              }}
               onClick={() => setSelectedDrawerSpecies(item)}
               className="group flex items-center justify-between p-3 rounded-xl bg-white hover:bg-[#f1f4f9] transition-all cursor-pointer shadow-xs border border-[#f1f4f9] active:scale-[0.99]"
             >
@@ -217,7 +230,7 @@ export const LifeListScreen: React.FC<LifeListScreenProps> = ({
             onClick={() => setSelectedDrawerSpecies(null)}
           ></div>
 
-          <div className="relative w-full max-w-md bg-white rounded-t-3xl shadow-xl p-5 flex flex-col gap-3 z-10 animate-in slide-in-from-bottom duration-300">
+          <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Species observation" tabIndex={-1} className="relative w-full max-w-md bg-white rounded-t-3xl shadow-xl max-h-[85dvh] overflow-y-auto p-5 flex flex-col gap-3 z-10 animate-in slide-in-from-bottom duration-300">
             <div className="w-10 h-1.5 rounded-full bg-[#e0e3e8] mx-auto mb-1"></div>
 
             <div className="flex items-center justify-between">
@@ -228,6 +241,7 @@ export const LifeListScreen: React.FC<LifeListScreenProps> = ({
                 </span>
               </div>
               <button
+                aria-label="Close species observation"
                 onClick={() => setSelectedDrawerSpecies(null)}
                 className="w-8 h-8 rounded-full bg-[#ebeef3] flex items-center justify-center text-[#181c20]"
               >

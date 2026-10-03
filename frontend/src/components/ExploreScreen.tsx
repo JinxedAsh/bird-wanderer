@@ -102,7 +102,9 @@ export const ExploreScreen: React.FC<ExploreScreenProps> = ({
 
               <div className="flex-1 min-w-0 ml-3.5 flex flex-col">
                 <h4 className="text-[16px] font-bold text-[#181c20] truncate group-hover:text-[#154212] transition-colors">
-                  {bird.name}
+                  <button type="button" onClick={(e) => { e.stopPropagation(); onSelectSpecies(bird); }} className="text-left">
+                    {bird.name}
+                  </button>
                 </h4>
                 <span className="text-[12px] italic text-[#42493e] truncate">
                   {bird.scientificName}
@@ -215,7 +217,8 @@ export const ExploreScreen: React.FC<ExploreScreenProps> = ({
             </div>
 
             <button
-              aria-label="View hornbill report details"
+              aria-label={`View ${notableBird.name} report details`}
+              onClick={(e) => { e.stopPropagation(); onSelectSpecies(notableBird); }}
               className="w-8 h-8 rounded-full bg-[#ebeef3] flex items-center justify-center text-[#181c20] group-hover:bg-[#2d5a27] group-hover:text-white transition-colors flex-shrink-0 ml-2"
             >
               <span className="material-symbols-outlined text-[18px]">chevron_right</span>

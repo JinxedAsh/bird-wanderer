@@ -6,12 +6,15 @@ Bird Wanderer brings species discovery, hotspots, photography logistics, persona
 
 > **In development:** account registration, login, persistent sessions and logout are implemented. Most other screens currently use sample data. This repository is not a finished production service.
 
+**Required delivery:** an Android app/APK. The current runtime is a React mobile web interface; Android packaging and device testing are still pending. Stage 1 frontend stabilization does not produce an APK.
+
 ## Current functionality
 
 - Fifteen frontend screens for discovery, species, hotspots, community, observations, journal, life list, quiz, messages, profile, search, notifications, settings and authentication.
 - Express authentication API with SQLite persistence, salted password hashes and server-managed sessions.
 - Input validation, authentication rate limiting, origin checks and session invalidation on logout.
 - Automated authentication integration tests, TypeScript checks and a production build.
+- Stage 1 frontend fixes: complete local search results, shared hotspot bookmarks, live comment-panel updates, account identity, keyboard-accessible sheets and configurable API proxying.
 
 ## Technology
 
@@ -52,7 +55,7 @@ pnpm test
 pnpm build
 ```
 
-`lint` currently performs TypeScript checking. Tests use temporary databases and cover registration, invalid credentials, duplicate accounts, session rotation and expiry, logout, origin checks, rate limiting, restart persistence and user isolation. GitHub Actions runs these checks on pushes and pull requests.
+`lint` currently performs TypeScript checking. Tests use temporary databases and cover registration, invalid credentials, duplicate accounts, session rotation and expiry, logout, origin checks, rate limiting, restart persistence and user isolation. Frontend rendering tests cover search results, empty states, zero sightings and account identity; HTTP tests cover development and preview API proxying. These do not replace browser interaction or visual checks. GitHub Actions runs these checks on pushes and pull requests.
 
 ## Repository layout
 
@@ -88,6 +91,7 @@ All four phases are required by **20 October 2026**. Password recovery, live ext
 - [Agreed scope and deadlines](PROJECT_CONTEXT.md)
 - [Initial source review](PROJECT_REVIEW.md)
 - [Authentication walkthrough](docs/AUTH_WALKTHROUGH.md)
+- [Stage 1 walkthrough and manual checks](docs/STAGE_1_WALKTHROUGH.md)
 - [Design reference index](docs/design-reference/README.md)
 - [Development and contribution guide](CONTRIBUTING.md)
 - [Runtime and deployment notes](frontend/README.md)

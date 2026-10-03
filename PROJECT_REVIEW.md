@@ -2,6 +2,8 @@
 
 Reviewed 3 October 2026. Source: the shared Group 13 Google Doc and the existing frontend source.
 
+**Historical snapshot:** statements below about missing dependencies, untracked files and absent authentication describe the initial repository only. Authentication and repository setup are now implemented. See README.md, PROJECT_CONTEXT.md and docs/STAGE_1_WALKTHROUGH.md for current progress and remaining verification.
+
 Follow-up: the user confirmed that all four phases are mandatory, the final designs must be followed exactly, and the full deadline is 20 October 2026. The first checkpoint is Tuesday 6 October. See PROJECT_CONTEXT.md for the current agreed constraints and living documentation link. The initial questions and two-week sequence below are historical proposals, not the current confirmed schedule.
 
 ## Review limits

@@ -6,6 +6,13 @@
     overscroll-behavior: none;
     -webkit-tap-highlight-color: transparent;
   }
+
+}
+
+/* Keep keyboard focus visible even on controls with focus:outline-none. */
+:focus-visible {
+  outline: 2px solid #154212;
+  outline-offset: 3px;
 }
 
 .material-symbols-outlined {

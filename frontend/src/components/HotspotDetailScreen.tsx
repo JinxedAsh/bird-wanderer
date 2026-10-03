@@ -3,6 +3,7 @@ import { Hotspot, ScreenType, BirdSpecies } from '../types';
 
 interface HotspotDetailScreenProps {
   hotspot: Hotspot;
+  onToggleSave: (hotspotId: string) => void;
   onNavigate: (screen: ScreenType) => void;
   onSelectSpeciesByName: (name: string) => void;
   showToast: (message: string) => void;
@@ -10,11 +11,12 @@ interface HotspotDetailScreenProps {
 
 export const HotspotDetailScreen: React.FC<HotspotDetailScreenProps> = ({
   hotspot,
+  onToggleSave,
   onNavigate,
   onSelectSpeciesByName,
   showToast,
 }) => {
-  const [isSaved, setIsSaved] = useState(hotspot.isSaved || false);
+  const isSaved = Boolean(hotspot.isSaved);
   const [openAccordion, setOpenAccordion] = useState<string | null>('visit');
 
   const toggleAccordion = (id: string) => {
@@ -22,9 +24,7 @@ export const HotspotDetailScreen: React.FC<HotspotDetailScreenProps> = ({
   };
 
   const handleToggleSave = () => {
-    const next = !isSaved;
-    setIsSaved(next);
-    showToast(next ? `Saved ${hotspot.name} to field bookmarks` : `Removed from bookmarks`);
+    onToggleSave(hotspot.id);
   };
 
   return (
@@ -43,6 +43,7 @@ export const HotspotDetailScreen: React.FC<HotspotDetailScreenProps> = ({
           <button
             onClick={handleToggleSave}
             aria-label="Bookmark this sanctuary"
+            aria-pressed={isSaved}
             className="w-10 h-10 rounded-full bg-white/90 backdrop-blur-md shadow-sm flex items-center justify-center text-[#181c20] hover:bg-white active:scale-95 transition-all"
           >
             <span

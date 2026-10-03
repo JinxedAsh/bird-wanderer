@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BirdSpecies, Hotspot, ScreenType } from '../types';
+import { BirdSpecies, Hotspot, ScreenType, CommunityPost } from '../types';
 
 interface GlobalSearchScreenProps {
   onSelectSpecies: (species: BirdSpecies) => void;
@@ -7,6 +7,7 @@ interface GlobalSearchScreenProps {
   onNavigate: (screen: ScreenType) => void;
   speciesList: BirdSpecies[];
   hotspots: Hotspot[];
+  posts: CommunityPost[];
 }
 
 export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
@@ -15,6 +16,7 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
   onNavigate,
   speciesList,
   hotspots,
+  posts,
 }) => {
   const [query, setQuery] = useState('Roller');
   const [activeCategory, setActiveCategory] = useState<'all' | 'birds' | 'people' | 'hotspots' | 'posts'>('all');
@@ -39,6 +41,15 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
     (h) => !q || h.name.toLowerCase().includes(q) || h.region.toLowerCase().includes(q)
   );
 
+  const people = [...new Map(posts.map((post) => [post.authorHandle, post])).values()];
+  const matchedPeople = people.filter((person) =>
+    !q || person.authorName.toLowerCase().includes(q) || person.authorHandle.toLowerCase().includes(q)
+  );
+  const matchedPosts = posts.filter((post) =>
+    !q || [post.speciesName, post.speciesScientific, post.authorName, post.location, post.caption]
+      .some((value) => value.toLowerCase().includes(q))
+  );
+
   const showBirds = activeCategory === 'all' || activeCategory === 'birds';
   const showPeople = activeCategory === 'all' || activeCategory === 'people';
   const showHotspots = activeCategory === 'all' || activeCategory === 'hotspots';
@@ -46,9 +57,9 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
 
   const hasAnyResult =
     (showBirds && matchedBirds.length > 0) ||
-    showPeople ||
+    (showPeople && matchedPeople.length > 0) ||
     (showHotspots && matchedHotspots.length > 0) ||
-    showPosts;
+    (showPosts && matchedPosts.length > 0);
 
   return (
     <div className="flex flex-col w-full px-4 pb-28 pt-2">
@@ -59,6 +70,7 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
             search
           </span>
           <input
+            aria-label="Search birds, hotspots, birders and posts"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search birds, hotspots, birders..."
@@ -67,6 +79,7 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
           {query && (
             <button
               type="button"
+              aria-label="Clear search"
               onClick={() => setQuery('')}
               className="w-7 h-7 flex items-center justify-center rounded-full text-[#42493e] hover:bg-[#ebeef3]"
             >
@@ -118,14 +131,16 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
                 key={term}
                 className="inline-flex items-center gap-1.5 bg-[#f1f4f9] text-[#181c20] px-3 py-1 rounded-full text-[12px] font-medium"
               >
-                <span
+                <button
+                  type="button"
                   onClick={() => setQuery(term)}
                   className="cursor-pointer hover:text-[#154212]"
                 >
                   {term}
-                </span>
+                </button>
                 <button
                   type="button"
+                  aria-label={`Remove ${term} from recent searches`}
                   onClick={() => removeRecent(term)}
                   className="text-[#72796e] hover:text-[#181c20] p-0.5"
                 >
@@ -140,29 +155,31 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
       {/* Search Results Stream */}
       <div className="flex flex-col gap-2.5 pt-2">
         {/* Bird Result */}
-        {showBirds && matchedBirds[0] && (
-          <div
-            onClick={() => onSelectSpecies(matchedBirds[0])}
-            className="flex items-center gap-3 p-3 bg-white rounded-xl shadow-xs hover:bg-[#f1f4f9] transition-all cursor-pointer border border-[#f1f4f9]"
+        {showBirds && matchedBirds.map((bird) => (
+          <button
+            type="button"
+            key={bird.id}
+            onClick={() => onSelectSpecies(bird)}
+            className="w-full text-left flex items-center gap-3 p-3 bg-white rounded-xl shadow-xs hover:bg-[#f1f4f9] transition-all cursor-pointer border border-[#f1f4f9]"
           >
             <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 bg-[#ebeef3]">
               <img
-                src={matchedBirds[0].image}
-                alt={matchedBirds[0].name}
+                src={bird.image}
+                alt={bird.name}
                 className="w-full h-full object-cover"
               />
             </div>
             <div className="flex flex-col min-w-0 flex-1">
               <div className="flex items-center gap-1.5">
                 <span className="text-[15px] font-bold text-[#181c20] truncate">
-                  {matchedBirds[0].name}
+                  {bird.name}
                 </span>
                 <span className="bg-[#ffdcc3] text-[#6e3900] text-[10px] font-bold px-1.5 py-0.2 rounded-full">
                   Species
                 </span>
               </div>
               <p className="text-[12px] italic text-[#72796e] truncate">
-                {matchedBirds[0].scientificName}
+                {bird.scientificName}
               </p>
               <div className="flex items-center gap-1 mt-1 text-[#42493e] text-[11px] font-semibold">
                 <span
@@ -171,36 +188,38 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
                 >
                   visibility
                 </span>
-                <span>12 local sightings this week</span>
+                <span>{bird.sightingsThisWeek ?? 0} local sightings this week</span>
               </div>
             </div>
             <span className="material-symbols-outlined text-[#c2c9bb] text-[20px]">
               chevron_right
             </span>
-          </div>
-        )}
+          </button>
+        ))}
 
         {/* Person Result */}
-        {showPeople && (
-          <div
+        {showPeople && matchedPeople.map((person) => (
+          <button
+            type="button"
+            key={person.authorHandle}
             onClick={() => onNavigate('messages')}
-            className="flex items-center gap-3 p-3 bg-white rounded-xl shadow-xs hover:bg-[#f1f4f9] transition-all cursor-pointer border border-[#f1f4f9]"
+            className="w-full text-left flex items-center gap-3 p-3 bg-white rounded-xl shadow-xs hover:bg-[#f1f4f9] transition-all cursor-pointer border border-[#f1f4f9]"
           >
             <div className="w-16 h-16 rounded-full overflow-hidden flex-shrink-0 bg-[#ebeef3]">
               <img
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuDc8Mtno8ZjD1IML5b86XosvxCcv_NqoB20eWS6ldf_4H4OFACjJ5qLBqd8XqQX0FsxWTwxmjHwU824nWrSimZdRZ7SrUYxDXwfPUfAmiyakIumIyYQNnMQQ4UZJPxzMHv514QDsMLNJtVjeofLI_lp8TTbQNlJgLfzCs1sRrRxIDSiNuN1IiHysRaZX7S-7-fX7X6vfaAhzZH0HSa2Kj3GjBUyhE6hp_QamV7UZtkW20-KxJHyJ5_VOw"
-                alt="Maya Singh"
+                src={person.authorAvatar}
+                alt={person.authorName}
                 className="w-full h-full object-cover"
               />
             </div>
             <div className="flex flex-col min-w-0 flex-1">
               <div className="flex items-center gap-1.5">
-                <span className="text-[15px] font-bold text-[#181c20] truncate">Maya Singh</span>
+                <span className="text-[15px] font-bold text-[#181c20] truncate">{person.authorName}</span>
                 <span className="bg-[#c7ecce] text-[#01210f] text-[10px] font-bold px-1.5 py-0.2 rounded-full">
-                  Top Birder
+                  {person.authorBadge || 'Birder'}
                 </span>
               </div>
-              <p className="text-[12px] text-[#72796e] truncate">@mayasingh</p>
+              <p className="text-[12px] text-[#72796e] truncate">{person.authorHandle}</p>
               <div className="flex items-center gap-1 mt-1 text-[#42493e] text-[11px] font-semibold">
                 <span
                   className="material-symbols-outlined text-[#904d00] text-[14px]"
@@ -208,20 +227,22 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
                 >
                   photo_camera
                 </span>
-                <span>210 photos • 84 species identified</span>
+                <span>{posts.filter((post) => post.authorHandle === person.authorHandle).length} community posts</span>
               </div>
             </div>
             <span className="material-symbols-outlined text-[#c2c9bb] text-[20px]">
               chevron_right
             </span>
-          </div>
-        )}
+          </button>
+        ))}
 
         {/* Hotspot Result */}
-        {showHotspots && matchedHotspots[1] && (
-          <div
-            onClick={() => onSelectHotspot(matchedHotspots[1])}
-            className="flex items-center gap-3 p-3 bg-white rounded-xl shadow-xs hover:bg-[#f1f4f9] transition-all cursor-pointer border border-[#f1f4f9]"
+        {showHotspots && matchedHotspots.map((hotspot) => (
+          <button
+            type="button"
+            key={hotspot.id}
+            onClick={() => onSelectHotspot(hotspot)}
+            className="w-full text-left flex items-center gap-3 p-3 bg-white rounded-xl shadow-xs hover:bg-[#f1f4f9] transition-all cursor-pointer border border-[#f1f4f9]"
           >
             <div className="w-16 h-16 rounded-xl flex items-center justify-center bg-[#2d5a27] text-white flex-shrink-0">
               <span
@@ -234,54 +255,56 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
             <div className="flex flex-col min-w-0 flex-1">
               <div className="flex items-center gap-1.5">
                 <span className="text-[15px] font-bold text-[#181c20] truncate">
-                  {matchedHotspots[1].name}
+                  {hotspot.name}
                 </span>
               </div>
               <p className="text-[12px] text-[#72796e] truncate">
-                {matchedHotspots[1].region} • {matchedHotspots[1].distanceKm} km away
+                {hotspot.region} • {hotspot.distanceKm} km away
               </p>
               <div className="flex items-center gap-1 mt-1 text-[#42493e] text-[11px] font-semibold">
                 <span className="material-symbols-outlined text-[#154212] text-[14px]">eco</span>
-                <span className="text-[#3b6934] font-bold">12 species active today</span>
+                <span className="text-[#3b6934] font-bold">{hotspot.activeTodayCount} species active today</span>
               </div>
             </div>
             <span className="material-symbols-outlined text-[#c2c9bb] text-[20px]">
               chevron_right
             </span>
-          </div>
-        )}
+          </button>
+        ))}
 
         {/* Community Post Result */}
-        {showPosts && (
-          <div
+        {showPosts && matchedPosts.map((post) => (
+          <button
+            type="button"
+            key={post.id}
             onClick={() => onNavigate('community')}
-            className="flex items-center gap-3 p-3 bg-white rounded-xl shadow-xs hover:bg-[#f1f4f9] transition-all cursor-pointer border border-[#f1f4f9]"
+            className="w-full text-left flex items-center gap-3 p-3 bg-white rounded-xl shadow-xs hover:bg-[#f1f4f9] transition-all cursor-pointer border border-[#f1f4f9]"
           >
             <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 bg-[#ebeef3]">
               <img
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBTY29b0PvKx_RjHZJmjbYzV7UjsuiJn3joowXPjtvWb-dNocmvpjBK-8MfEvgizT47YP9QtxGt-DoD4nc7psI8nnGz0Nfz4GdZygb2mlF7y-aPaaTe_LP3dheu9m032V6Qomwxh0sbN1a58oVb8jER3NcOC6-rXdMkFBhP8x_WVoSdiAavfGlGavwE8A4D0MJSYO1v7jUm0-jEaCEwpOmz-5_k8T1iVFkrazr-5SNNjzfuc4PhWVdAZw"
-                alt="Rose-ringed Parakeet post"
+                src={post.imageUrl}
+                alt={post.speciesName}
                 className="w-full h-full object-cover"
               />
             </div>
             <div className="flex flex-col min-w-0 flex-1">
               <div className="flex items-center gap-1.5">
                 <span className="text-[15px] font-bold text-[#181c20] truncate">
-                  Rose-ringed Parakeet
+                  {post.speciesName}
                 </span>
               </div>
-              <p className="text-[12px] text-[#42493e] line-clamp-1">at Lodhi Gardens</p>
+              <p className="text-[12px] text-[#42493e] line-clamp-1">{post.location}</p>
               <div className="flex items-center gap-1 mt-1 text-[11px] text-[#72796e]">
-                <span>By Kabir</span>
+                <span>By {post.authorName}</span>
                 <span>•</span>
-                <span>3 hours ago</span>
+                <span>{post.timeAgo}</span>
               </div>
             </div>
             <span className="material-symbols-outlined text-[#c2c9bb] text-[20px]">
               chevron_right
             </span>
-          </div>
-        )}
+          </button>
+        ))}
 
         {/* Empty State */}
         {!hasAnyResult && (

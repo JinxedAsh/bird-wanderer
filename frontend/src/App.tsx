@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { auth, type AuthUser } from './lib/auth';
 import {
   ScreenType,
@@ -86,15 +86,19 @@ export default function App() {
 
   // Global Toast State
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [toastTimer, setToastTimer] = useState<NodeJS.Timeout | null>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => () => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+  }, []);
 
   const showToast = (message: string) => {
-    if (toastTimer) clearTimeout(toastTimer);
+    if (toastTimer.current) clearTimeout(toastTimer.current);
     setToastMessage(message);
-    const timer = setTimeout(() => {
+    toastTimer.current = setTimeout(() => {
       setToastMessage(null);
+      toastTimer.current = null;
     }, 2600);
-    setToastTimer(timer);
   };
 
   const navigateTo = (screen: ScreenType) => {
@@ -130,8 +134,7 @@ export default function App() {
       setSelectedSpecies(found);
       navigateTo('species-detail');
     } else {
-      setSelectedSpecies(speciesList[0]);
-      navigateTo('species-detail');
+      showToast('This species is not available in the sample catalogue yet.');
     }
   };
 
@@ -141,8 +144,7 @@ export default function App() {
       setSelectedSpecies(found);
       navigateTo('species-detail');
     } else {
-      setSelectedSpecies(speciesList[0]);
-      navigateTo('species-detail');
+      showToast('This species is not available in the sample catalogue yet.');
     }
   };
 
@@ -158,11 +160,13 @@ export default function App() {
 
   // Interactions
   const handleToggleLike = (postId: string) => {
+    const post = posts.find((p) => p.id === postId);
+    if (!post) return;
+    showToast(post.isLiked ? 'Unliked sighting' : 'Liked sighting');
     setPosts((prev) =>
       prev.map((p) => {
         if (p.id === postId) {
           const isLiked = !p.isLiked;
-          showToast(isLiked ? 'Liked sighting' : 'Unliked sighting');
           return {
             ...p,
             isLiked,
@@ -175,11 +179,13 @@ export default function App() {
   };
 
   const handleToggleSavePost = (postId: string) => {
+    const post = posts.find((p) => p.id === postId);
+    if (!post) return;
+    showToast(post.isSaved ? 'Removed from bookmarks' : 'Saved to field bookmarks');
     setPosts((prev) =>
       prev.map((p) => {
         if (p.id === postId) {
           const isSaved = !p.isSaved;
-          showToast(isSaved ? 'Saved to Field Journal' : 'Removed from bookmarks');
           return { ...p, isSaved };
         }
         return p;
@@ -187,18 +193,29 @@ export default function App() {
     );
   };
 
+  const handleToggleSaveHotspot = (hotspotId: string) => {
+    const hotspot = hotspotsList.find((h) => h.id === hotspotId);
+    if (!hotspot) return;
+    setHotspotsList((prev) => prev.map((h) =>
+      h.id === hotspotId ? { ...h, isSaved: !h.isSaved } : h
+    ));
+    showToast(hotspot.isSaved ? 'Removed from bookmarks' : `Saved ${hotspot.name} to field bookmarks`);
+  };
+
   const handleAddComment = (postId: string, text: string) => {
+    const commentText = text.trim();
+    if (!commentText || !posts.some((p) => p.id === postId)) return;
+    const newComment = {
+      id: crypto.randomUUID(),
+      author: userProfile.name,
+      avatarInitials: userProfile.name.slice(0, 2).toUpperCase(),
+      time: 'Just now',
+      text: commentText,
+      color: 'bg-[#2d5a27] text-white',
+    };
     setPosts((prev) =>
       prev.map((p) => {
         if (p.id === postId) {
-          const newComment = {
-            id: `c-${Date.now()}`,
-            author: userProfile.name,
-            avatarInitials: userProfile.name.slice(0, 2).toUpperCase(),
-            time: 'Just now',
-            text,
-            color: 'bg-[#2d5a27] text-white',
-          };
           return {
             ...p,
             commentsCount: p.commentsCount + 1,
@@ -298,6 +315,8 @@ export default function App() {
             onNavigate={navigateTo}
             onBack={handleBack}
             unreadCount={unreadNotifsCount}
+            userProfile={userProfile}
+            showToast={showToast}
           />
         )}
 
@@ -367,7 +386,8 @@ export default function App() {
 
           {currentScreen === 'species-detail' && (
             <SpeciesDetailScreen
-              species={selectedSpecies}
+              key={selectedSpecies.id}
+              species={speciesList.find((s) => s.id === selectedSpecies.id) || selectedSpecies}
               onNavigate={navigateTo}
               onQuickLog={handleQuickLog}
               showToast={showToast}
@@ -377,6 +397,7 @@ export default function App() {
           {currentScreen === 'log-observation' && (
             <LogObservationScreen
               initialSpecies={selectedSpecies}
+              userProfile={userProfile}
               onPostObservation={handlePostObservation}
               onNavigate={navigateTo}
               showToast={showToast}
@@ -385,7 +406,9 @@ export default function App() {
 
           {currentScreen === 'hotspot-detail' && (
             <HotspotDetailScreen
-              hotspot={selectedHotspot}
+              key={selectedHotspot.id}
+              hotspot={hotspotsList.find((h) => h.id === selectedHotspot.id) || selectedHotspot}
+              onToggleSave={handleToggleSaveHotspot}
               onNavigate={navigateTo}
               onSelectSpeciesByName={handleSelectSpeciesByName}
               showToast={showToast}
@@ -412,6 +435,7 @@ export default function App() {
             <GlobalSearchScreen
               speciesList={speciesList}
               hotspots={hotspotsList}
+              posts={posts}
               onSelectSpecies={handleSelectSpecies}
               onSelectHotspot={handleSelectHotspot}
               onNavigate={navigateTo}
@@ -446,7 +470,7 @@ export default function App() {
 
         {/* Global Floating Toast Alert */}
         {toastMessage && (
-          <div className="fixed top-20 inset-x-4 mx-auto max-w-xs z-50 bg-[#2d3135] text-[#eef1f6] py-2.5 px-4 rounded-xl shadow-lg flex items-center justify-center gap-2 animate-in fade-in slide-in-from-top-3 duration-200">
+          <div role="status" aria-live="polite" className="fixed top-20 inset-x-4 mx-auto max-w-xs z-50 bg-[#2d3135] text-[#eef1f6] py-2.5 px-4 rounded-xl shadow-lg flex items-center justify-center gap-2 animate-in fade-in slide-in-from-top-3 duration-200">
             <span
               className="material-symbols-outlined text-[18px] text-[#a1d494]"
               style={{ fontVariationSettings: "'FILL' 1" }}

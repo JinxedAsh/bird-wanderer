@@ -1,5 +1,5 @@
 import React from 'react';
-import { ScreenType } from '../types';
+import { ScreenType, UserProfile } from '../types';
 
 interface HeaderProps {
   currentScreen: ScreenType;
@@ -7,6 +7,8 @@ interface HeaderProps {
   onBack: () => void;
   unreadCount?: number;
   titleOverride?: string;
+  userProfile: UserProfile;
+  showToast: (message: string) => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -15,6 +17,8 @@ export const Header: React.FC<HeaderProps> = ({
   onBack,
   unreadCount = 3,
   titleOverride,
+  userProfile,
+  showToast,
 }) => {
   const isStackScreen = [
     'species-detail',
@@ -68,7 +72,7 @@ export const Header: React.FC<HeaderProps> = ({
     'https://lh3.googleusercontent.com/aida/AEtjO1W8yln5EatqNnqKbQzoUitk58-CzWZFsehpZ_GK_zrmrGN3Rf6DRUAAPQOWkobP98hENh3t1gmnVPXejRTXiM2TGKjiQekU3Rg-unebzUWBRENy0VWqkTuIh1Sn-JG2oOC0nXRl1mcsPKuw3fjC_1M72Xv5uLfUz_I-MVJCbPW9iGgR4qgONFxTYDeymWN81E-fZkTP47jwWhru75_7Y-Xh7gyI3W3itKbKoEGU6949uH_m1ajz26fkPFI';
 
   const avatarUrl =
-    'https://lh3.googleusercontent.com/aida-public/AB6AXuBilIfqeqGZqxiuK6vxRyu_VanbSPnlYC5UaLKlYlFqvr6hT1yyFB_Fg7KCmdxldB02SZVzoKxBFtWeD5VF6oLjLT6b4s3--fjiBFA8DXvuDeyNfHe9Z4rqo9qzO7qswlZXVySE3EqnD_uiKwDKd7XjL9d5-UN2BEDEUkHMMFqB2Sn7aZIP3shqFP4qEhe9oSuBUYnIcEahlDaPIWpYXSW1JXkXJQO8VY6UHlpPDxI4iN11eppj5PWiaQ';
+    userProfile.avatarUrl;
 
   return (
     <header className="fixed top-0 inset-x-0 z-40 bg-[#f7f9ff]/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.03)] transition-all">
@@ -90,6 +94,15 @@ export const Header: React.FC<HeaderProps> = ({
             alt="Bird Wanderer Logo"
             className="h-8 w-auto object-contain flex-shrink-0 cursor-pointer"
             onClick={() => onNavigate('explore')}
+            role="button"
+            tabIndex={0}
+            aria-label="Open Explore"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onNavigate('explore');
+              }
+            }}
           />
 
           <div className="flex flex-col min-w-0">
@@ -112,7 +125,11 @@ export const Header: React.FC<HeaderProps> = ({
                     title: 'Bird Wanderer',
                     text: 'Explore avian observations with Bird Wanderer',
                     url: window.location.href,
-                  }).catch(() => {});
+                  }).catch((error) => {
+                    if (error.name !== 'AbortError') showToast('Could not share this page. Please try again.');
+                  });
+                } else {
+                  showToast('Sharing is not supported by this browser yet.');
                 }
               }}
               aria-label="Share observation"
@@ -140,7 +157,7 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <img
               src={avatarUrl}
-              alt="Sourabh profile"
+              alt={`${userProfile.name} profile`}
               className="w-8 h-8 rounded-full object-cover ring-2 ring-[#e0e3e8]"
             />
           </button>

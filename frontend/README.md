@@ -23,6 +23,10 @@ An optional `.env` can be copied from `.env.example`. Accounts and sessions pers
 
 ## Verify
 
+To preview the production frontend locally, first run `pnpm build`. Start `pnpm dev:server` in one terminal and `pnpm preview` in another, then open **http://localhost:3000**. Preview needs the API running separately; it is not a production deployment command. Stop the development frontend before previewing because both use the same port.
+
+Development and preview read the frontend port from `APP_ORIGIN` and the API port from `PORT` in `.env`. Keep `APP_ORIGIN` equal to the URL you open (including the port). For example, `APP_ORIGIN=http://localhost:3100` and `PORT=3101` move both servers without changing source files. No environment secrets are exposed by this proxy configuration.
+
 ```sh
 pnpm lint
 pnpm test
@@ -30,6 +34,7 @@ pnpm build
 ```
 
 The lint command currently checks TypeScript types. Tests use temporary isolated databases and do not change your development accounts.
+The suite also includes server-rendered frontend regression checks and HTTP checks for both Vite proxies. See `../docs/STAGE_1_WALKTHROUGH.md` for browser checks still required.
 
 ## Current status
 

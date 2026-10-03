@@ -16,6 +16,7 @@ The team updates this document during development. When the user asks to check d
 - Full development deadline: 20 October 2026. A possible extension is unconfirmed and must not be assumed in planning.
 - The embedded screen designs are final and must be followed exactly. Inspect the original images and compare the running application against them before claiming design fidelity. Do not redesign or silently substitute layouts.
 - No mandated technology stack.
+- The final evaluation deliverable must be an Android app/APK (confirmed 4 October 2026). The current implementation is a React mobile web interface with an Express backend. Android packaging, API connectivity and physical-device testing still need to be planned and implemented; an installable web app alone does not meet this requirement. Preserve the existing code where practical instead of assuming a rewrite is required.
 - One developer, available for most of each day. Teach implementation decisions and flows as work proceeds so the developer can explain the application.
 
 ## Delivery approach
@@ -29,3 +30,5 @@ Plan remaining implementation through 20 October, reserving time for integration
 First increment, 3 October: installed frontend dependencies and generated a lockfile; added Express/SQLite registration, login, persisted sessions and logout; connected the authentication UI and current user's greeting/email. TypeScript, production build and five authentication integration test groups pass. Start locally with Start-Dev.ps1. See docs/AUTH_WALKTHROUGH.md.
 
 Original design images were extracted into docs/design-reference. The auth reference was inspected, but exact UI fidelity and browser interaction remain unverified because local browser access was denied by browser security policy. Next: complete visual screen comparison/refinement, password recovery, and Phase 1 live discovery/data integration. Other application screens still use prototype data.
+
+Stage 1 increment, 4 October: corrected local search rendering and empty states, shared hotspot bookmark state, open comment-panel updates, account identity display, zero sightings, follow/unfollow behavior and missing-species handling. Added keyboard focus/Escape handling to existing sheets, visible focus indicators, browser zoom support and accurate messages for unsupported prototype actions. Development and preview proxy authentication to the configured API port. TypeScript, eleven automated tests and the production build pass. No authentication schema or backend business functionality was changed. Runtime visual comparison remains pending; reference images were inspected without claiming exact fidelity. See docs/STAGE_1_WALKTHROUGH.md. Stop after Stage 1 until the user requests further implementation.
