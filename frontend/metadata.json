@@ -1,0 +1,6 @@
+{
+  "name": "Bird Wanderer - Field Log & Journal",
+  "description": "Discover birds, photograph them, keep your field journal, and connect with other birders in your local community.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

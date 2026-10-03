@@ -1,0 +1,16 @@
+.pnpm-store/
+*.log
+node_modules/
+dist/
+coverage/
+.env
+.env.*
+!.env.example
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+*.db
+*.pem
+*.key
+.DS_Store
+Thumbs.db
