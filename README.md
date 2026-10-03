@@ -6,6 +6,8 @@ Bird Wanderer brings species discovery, hotspots, photography logistics, persona
 
 > **In development:** account registration, login, persistent sessions and logout are implemented. Most other screens currently use sample data. This repository is not a finished production service.
 
+**Required delivery:** an Android app/APK. The current runtime is a React mobile web interface; Android packaging and device testing are still pending. Stage 1 frontend stabilization does not produce an APK.
+
 ## Current functionality
 
 - Fifteen frontend screens for discovery, species, hotspots, community, observations, journal, life list, quiz, messages, profile, search, notifications, settings and authentication.

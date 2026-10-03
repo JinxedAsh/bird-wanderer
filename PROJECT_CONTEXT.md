@@ -16,6 +16,7 @@ The team updates this document during development. When the user asks to check d
 - Full development deadline: 20 October 2026. A possible extension is unconfirmed and must not be assumed in planning.
 - The embedded screen designs are final and must be followed exactly. Inspect the original images and compare the running application against them before claiming design fidelity. Do not redesign or silently substitute layouts.
 - No mandated technology stack.
+- The final evaluation deliverable must be an Android app/APK (confirmed 4 October 2026). The current implementation is a React mobile web interface with an Express backend. Android packaging, API connectivity and physical-device testing still need to be planned and implemented; an installable web app alone does not meet this requirement. Preserve the existing code where practical instead of assuming a rewrite is required.
 - One developer, available for most of each day. Teach implementation decisions and flows as work proceeds so the developer can explain the application.
 
 ## Delivery approach

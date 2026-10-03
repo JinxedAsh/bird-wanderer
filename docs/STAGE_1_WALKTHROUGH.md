@@ -2,6 +2,8 @@
 
 Implemented 4 October 2026. This increment preserves React, Express, SQLite, the existing screen layouts and working authentication. It does not implement later-stage persistence, external discovery, maps, uploads/EXIF, privacy enforcement, messaging, alerts or gamification.
 
+The user confirmed that the final deliverable must be an Android app/APK. The current runtime remains a mobile web interface. Android packaging and physical-device verification remain required future work; this stage does not claim to deliver an Android installation package.
+
 ## Changes and how they work
 
 - Search filters every available bird, hotspot, community author and post, then renders all matches with `map`. The previous hotspot index of 1 skipped single-result searches. People are deduplicated by their handle with a `Map`; their displayed counts describe available community posts rather than invented profile statistics. The original search card layout remains.
