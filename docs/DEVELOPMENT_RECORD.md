@@ -455,7 +455,7 @@ The header logo now uses a bundled SVG following the supplied green bird emblem,
 
 **Limitations:** no multi-photo statistics or verified matching of environmental conditions; no sourced best-time/season/difficulty inference; no saved itinerary. Fully absent EXIF/provider outages, physical-phone behavior and full design acceptance still need manual verification; one missing-lens case passed in the browser. Source-photo settings remain unverified records, and reports are not sighting guarantees. APK packaging remains deferred for this phase.
 
-**Delivery:** prepared on `codex/photo-planning`; publication evidence will follow. The [Photography planning walkthrough](PHOTO_PLANNING_WALKTHROUGH.md) contains the rules, source boundaries, manual checks and Viva Notes. Next: sourced detailed species enrichment, retaining the current discovery and planning flow.
+**Delivery:** implementation commit `dc5f7ea`, published on `codex/photo-planning` in [PR #10](https://github.com/JinxedAsh/bird-wanderer/pull/10). Local checks and the configured-key scan passed; the PR records final GitHub check/merge status. Automatic merge follows passing final-commit checks under standing authorization. Private context/reviews, secrets and databases remain excluded. The [Photography planning walkthrough](PHOTO_PLANNING_WALKTHROUGH.md) contains the rules, source boundaries, manual checks and Viva Notes. Next: sourced detailed species enrichment, retaining the current discovery and planning flow.
 
 ## 4. How the current application fits together
 
