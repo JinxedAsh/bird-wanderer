@@ -3,6 +3,11 @@ import { BirdSpecies, Hotspot, ScreenType, CommunityPost } from '../types';
 import { SpeciesPhoto } from './SpeciesPhoto';
 
 interface GlobalSearchScreenProps {
+  recentSearches?: string[];
+  savedSpeciesIds?: string[];
+  historyDisabled?: boolean;
+  onRecordSearch?: (term: string) => void;
+  onRemoveSearch?: (term?: string) => void;
   onSessionExpired?: () => void;
   externalDiscovery?: boolean;
   onSelectSpecies: (species: BirdSpecies) => void;
@@ -14,6 +19,11 @@ interface GlobalSearchScreenProps {
 }
 
 export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
+  recentSearches = [],
+  savedSpeciesIds = [],
+  historyDisabled = false,
+  onRecordSearch,
+  onRemoveSearch,
   onSessionExpired,
   externalDiscovery = false,
   onSelectSpecies,
@@ -23,23 +33,21 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
   hotspots,
   posts,
 }) => {
-  const [query, setQuery] = useState('Roller');
+  const [query, setQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<'all' | 'birds' | 'people' | 'hotspots' | 'posts'>('all');
-  const [recentSearches, setRecentSearches] = useState([
-    'Common Kingfisher',
-    'Okhla Sanctuary',
-    'Indian Roller',
-  ]);
-
-  const removeRecent = (item: string) => {
-    setRecentSearches((prev) => prev.filter((s) => s !== item));
+  const [savedOnly, setSavedOnly] = useState(false);
+  const recordSearch = () => {
+    const term = query.trim().replace(/\s+/g, ' ');
+    if (term) onRecordSearch?.(term);
   };
+  const selectBird = (bird: BirdSpecies) => { recordSearch(); onSelectSpecies(bird); };
+  const selectHotspot = (hotspot: Hotspot) => { recordSearch(); onSelectHotspot(hotspot); };
 
   const q = query.toLowerCase().trim();
 
   // Matched results
   const matchingBirds = speciesList.filter(
-    (b) => !q || b.name.toLowerCase().includes(q) || b.scientificName.toLowerCase().includes(q)
+    (b) => (!savedOnly || savedSpeciesIds.includes(b.id)) && (!q || b.name.toLowerCase().includes(q) || b.scientificName.toLowerCase().includes(q))
   );
   const matchedBirds = matchingBirds.slice(0, 60);
 
@@ -79,6 +87,8 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
             aria-label="Search birds, hotspots, birders and posts"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') recordSearch(); }}
+            maxLength={100}
             placeholder="Search birds, hotspots, birders..."
             className="w-full bg-transparent border-0 outline-none px-2.5 text-[14px] text-[#181c20] placeholder:text-[#72796e]"
           />
@@ -116,6 +126,14 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
         })}
       </div>
 
+      {(activeCategory === 'all' || activeCategory === 'birds') && externalDiscovery && (
+        <label className="mt-2 flex items-center gap-2 text-[12px] text-[#42493e]">
+          <input type="checkbox" checked={savedOnly} onChange={(event) => setSavedOnly(event.target.checked)} />
+          Saved birds only
+        </label>
+      )}
+      {onRecordSearch && <p className="mt-2 text-[11px] text-[#72796e]">Press Enter or open a bird/hotspot result to keep this search.</p>}
+
       {/* Recent Searches */}
       {recentSearches.length > 0 && (
         <div className="pt-3 pb-2">
@@ -124,7 +142,8 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
               Recent Searches
             </span>
             <button
-              onClick={() => setRecentSearches([])}
+              disabled={historyDisabled}
+              onClick={() => onRemoveSearch?.()}
               className="text-[11px] font-semibold text-[#154212] hover:underline"
             >
               Clear All
@@ -139,7 +158,8 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
               >
                 <button
                   type="button"
-                  onClick={() => setQuery(term)}
+                  disabled={historyDisabled}
+                  onClick={() => { setQuery(term); onRecordSearch?.(term); }}
                   className="cursor-pointer hover:text-[#154212]"
                 >
                   {term}
@@ -147,7 +167,8 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
                 <button
                   type="button"
                   aria-label={`Remove ${term} from recent searches`}
-                  onClick={() => removeRecent(term)}
+                  disabled={historyDisabled}
+                  onClick={() => onRemoveSearch?.(term)}
                   className="text-[#72796e] hover:text-[#181c20] p-0.5"
                 >
                   <span className="material-symbols-outlined text-[14px]">close</span>
@@ -166,13 +187,13 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
         {showBirds && matchedBirds.map((bird) => (
           <article
             key={bird.id}
-            onClick={() => onSelectSpecies(bird)}
+            onClick={() => selectBird(bird)}
             className="w-full text-left grid grid-cols-[64px_1fr_auto] items-center gap-x-3 p-3 bg-white rounded-xl shadow-xs hover:bg-[#f1f4f9] transition-all cursor-pointer border border-[#f1f4f9]"
           >
             <SpeciesPhoto key={bird.id} species={bird} onSessionExpired={onSessionExpired} frameClassName="w-16 h-16 rounded-xl overflow-hidden bg-[#ebeef3]" />
             <div className="flex flex-col min-w-0 flex-1">
               <div className="flex items-center gap-1.5">
-                <button type="button" onClick={(event) => { event.stopPropagation(); onSelectSpecies(bird); }} className="text-left text-[15px] font-bold text-[#181c20] truncate">
+                <button type="button" onClick={(event) => { event.stopPropagation(); selectBird(bird); }} className="text-left text-[15px] font-bold text-[#181c20] truncate">
                   {bird.name}
                 </button>
                 <span className="bg-[#ffdcc3] text-[#6e3900] text-[10px] font-bold px-1.5 py-0.2 rounded-full">
@@ -242,7 +263,7 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
           <button
             type="button"
             key={hotspot.id}
-            onClick={() => onSelectHotspot(hotspot)}
+            onClick={() => selectHotspot(hotspot)}
             className="w-full text-left flex items-center gap-3 p-3 bg-white rounded-xl shadow-xs hover:bg-[#f1f4f9] transition-all cursor-pointer border border-[#f1f4f9]"
           >
             <div className="w-16 h-16 rounded-xl flex items-center justify-center bg-[#2d5a27] text-white flex-shrink-0">

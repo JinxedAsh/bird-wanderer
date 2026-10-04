@@ -5,6 +5,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { auth, SessionExpiredError, type AuthUser } from './lib/auth';
+import { activity, type DiscoveryActivity, type SaveKind } from './lib/activity';
 import { loadDiscovery, loadSpeciesLocations, loadHotspotDetails, loadHotspotWeather, type DiscoveryCatalogue, type SpeciesLocations, type HotspotDetails, type HotspotWeather } from './lib/discovery';
 import {
   ScreenType,
@@ -66,6 +67,35 @@ export default function App() {
   const [discoveryError, setDiscoveryError] = useState('');
   const [discoveryLoading, setDiscoveryLoading] = useState(false);
   const [discoveryAttempt, setDiscoveryAttempt] = useState(0);
+  const [discoveryActivity, setDiscoveryActivity] = useState<DiscoveryActivity>({ saves: [], searches: [] });
+  const [activityReady, setActivityReady] = useState(false);
+  const [activityError, setActivityError] = useState('');
+  const [activityAttempt, setActivityAttempt] = useState(0);
+  const [activityBusy, setActivityBusy] = useState(false);
+  const activityPending = useRef(false);
+  const activityController = useRef<AbortController | null>(null);
+  const activityOwner = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!sessionUser) return;
+    const owner = sessionUser.id;
+    const controller = new AbortController();
+    activityController.current = controller;
+    setActivityReady(false);
+    setActivityError('');
+    activity.load(controller.signal).then((data) => {
+      if (!controller.signal.aborted && activityOwner.current === owner) {
+        setDiscoveryActivity(data);
+        setActivityReady(true);
+      }
+    }).catch((error) => {
+      if (!controller.signal.aborted && activityOwner.current === owner) {
+        if (error instanceof SessionExpiredError) resetSession();
+        else setActivityError(error.message || 'Saved items and searches are unavailable.');
+      }
+    });
+    return () => controller.abort();
+  }, [sessionUser?.id, activityAttempt]);
 
   useEffect(() => {
     setDiscovery(null);
@@ -87,6 +117,13 @@ export default function App() {
   }, [sessionUser?.id, discoveryAttempt]);
 
   const acceptSession = (user: AuthUser) => {
+    activityController.current?.abort();
+    activityOwner.current = user.id;
+    activityPending.current = false;
+    setActivityBusy(false);
+    setActivityReady(false);
+    setDiscoveryActivity({ saves: [], searches: [] });
+    setActivityError('');
     setSessionUser(user);
     setUserProfile({ ...INITIAL_USER_PROFILE, name: user.name, handle: `@${user.name.toLowerCase().replace(/\s+/g, '')}` });
     setPosts(COMMUNITY_POSTS);
@@ -315,11 +352,51 @@ export default function App() {
   const handleToggleSaveHotspot = (hotspotId: string) => {
     const hotspot = discovery?.hotspots.find((h) => h.id === hotspotId) || hotspotsList.find((h) => h.id === hotspotId);
     if (!hotspot) return;
+    if (hotspot.source) {
+      handleToggleDiscoverySave('hotspot', hotspot.id, hotspot.name);
+      return;
+    }
     setDiscovery((prev) => prev ? { ...prev, hotspots: prev.hotspots.map((h) => h.id === hotspotId ? { ...h, isSaved: !h.isSaved } : h) } : prev);
     setHotspotsList((prev) => prev.map((h) =>
       h.id === hotspotId ? { ...h, isSaved: !h.isSaved } : h
     ));
     showToast(hotspot.isSaved ? 'Removed from bookmarks' : `Saved ${hotspot.name} to field bookmarks`);
+  };
+
+  const isDiscoverySaved = (kind: SaveKind, id: string) => discoveryActivity.saves.some((item) => item.kind === kind && item.id === id);
+
+  const updateActivity = async (change: (signal: AbortSignal) => Promise<DiscoveryActivity>, success?: string) => {
+    const controller = activityController.current;
+    const owner = activityOwner.current;
+    if (!activityReady || !owner || !controller || controller.signal.aborted) {
+      showToast('Saved items and searches have not loaded. Use Try again if needed.');
+      return;
+    }
+    if (activityPending.current) { showToast('Please wait for your current save or search update.'); return; }
+    activityPending.current = true;
+    setActivityBusy(true);
+    try {
+      const data = await change(controller.signal);
+      if (!controller.signal.aborted && activityOwner.current === owner) {
+        setDiscoveryActivity(data);
+        if (success) showToast(success);
+      }
+    } catch (error) {
+      if (!controller.signal.aborted && activityOwner.current === owner) {
+        if (error instanceof SessionExpiredError) resetSession();
+        else showToast(error instanceof Error ? error.message : 'Could not save this change. Please try again.');
+      }
+    } finally {
+      if (activityOwner.current === owner && activityController.current === controller) {
+        activityPending.current = false;
+        setActivityBusy(false);
+      }
+    }
+  };
+
+  const handleToggleDiscoverySave = (kind: SaveKind, id: string, name: string) => {
+    const saved = !isDiscoverySaved(kind, id);
+    void updateActivity((signal) => activity.save(kind, id, saved, signal), saved ? `Saved ${name} to your ${kind === 'species' ? 'field target list' : 'field bookmarks'}` : 'Removed from bookmarks');
   };
 
   const handleAddComment = (postId: string, text: string) => {
@@ -400,6 +477,13 @@ export default function App() {
   const unreadNotifsCount = notifications.filter((n) => n.isUnread).length;
 
   function resetSession() {
+    activityController.current?.abort();
+    activityOwner.current = null;
+    activityPending.current = false;
+    setDiscoveryActivity({ saves: [], searches: [] });
+    setActivityReady(false);
+    setActivityBusy(false);
+    setActivityError('');
     setSessionUser(null);
     setSessionError('');
     setUserProfile(INITIAL_USER_PROFILE);
@@ -426,6 +510,9 @@ export default function App() {
       showToast(error instanceof Error ? error.message : 'Could not sign out. Please try again.');
     }
   };
+
+  const externalHotspots = discovery?.hotspots.map((hotspot) => ({ ...hotspot, isSaved: isDiscoverySaved('hotspot', hotspot.id) })) || [];
+  const saveDisabled = !activityReady || activityBusy;
 
   if (checkingSession || sessionError) return (
     <main className="min-h-screen bg-[#f7f9ff] flex items-center justify-center p-6 text-center">
@@ -458,6 +545,12 @@ export default function App() {
             currentScreen !== 'auth' ? 'pt-16' : ''
           }`}
         >
+          {sessionUser && !activityReady && (
+            <div role="status" className="mx-4 mt-2 rounded-xl bg-[#f1f4f9] p-3 text-[12px] text-[#42493e]">
+              {activityError || 'Loading your saved birds, hotspots and searches...'}
+              {activityError && <button type="button" className="ml-2 font-semibold text-[#154212] underline" onClick={() => setActivityAttempt((prev) => prev + 1)}>Try again</button>}
+            </div>
+          )}
           {['explore', 'search', 'hotspots'].includes(currentScreen) && (
             <div role="status" className="mx-4 mt-2 rounded-xl bg-[#f1f4f9] p-3 text-[12px] text-[#42493e]">
               {discoveryLoading ? 'Loading birds and hotspots from eBird...' : discoveryError || (discovery ? `eBird - ${discovery.region}. Retrieved ${new Date(discovery.fetchedAt).toLocaleString()}. Recent reports: past 14 days. ${discovery.cached ? 'Using server cache.' : ''}` : 'External discovery has not loaded.')}
@@ -498,7 +591,7 @@ export default function App() {
 
           {currentScreen === 'hotspots' && (
             <HotspotsScreen
-              hotspots={discovery?.hotspots || []}
+              hotspots={externalHotspots}
               externalDiscovery
               onSelectHotspot={handleSelectHotspot}
               onNavigate={navigateTo}
@@ -528,6 +621,9 @@ export default function App() {
 
           {currentScreen === 'species-detail' && (
             <SpeciesDetailScreen
+              saved={selectedSpecies.source ? isDiscoverySaved('species', selectedSpecies.id) : undefined}
+              saveDisabled={Boolean(selectedSpecies.source) && saveDisabled}
+              onToggleBookmark={selectedSpecies.source ? () => handleToggleDiscoverySave('species', selectedSpecies.id, selectedSpecies.name) : undefined}
               onSessionExpired={resetSession}
               key={selectedSpecies.id}
               species={speciesList.find((s) => s.id === selectedSpecies.id) || selectedSpecies}
@@ -553,8 +649,9 @@ export default function App() {
 
           {currentScreen === 'hotspot-detail' && (
             <HotspotDetailScreen
+              saveDisabled={Boolean(selectedHotspot.source) && saveDisabled}
               key={selectedHotspot.id}
-              hotspot={discovery?.hotspots.find((h) => h.id === selectedHotspot.id) || hotspotsList.find((h) => h.id === selectedHotspot.id) || selectedHotspot}
+              hotspot={externalHotspots.find((h) => h.id === selectedHotspot.id) || hotspotsList.find((h) => h.id === selectedHotspot.id) || { ...selectedHotspot, isSaved: selectedHotspot.source ? isDiscoverySaved('hotspot', selectedHotspot.id) : selectedHotspot.isSaved }}
               onToggleSave={handleToggleSaveHotspot}
               onNavigate={navigateTo}
               onSelectSpeciesByName={handleSelectSpeciesByName}
@@ -587,10 +684,15 @@ export default function App() {
 
           {currentScreen === 'search' && (
             <GlobalSearchScreen
+              recentSearches={discoveryActivity.searches}
+              savedSpeciesIds={discoveryActivity.saves.filter((item) => item.kind === 'species').map((item) => item.id)}
+              historyDisabled={saveDisabled}
+              onRecordSearch={(term) => { void updateActivity((signal) => activity.search(term, signal)); }}
+              onRemoveSearch={(term) => { void updateActivity((signal) => activity.removeSearch(term, signal), term ? 'Removed recent search' : 'Cleared recent searches'); }}
               onSessionExpired={resetSession}
               externalDiscovery
               speciesList={discovery?.species || []}
-              hotspots={discovery?.hotspots || []}
+              hotspots={externalHotspots}
               posts={posts}
               onSelectSpecies={handleSelectSpecies}
               onSelectHotspot={handleSelectHotspot}

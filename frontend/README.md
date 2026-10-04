@@ -57,7 +57,7 @@ EBIRD_REGION=IN-DL
 
 Do not put the key in chat, source code, screenshots or any `VITE_` variable. It is used only by the Express server. Restart the API after configuration changes. The default region is Delhi; change `EBIRD_REGION` to another valid eBird region code to load its hotspots and recent reports.
 
-After signing in, Explore shows species with recent regional reports. Global Search searches the worldwide eBird species taxonomy by common/scientific name and the configured region's hotspots by name. Results retain eBird species codes and location IDs. Hotspots shows the configured region, not a GPS-derived nearby radius. Use Saved to check bookmarks within the current session; bookmarks are not yet persistent.
+After signing in, Explore shows species with recent regional reports. Global Search searches the worldwide eBird species taxonomy by common/scientific name and the configured region's hotspots by name. Results retain eBird species codes and location IDs. Hotspots shows the configured region, not a GPS-derived nearby radius. Use Saved to check persistent bookmarks for your signed-in account.
 
 The backend requests the taxonomy, regional hotspots and latest regional observations from the past 14 days. It caches the combined catalogue in memory for 15 minutes and shares concurrent loads. The retrieval timestamp stays unchanged when cached data is served. Cache is lost on server restart, and expired data is not silently used after a failed refresh.
 
@@ -67,7 +67,7 @@ Latest observation reports are not total sightings counts. Hotspot species count
 
 ### Hotspot maps and directions
 
-Leaflet displays interactive OpenStreetMap tiles with pins at validated eBird coordinates. Search, All, Popular and Saved use the same filtered records for the list and map. Select a pin, then choose **Open hotspot** in its popup. The detail map shows that hotspot and **Open directions** opens Google Maps at its coordinates. No extra maps API key is needed for these links. The destination is the reported hotspot point, not a verified entrance. GPS, distance sorting and persistent bookmarks are still pending.
+Leaflet displays interactive OpenStreetMap tiles with pins at validated eBird coordinates. Search, All, Popular and Saved use the same filtered records for the list and map. Select a pin, then choose **Open hotspot** in its popup. The detail map shows that hotspot and **Open directions** opens Google Maps at its coordinates. No extra maps API key is needed for these links. The destination is the reported hotspot point, not a verified entrance. GPS and distance sorting are still pending.
 
 Internet access to `tile.openstreetmap.org` is needed for map imagery. Attribution remains visible; normal browser caching is used, with no offline tile downloads or prefetching. Keep normal browser Referer behavior for tile requests. A tile failure shows an error/retry message while lists and directions remain available. Invalid coordinates are excluded from maps and cannot produce a directions link. Manual phone checks are in the discovery walkthrough; automated rendering checks do not verify map gestures or tile loading.
 
@@ -106,6 +106,14 @@ On a real species detail, open **Identification, Habitat & Behaviour**, or choos
 Plain-text article excerpts provide supported description, habitat/range, behaviour and explicit migration-section information. Missing article/sections remain unavailable. Revision, contributor history, licence and identity links accompany shortened/reformatted text. Text is attributed to Wikipedia contributors under CC BY-SA 4.0; that does not assign a licence to the application code. Source descriptions can cover different sexes, ages, subspecies and regions, and do not establish local abundance, optimal visit times or difficulty ratings.
 
 Successful/no-match results are cached in memory for 24 hours, limited to 200 names. Same-name loads share work; at most three active and 20 distinct pending lookups are allowed. Failed lookups are not cached. Requests cancel on navigation; HTTP 401 reuses the session reset, while provider errors have their own retry. Closing/reopening the disclosure retains its loaded result. Photos and reports load independently. A server without Node watch needs restarting after the new route is added. See [Species information walkthrough](../docs/SPECIES_INFORMATION_WALKTHROUGH.md).
+
+### Persistent discovery saves and search history
+
+Bird bookmarks and hotspot SAVE/header controls now use per-account SQLite records. In Search, choose Birds and **Saved birds only**, then clear the query to browse targets. Hotspots retains its existing **Saved** filter. Search starts empty; press Enter or open a bird/hotspot result to record a nonempty query. Recent chips replay/promote a search; their remove control and Clear All update the database. Typing alone does not write history. At most ten normalized, case-insensitively deduplicated searches (1–100 characters) and 500 saved references are retained per user.
+
+The existing database gains `discovery_saves` and `search_history` automatically at startup; accounts/sessions are preserved. `GET /api/activity` returns your saves/history; `PUT /api/activity/saves/:kind/:id` takes `{saved: boolean}`; `POST /api/activity/searches` takes `{term}`; `DELETE /api/activity/searches` takes `{term}` or `{}` for Clear All. All routes require the existing session and mutations require an allowed Origin. User identity comes from the session, never a submitted user ID. New saves validate against the current eBird catalogue; existing references/history can be loaded and removed without provider access.
+
+The client waits for the server before changing state or confirming success. Mutations are serialized within this app session; controls wait while loading/updating, and failed initial loads have Try again. Logout clears local state and aborts old requests. Persistent records store source IDs, not a copied offline catalogue: saved hotspots outside the configured region and removed taxa are retained but not shown until present in the loaded catalogue. Discovery/provider availability is still required to browse their details. Other tabs see changes after refresh; realtime synchronization is not implemented. Community saves, journal records and trip persistence remain later work. See [Discovery activity walkthrough](../docs/DISCOVERY_ACTIVITY_WALKTHROUGH.md).
 
 ## Deployment prerequisites
 

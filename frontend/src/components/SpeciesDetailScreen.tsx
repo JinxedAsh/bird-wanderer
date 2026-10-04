@@ -6,6 +6,9 @@ import { PhotoPlanning } from './PhotoPlanning';
 import { SpeciesInfoPanel } from './SpeciesInfoPanel';
 
 interface SpeciesDetailScreenProps {
+  saved?: boolean;
+  saveDisabled?: boolean;
+  onToggleBookmark?: () => void;
   onSessionExpired?: () => void;
   locations?: SpeciesLocations;
   locationsError?: string;
@@ -18,6 +21,9 @@ interface SpeciesDetailScreenProps {
 }
 
 export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
+  saved,
+  saveDisabled = false,
+  onToggleBookmark,
   onSessionExpired,
   locations,
   locationsError,
@@ -28,7 +34,8 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
   onQuickLog,
   showToast,
 }) => {
-  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [localBookmark, setIsBookmarked] = useState(false);
+  const isBookmarked = saved ?? localBookmark;
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [isSightingsExpanded, setIsSightingsExpanded] = useState(true);
   const [photoState, setPhotoState] = useState<PhotoLoadState>({ speciesId: species.id, photo: null, loading: true, error: '' });
@@ -52,6 +59,7 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
   };
 
   const toggleBookmark = () => {
+    if (onToggleBookmark) { onToggleBookmark(); return; }
     const next = !isBookmarked;
     setIsBookmarked(next);
     showToast(
@@ -91,6 +99,8 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
         <div className="flex items-center gap-2">
           <button
             onClick={toggleBookmark}
+            disabled={saveDisabled}
+            aria-pressed={isBookmarked}
             aria-label="Bookmark species"
             className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
               isBookmarked
