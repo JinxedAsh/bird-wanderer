@@ -1,13 +1,13 @@
 import React from 'react';
 import type { PhotoExif } from '../lib/discovery';
 
-const decimal = (value: number) => Number(value.toPrecision(6)).toString();
-const shutter = (seconds: number | null) => {
+export const formatExifNumber = (value: number) => Number(value.toPrecision(6)).toString();
+export const formatShutter = (seconds: number | null) => {
   if (seconds === null) return 'Unavailable';
   const denominator = 1 / seconds;
   // Use a reciprocal only when it faithfully represents the recorded value.
   return seconds < 1 && Math.abs(denominator - Math.round(denominator)) < 0.000001
-    ? `1/${Math.round(denominator)} s` : `${decimal(seconds)} s`;
+    ? `1/${Math.round(denominator)} s` : `${formatExifNumber(seconds)} s`;
 };
 
 export const PhotoMetadata: React.FC<{ exif: PhotoExif }> = ({ exif }) => {
@@ -15,10 +15,10 @@ export const PhotoMetadata: React.FC<{ exif: PhotoExif }> = ({ exif }) => {
     ['Camera make', exif.cameraMake || 'Unavailable'],
     ['Camera model', exif.cameraModel || 'Unavailable'],
     ['Lens', exif.lens || 'Unavailable'],
-    ['Shutter speed', shutter(exif.exposureSeconds)],
-    ['Aperture', exif.aperture === null ? 'Unavailable' : `f/${decimal(exif.aperture)}`],
-    ['ISO', exif.iso === null ? 'Unavailable' : decimal(exif.iso)],
-    ['Focal length', exif.focalLengthMm === null ? 'Unavailable' : `${decimal(exif.focalLengthMm)} mm`],
+    ['Shutter speed', formatShutter(exif.exposureSeconds)],
+    ['Aperture', exif.aperture === null ? 'Unavailable' : `f/${formatExifNumber(exif.aperture)}`],
+    ['ISO', exif.iso === null ? 'Unavailable' : formatExifNumber(exif.iso)],
+    ['Focal length', exif.focalLengthMm === null ? 'Unavailable' : `${formatExifNumber(exif.focalLengthMm)} mm`],
     ['Capture time', exif.capturedAt ? `${exif.capturedAt} (camera clock; ${exif.utcOffset ? `UTC${exif.utcOffset}` : 'timezone unknown'})` : 'Unavailable'],
   ];
   return (
