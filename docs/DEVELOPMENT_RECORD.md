@@ -536,6 +536,8 @@ The header logo now uses a bundled SVG following the supplied green bird emblem,
 
 **Browser acceptance:** Test chat directly checked Lodhi, both Nursery records and unmatched Yamuna Phase I. Source links, review date, unavailable fields, operator conflict, entrance caveats, keyboard collapse/reopen, navigation and 390-pixel wrapping passed. Nearby/maps/weather and existing saved-state regression passed; no console warnings/errors were reported. Prior saves were preserved and the viewport restored. Expiry/identity guards were tested automatically, not by changing the browser clock. Physical-phone/on-site/outage checks remain pending.
 
+**Delivery:** implementation commit `225b106`, published on `codex/hotspot-access` in [PR #14](https://github.com/JinxedAsh/bird-wanderer/pull/14). The configured-key scan found zero leaks across 118 files; private context/reviews, secrets, databases and build output remain excluded. The PR records final checks and merge status; automatic merge follows passing final-commit checks under standing authorization.
+
 **Remaining:** broader access coverage, current operator/on-site confirmation, local seasonal/difficulty evidence, stronger environmental recommendations and design/physical-phone/failure acceptance. APK remains deferred for this checkpoint.
 
 ## 4. How the current application fits together
