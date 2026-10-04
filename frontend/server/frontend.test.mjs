@@ -13,13 +13,14 @@ let render;
 let mapHelpers;
 let authClient;
 let discoveryClient;
+let activityClient;
 
 before(async () => {
   temporaryDirectory = mkdtempSync(join(root, '.stage1-render-'));
   const screens = {};
   const names = ['GlobalSearchScreen', 'SettingsScreen', 'SpeciesDetailScreen', 'SpeciesPhoto', 'PhotoMetadata', 'PhotoPlanning', 'SpeciesInfoPanel', 'HotspotMap', 'HotspotWeatherPanel', 'HotspotDetailScreen', 'HotspotsScreen', 'ExploreScreen', 'Header'];
   // Compile these existing TSX screens for Node rendering; no browser or new test framework.
-  for (const relative of ['lib/useDialogFocus.ts', 'lib/maps.ts', 'lib/auth.ts', 'lib/discovery.ts', ...names.map((name) => `components/${name}.tsx`)]) {
+  for (const relative of ['lib/useDialogFocus.ts', 'lib/maps.ts', 'lib/auth.ts', 'lib/discovery.ts', 'lib/activity.ts', ...names.map((name) => `components/${name}.tsx`)]) {
     const output = join(temporaryDirectory, relative.replace(/\.tsx?$/, '.mjs'));
     mkdirSync(dirname(output), { recursive: true });
     const source = readFileSync(join(root, 'src', relative), 'utf8');
@@ -35,6 +36,7 @@ before(async () => {
   render = (name, props) => renderToStaticMarkup(createElement(screens[name], props));
   mapHelpers = await import(pathToFileURL(join(temporaryDirectory, 'lib/maps.mjs')).href);
   authClient = await import(pathToFileURL(join(temporaryDirectory, 'lib/auth.mjs')).href);
+  activityClient = await import(pathToFileURL(join(temporaryDirectory, 'lib/activity.mjs')).href);
   discoveryClient = await import(pathToFileURL(join(temporaryDirectory, 'lib/discovery.mjs')).href);
 });
 
@@ -47,6 +49,54 @@ after(() => {
 
 const noop = () => {};
 const searchProps = { speciesList: [], hotspots: [], posts: [], onSelectSpecies: noop, onSelectHotspot: noop, onNavigate: noop };
+
+test('search uses supplied real history with safe text and no fabricated recent searches', () => {
+  const empty = render('GlobalSearchScreen', { ...searchProps, externalDiscovery: true, onRecordSearch: noop });
+  assert.doesNotMatch(empty, /Recent Searches|value="Roller"|Okhla Sanctuary/);
+  assert.match(empty, /Saved birds only/);
+  assert.match(empty, /Press Enter/);
+  const html = render('GlobalSearchScreen', { ...searchProps, recentSearches: ['Wetland', '<script>bad</script>'], historyDisabled: true });
+  assert.match(html, /Remove Wetland from recent searches/);
+  assert.match(html, /&lt;script&gt;bad&lt;\/script&gt;/);
+  assert.doesNotMatch(html, /<script>/);
+  assert.match(html, /disabled=""/);
+});
+
+test('persisted species bookmark is controlled by the account state and can disable mutation', () => {
+  const props = { species: { id: 'indrol2', source: 'eBird', name: 'Indian Roller', scientificName: 'Coracias benghalensis', image: '/test.svg' }, onNavigate: noop, onQuickLog: noop, showToast: noop, onToggleBookmark: noop };
+  assert.match(render('SpeciesDetailScreen', { ...props, saved: true, saveDisabled: true }), /disabled="" aria-pressed="true" aria-label="Bookmark species"/);
+  assert.match(render('SpeciesDetailScreen', { ...props, saved: false }), /aria-pressed="false" aria-label="Bookmark species"/);
+});
+
+test('activity client preserves session semantics, validates responses and sends explicit mutations', async () => {
+  const previous = globalThis.fetch;
+  const signal = new AbortController().signal;
+  const state = { saves: [{ kind: 'species', id: 'indrol2' }], searches: ['Roller'] };
+  const requests = [];
+  try {
+    globalThis.fetch = async (url, options) => { requests.push({ url, ...options }); return Response.json(state); };
+    assert.deepEqual(await activityClient.activity.load(signal), state);
+    await activityClient.activity.save('species', 'indrol2', true, signal);
+    await activityClient.activity.search('Roller', signal);
+    await activityClient.activity.removeSearch('Roller', signal);
+    await activityClient.activity.removeSearch(undefined, signal);
+    assert.deepEqual(requests.map((req) => req.method), ['GET', 'PUT', 'POST', 'DELETE', 'DELETE']);
+    assert.equal(requests[1].url, '/api/activity/saves/species/indrol2');
+    assert.deepEqual(JSON.parse(requests[1].body), { saved: true });
+    assert.deepEqual(JSON.parse(requests[4].body), {});
+    assert.ok(requests.every((req) => req.signal === signal && req.credentials === 'same-origin'));
+    for (const invalid of [null, {}, { ...state, saves: [null] }, { ...state, saves: [{ kind: 'post', id: 'indrol2' }] }, { ...state, searches: Array(11).fill('Bird') }, { ...state, searches: ['bad\nterm'] }]) {
+      globalThis.fetch = async () => Response.json(invalid);
+      await assert.rejects(activityClient.activity.load(signal), /Unexpected saved-items response/);
+    }
+    globalThis.fetch = async () => Response.json({ error: 'Sign in' }, { status: 401 });
+    await assert.rejects(activityClient.activity.load(signal), authClient.SessionExpiredError);
+    globalThis.fetch = async () => Response.json({ error: 'Provider unavailable' }, { status: 503 });
+    await assert.rejects(activityClient.activity.save('species', 'indrol2', true, signal), (error) => !(error instanceof authClient.SessionExpiredError) && error.message === 'Provider unavailable');
+    globalThis.fetch = async () => { throw new TypeError('Offline'); };
+    await assert.rejects(activityClient.activity.load(signal), /Check your connection/);
+  } finally { globalThis.fetch = previous; }
+});
 
 test('species information renders credited excerpts, missing sections, loading and retry without local timing claims', () => {
   const profile = { title: 'Indian roller', scientificName: 'Coracias benghalensis', summary: 'A bird of a broad range.', identification: { heading: 'Description', text: 'Blue wings <img onerror=steal()>' }, habitat: { heading: 'Habitat', text: 'Open woodland' }, behaviour: null, seasonality: null, source: 'Wikipedia', sourceUrl: 'https://en.wikipedia.org/wiki/Indian_roller', revisionUrl: 'https://en.wikipedia.org/w/index.php?oldid=123', historyUrl: 'https://en.wikipedia.org/w/index.php?action=history', revisionId: 123, matchUrl: 'https://www.wikidata.org/wiki/Q477133', license: 'CC BY-SA 4.0', licenseUrl: 'https://creativecommons.org/licenses/by-sa/4.0/' };
@@ -307,11 +357,8 @@ test('search renders its only matching hotspot and every matching bird', () => {
   assert.match(html, /0 species active today/);
 });
 
-test('unrelated people and posts do not suppress the empty search state', () => {
-  const html = render('GlobalSearchScreen', {
-    ...searchProps,
-    posts: [{ id: 'unrelated', authorName: 'Maya Singh', authorHandle: '@maya', authorAvatar: '/maya.jpg', speciesName: 'Kingfisher', speciesScientific: 'Alcedo atthis', location: 'River', caption: 'Fishing', imageUrl: '/bird.jpg' }],
-  });
+test('an empty catalogue and no matching community records show the empty search state', () => {
+  const html = render('GlobalSearchScreen', searchProps);
   assert.match(html, /No wanderings found/);
   assert.doesNotMatch(html, /Maya Singh/);
   assert.doesNotMatch(html, /src="\/bird.jpg"/);

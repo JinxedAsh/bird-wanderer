@@ -6,6 +6,7 @@ import { HotspotMap } from './HotspotMap';
 import { HotspotWeatherPanel } from './HotspotWeatherPanel';
 
 interface HotspotDetailScreenProps {
+  saveDisabled?: boolean;
   weather?: HotspotWeather;
   weatherError?: string;
   onRetryWeather?: () => void;
@@ -21,6 +22,7 @@ interface HotspotDetailScreenProps {
 }
 
 export const HotspotDetailScreen: React.FC<HotspotDetailScreenProps> = ({
+  saveDisabled = false,
   weather,
   weatherError,
   onRetryWeather,
@@ -70,6 +72,7 @@ export const HotspotDetailScreen: React.FC<HotspotDetailScreenProps> = ({
         <div className="absolute top-3 right-4 flex items-center gap-2">
           <button
             onClick={handleToggleSave}
+            disabled={saveDisabled}
             aria-label="Bookmark this sanctuary"
             aria-pressed={isSaved}
             className="w-10 h-10 rounded-full bg-white/90 backdrop-blur-md shadow-sm flex items-center justify-center text-[#181c20] hover:bg-white active:scale-95 transition-all"
@@ -143,6 +146,8 @@ export const HotspotDetailScreen: React.FC<HotspotDetailScreenProps> = ({
       <div className="px-4 pt-3 grid grid-cols-3 gap-2">
         <button
           onClick={handleToggleSave}
+          disabled={saveDisabled}
+          aria-pressed={isSaved}
           className={`h-11 flex items-center justify-center gap-1.5 rounded-xl font-semibold text-[13px] transition-all active:scale-95 ${
             isSaved
               ? 'bg-[#ffdcc3] text-[#6e3900]'

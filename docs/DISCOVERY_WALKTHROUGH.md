@@ -126,3 +126,7 @@ That check exposed a stale signed-in interface after session invalidation and a 
 All 30 tests, TypeScript checking and the build passed. Manual rechecking of the fixes is pending. Confirm that invalidating a disposable session returns the original page to login on focus/request, while provider failures keep the account signed in. Check fresh login/logout and the bundled header emblem.
 
 **Viva:** the browser's React state is not proof of a valid server session. HTTP 401 identifies an authentication failure from our protected endpoint. A dedicated error class lets the app handle that differently from HTTP 503 or loss of internet. Reusing one reset function keeps logout and expiry consistent; listener cleanup prevents an old check from changing a newer session.
+
+## 4 October 2026 — Persistent discovery activity follow-up
+
+Hotspot bookmarks and bird targets now persist per account in SQLite, superseding this walkthrough's earlier session-only limitation. Search records actual submitted/opened-result queries, with bounded Recent Searches and remove/clear controls. The existing Hotspots Saved filter and Search's Saved birds only control use these records. See [Discovery saves and search history](DISCOVERY_ACTIVITY_WALKTHROUGH.md) and Development Record Entry 21 for the implementation and evidence. Bookmarks store provider IDs; the catalogue still requires provider access and is not an offline database.

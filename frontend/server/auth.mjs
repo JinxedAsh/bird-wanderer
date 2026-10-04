@@ -5,6 +5,7 @@ import { promisify } from 'node:util';
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { discoveryRouter, createDiscoveryService } from './discovery.mjs';
+import { activityRouter } from './activity.mjs';
 
 const scrypt = promisify(scryptCallback);
 const cookieName = 'bw_session';
@@ -124,12 +125,15 @@ export function createApp({ dbPath = ':memory:', origin = 'http://localhost:3000
     res.clearCookie(cookieName, cookieOptions);
     res.status(204).end();
   });
-  app.use('/api/discovery', (req, res, next) => {
+  const requireSession = (req, res, next) => {
     const token = tokenFrom(req);
     const session = token && db.prepare('SELECT user_id FROM sessions WHERE token_hash = ? AND expires_at > ?').get(digest(token), now());
     if (!session) return res.status(401).json({ error: 'Please sign in to discover birds and hotspots.' });
+    req.userId = session.user_id;
     next();
-  }, discoveryRouter(discovery));
+  };
+  app.use('/api/activity', requireSession, activityRouter(db, discovery, now));
+  app.use('/api/discovery', requireSession, discoveryRouter(discovery));
   app.use('/api', (_req, res) => res.status(404).json({ error: 'API endpoint not found.' }));
   app.use((error, _req, res, _next) => {
     if (error.type === 'entity.parse.failed') return res.status(400).json({ error: 'Invalid JSON request.' });
