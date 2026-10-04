@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { BirdSpecies, Hotspot, ScreenType, CommunityPost } from '../types';
+import { SpeciesPhoto } from './SpeciesPhoto';
 
 interface GlobalSearchScreenProps {
+  onSessionExpired?: () => void;
   externalDiscovery?: boolean;
   onSelectSpecies: (species: BirdSpecies) => void;
   onSelectHotspot: (hotspot: Hotspot) => void;
@@ -12,6 +14,7 @@ interface GlobalSearchScreenProps {
 }
 
 export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
+  onSessionExpired,
   externalDiscovery = false,
   onSelectSpecies,
   onSelectHotspot,
@@ -161,24 +164,17 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
       <div className="flex flex-col gap-2.5 pt-2">
         {/* Bird Result */}
         {showBirds && matchedBirds.map((bird) => (
-          <button
-            type="button"
+          <article
             key={bird.id}
             onClick={() => onSelectSpecies(bird)}
-            className="w-full text-left flex items-center gap-3 p-3 bg-white rounded-xl shadow-xs hover:bg-[#f1f4f9] transition-all cursor-pointer border border-[#f1f4f9]"
+            className="w-full text-left grid grid-cols-[64px_1fr_auto] items-center gap-x-3 p-3 bg-white rounded-xl shadow-xs hover:bg-[#f1f4f9] transition-all cursor-pointer border border-[#f1f4f9]"
           >
-            <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 bg-[#ebeef3]">
-              <img
-                src={bird.image}
-                alt={bird.name}
-                className="w-full h-full object-cover"
-              />
-            </div>
+            <SpeciesPhoto key={bird.id} species={bird} onSessionExpired={onSessionExpired} frameClassName="w-16 h-16 rounded-xl overflow-hidden bg-[#ebeef3]" />
             <div className="flex flex-col min-w-0 flex-1">
               <div className="flex items-center gap-1.5">
-                <span className="text-[15px] font-bold text-[#181c20] truncate">
+                <button type="button" onClick={(event) => { event.stopPropagation(); onSelectSpecies(bird); }} className="text-left text-[15px] font-bold text-[#181c20] truncate">
                   {bird.name}
-                </span>
+                </button>
                 <span className="bg-[#ffdcc3] text-[#6e3900] text-[10px] font-bold px-1.5 py-0.2 rounded-full">
                   Species
                 </span>
@@ -199,7 +195,7 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
             <span className="material-symbols-outlined text-[#c2c9bb] text-[20px]">
               chevron_right
             </span>
-          </button>
+          </article>
         ))}
 
         {/* Person Result */}

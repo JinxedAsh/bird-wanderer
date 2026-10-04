@@ -1,7 +1,9 @@
 import React from 'react';
 import { BirdSpecies, ScreenType } from '../types';
+import { SpeciesPhoto } from './SpeciesPhoto';
 
 interface ExploreScreenProps {
+  onSessionExpired?: () => void;
   externalDiscovery?: boolean;
   discoveryRegion?: string;
   observerName: string;
@@ -12,6 +14,7 @@ interface ExploreScreenProps {
 }
 
 export const ExploreScreen: React.FC<ExploreScreenProps> = ({
+  onSessionExpired,
   externalDiscovery = false,
   discoveryRegion,
   observerName,
@@ -94,16 +97,10 @@ export const ExploreScreen: React.FC<ExploreScreenProps> = ({
           {nearbyBirds.map((bird) => (
             <article
               key={bird.id}
-              className="flex items-center p-2 rounded-xl bg-white shadow-sm hover:shadow-md transition-all group cursor-pointer"
+              className="grid grid-cols-[64px_1fr_auto] items-center p-2 rounded-xl bg-white shadow-sm hover:shadow-md transition-all group cursor-pointer"
               onClick={() => onSelectSpecies(bird)}
             >
-              <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-[#ebeef3]">
-                <img
-                  src={bird.image}
-                  alt={bird.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-              </div>
+              <SpeciesPhoto key={bird.id} species={bird} onSessionExpired={onSessionExpired} frameClassName="w-16 h-16 rounded-lg overflow-hidden bg-[#ebeef3]" />
 
               <div className="flex-1 min-w-0 ml-3.5 flex flex-col">
                 <h4 className="text-[16px] font-bold text-[#181c20] truncate group-hover:text-[#154212] transition-colors">

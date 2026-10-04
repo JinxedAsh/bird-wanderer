@@ -185,7 +185,8 @@ test('detail caches share loads, expire, and retry failures without mixing entit
 
 test('detail HTTP routes keep session protection and expose ID-safe species/hotspot responses', async () => {
   const weatherCalls = [];
-  const { app, db } = createApp({ discovery: createDiscoveryService({ apiKey: 'test-key', fetchImpl: detailUpstream([]), weather: { forecast: async (...coordinates) => { weatherCalls.push(coordinates); return { source: 'Open-Meteo' }; } } }) });
+  const photoCalls = [];
+  const { app, db } = createApp({ discovery: createDiscoveryService({ apiKey: 'test-key', fetchImpl: detailUpstream([]), weather: { forecast: async (...coordinates) => { weatherCalls.push(coordinates); return { source: 'Open-Meteo' }; } }, photos: { photo: async (name) => { photoCalls.push(name); return { photo: null }; } } }) });
   const server = app.listen(0, '127.0.0.1');
   await new Promise((resolve) => server.once('listening', resolve));
   const base = `http://127.0.0.1:${server.address().port}/api`;
@@ -194,6 +195,8 @@ test('detail HTTP routes keep session protection and expose ID-safe species/hots
     assert.equal((await fetch(`${base}/discovery/species/indrol2/locations`)).status, 401);
     assert.equal((await fetch(`${base}/discovery/hotspots/L123/weather`)).status, 401);
     assert.equal(weatherCalls.length, 0);
+    assert.equal((await fetch(`${base}/discovery/species/indrol2/photo`)).status, 401);
+    assert.equal(photoCalls.length, 0);
     const registration = await fetch(`${base}/auth/register`, { method: 'POST', headers: { Origin: 'http://localhost:3000', 'Content-Type': 'application/json' }, body: JSON.stringify({ name: 'Test Observer', email: 'journey@example.test', password: 'test-password-12345' }) });
     const headers = { Cookie: registration.headers.get('set-cookie').split(';')[0] };
     const species = await fetch(`${base}/discovery/species/indrol2/locations`, { headers });
@@ -210,6 +213,13 @@ test('detail HTTP routes keep session protection and expose ID-safe species/hots
     assert.equal((await fetch(`${base}/discovery/hotspots/L999/weather`, { headers })).status, 404);
     assert.equal((await fetch(`${base}/discovery/hotspots/not-an-id/weather`, { headers })).status, 400);
     assert.equal(weatherCalls.length, 1);
+    const photo = await fetch(`${base}/discovery/species/indrol2/photo`, { headers });
+    assert.equal(photo.status, 200);
+    assert.equal((await photo.json()).speciesId, 'indrol2');
+    assert.deepEqual(photoCalls, ['Coracias benghalensis']);
+    assert.equal((await fetch(`${base}/discovery/species/unknown/photo`, { headers })).status, 404);
+    assert.equal((await fetch(`${base}/discovery/species/bad.id/photo`, { headers })).status, 400);
+    assert.equal(photoCalls.length, 1);
   } finally {
     await new Promise((resolve) => server.close(resolve));
     db.close();

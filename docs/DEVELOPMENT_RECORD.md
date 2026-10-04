@@ -45,6 +45,7 @@ Bird Wanderer helps birdwatchers and wildlife photographers discover species and
 | Interface | Fifteen screen components exist. Frontend corrections and accessibility improvements have been implemented. Exact visual acceptance remains pending. |
 | Accounts | Real registration, login, session restoration and logout are implemented. Accounts and sessions survive a server restart. |
 | Discovery | eBird taxonomy, regional hotspots and latest regional reports are connected; search and existing detail screens use source IDs. Live API checks passed. Species-to-hotspot links, hotspot-specific recent reports and catalogue-matched all-time species lists are connected. Manual device acceptance remains pending. |
+| Species photographs | Explore, Search and species details load credited Wikimedia Commons reference photos through exact scientific-name/species-rank matches on Wikidata. Live metadata and scoped browser checks passed. Coverage is not universal; EXIF extraction remains pending. |
 | Maps and logistics | Interactive hotspot maps, coordinate-based directions and hotspot forecasts are implemented. Desktop browser checks passed pins/filtering/detail navigation, weather, coordinate directions and a 390-pixel layout. Physical-phone/outage acceptance remains pending. General photography planning tips are labelled as heuristics; open-photo metadata and verified access information remain incomplete. |
 | Journal, profiles and social activity | Many interactions work temporarily within the running app. Most changes are not stored for later use. |
 | Alerts and quizzes | Demonstration screens exist. Automated alerts, complete quiz progress and challenges are not delivered. |
@@ -373,6 +374,35 @@ The header logo now uses a bundled SVG following the supplied green bird emblem,
 
 **Delivery:** implementation commit `f2f69fe`, published on `codex/hotspot-weather` in [PR #7](https://github.com/JinxedAsh/bird-wanderer/pull/7). The PR records check/merge results; merging follows passing checks. The [Weather walkthrough](WEATHER_WALKTHROUGH.md) gives the flow, acceptance checklist and viva notes. Next Phase 1 increment: source-attributed species photographs and open-photo metadata; remaining site-access data requires verifiable sources.
 
+### Entry 17 — Real species reference photographs and attribution
+
+- **Date:** 4 October 2026, India Standard Time.
+- **Group:** external discovery and photography evidence.
+- **Phase:** Phase 1 core MVP, remaining itinerary item 1.
+- **Status:** implemented; automated, live-provider and scoped browser checks passed. Delivery evidence below.
+
+**Requirement:** replace disconnected species imagery with identifiable external reference photos while preserving working discovery, account handling and the existing screen structure. The living specification was reread for this increment. External-photo EXIF belongs to Phase 1 but is the next increment; this delivery does not implement it.
+
+**What changed:** Explore, Search and species details reuse one photo component. Creator, licence and Commons links accompany each accepted photograph. Details include full source credit, required attribution, usage terms, restrictions and a Wikidata match link. Cropping is disclosed. Existing image frames and controls remain; credit rows wrap underneath. Search cards now use a native species-selection button inside an article so attribution links are not nested inside a button. Credit clicks do not accidentally navigate to a bird.
+
+**How it works:** the signed-in photo endpoint validates the existing eBird species ID. A separate server module finds an exact scientific-name claim and species rank on Wikidata, then retrieves the associated Commons file metadata. It accepts only supported raster formats, fixed HTTPS source hosts, eligible CC licences and mandatory author/source information. Metadata HTML becomes inert text rendered safely by React. No image binary is downloaded. Original file URLs are retained for future work, but neither EXIF nor location/camera settings are extracted.
+
+**Reliability:** photo queries run separately from catalogue loading. Cards load near the viewport; changing species cancels stale client requests. Same-name requests share work; the server allows three active species lookups and 30 distinct pending lookups. Successful/no-match results are cached for 24 hours with a 300-entry limit; failures are not cached. Missing matches and broken/provider images keep the species page usable with a fallback; detail failures offer retry. App-session rejection reuses the existing reset-to-login behavior. No new dependency, database migration or framework was introduced.
+
+**Source limits:** exact structured claims are not image recognition or independent biological verification. Taxonomy differences and unsupported licences can leave a species without a photo. A source photo may be old or captive, and is labelled a reference rather than a recent hotspot sighting. Supported licences are CC BY/CC BY-SA unported versions 1.0–4.0 as enumerated in the walkthrough, and CC0 1.0; other licences are skipped conservatively. Hotspot report thumbnails and later-phase prototype imagery are outside this increment.
+
+**Files changed:** new `server/photos.mjs`, `server/photos.test.mjs`, `components/SpeciesPhoto.tsx` and `docs/PHOTOS_WALKTHROUGH.md`; updated `server/discovery.mjs`, `server/discovery.test.mjs`, `server/frontend.test.mjs`, `src/lib/discovery.ts`, `src/App.tsx`, ExploreScreen, GlobalSearchScreen, SpeciesDetailScreen, `frontend/package.json`, both READMEs and this record.
+
+**Automated verification:** TypeScript checking, all **42 tests** and the production build passed. Added tests cover exact scientific-name/rank matching, rejected subspecies/deprecated claims, unsupported files/licences/URLs, safe credit rendering, cache expiry/concurrent sharing, malformed provider responses, protected endpoint membership and expired-session propagation. Existing account, discovery, maps, weather and proxy tests still pass.
+
+**Live metadata evidence:** Indian Roller (`Coracias benghalensis`, Wikidata Q477133) resolved to Koshyk's CC BY 2.0 Commons photo; Common Kingfisher (`Alcedo atthis`, Q79915) to Artemy Voikhansky's CC BY-SA 4.0 photo; Lesser Whistling-Duck (`Dendrocygna javanica`, Q244284) to Olaf Oliviero Riemer's CC BY-SA 3.0 photo. The duck file names a German bird park in 2012, illustrating why a reference image must not be represented as a current Indian hotspot observation. These are source snapshots, not permanent provider guarantees.
+
+**Browser verification:** the user-designated Test chat reloaded the running app. All four visible Explore photos rendered. Indian Roller and Common Kingfisher common/scientific searches and details passed; Roller, Kingfisher and Lesser Whistling-Duck hero images visibly rendered. Commons, licence and Wikidata links opened; search credit links did not select the card. Image clicks, species-button clicks and Enter selected the correct species. Rapid switching/leaving a loading species retained the final Kingfisher photo/credit. At 390 pixels, photos, wrapped credits, links and scrolling were usable. Logout, wrong-password rejection, login, refresh persistence and Lodhi weather navigation passed. The metadata-unavailable badge remained and no invented EXIF appeared on tested details. Testing changed temporary sessions only, not source, settings, branches, server processes or account records.
+
+**Acceptance limits:** initial uncached cards briefly showed a placeholder before loading, whose loading wording could be clearer. No genuine provider outage occurred in browser testing, so forced failure/retry UI remains a manual check despite automated failure coverage. Physical Android testing, exhaustive races, all-species coverage and exact design acceptance remain pending. Photos do not complete Phase 1 logistics or Android packaging.
+
+**Delivery:** prepared on `codex/species-photographs`; commit/PR evidence will be added after publication. The [Photos walkthrough](PHOTOS_WALKTHROUGH.md) contains setup, source policy, manual checks and Viva Notes. Next: extract genuine metadata from eligible external photos, explicitly handling absent EXIF.
+
 ## 4. How the current application fits together
 
 The interface is what the user sees and interacts with. The backend is the program that receives requests and checks account information. The database is where persistent account information is saved.
@@ -408,7 +438,7 @@ Manual checks still include design comparison for all screens, mobile layout/tou
 
 | Phase | Remaining implementation and acceptance |
 | --- | --- |
-| Phase 1 — core | Complete species enrichment, open-photo metadata and verified access logistics; complete design/manual/device acceptance. Discovery is connected in Entries 12–13, maps/directions in Entry 14 and hotspot forecasts/general planning tips in Entry 16. |
+| Phase 1 — core | Complete species enrichment, external-photo EXIF and evidence-based photography logistics, persistent saves/search history, GPS/Explore weather, verified access information and design/manual/device acceptance. Discovery is connected in Entries 12–13, maps/directions in Entry 14, forecasts/general tips in Entry 16 and reference photos in Entry 17. |
 | Phase 2 — community | Persistent profiles and sightings; validated photograph upload/storage; EXIF extraction; journal/life-list relationships and reconciled statistics; real feed/follows/likes/comments/reporting; server ownership/visibility checks. |
 | Phase 3 — alerts | Subscriptions/preferences; qualifying-sighting matching; automated delivery; protected-species coordinate handling and privacy checks. Privacy must also be applied earlier wherever location data becomes accessible. |
 | Phase 4 — retention | Complete identification quiz sessions, persistent progress and photography challenges without disrupting discovery. |
@@ -441,6 +471,7 @@ These paths help the developer find implementation details; teammates can unders
 | External discovery | frontend/server/discovery.mjs; frontend/server/discovery.test.mjs; frontend/src/lib/discovery.ts; docs/DISCOVERY_WALKTHROUGH.md |
 | Maps and directions | frontend/src/components/HotspotMap.tsx; frontend/src/lib/maps.ts; HotspotsScreen.tsx; HotspotDetailScreen.tsx; frontend/src/index.css |
 | Weather and planning | frontend/server/weather.mjs; frontend/server/weather.test.mjs; frontend/src/components/HotspotWeatherPanel.tsx; docs/WEATHER_WALKTHROUGH.md |
+| Species photographs | frontend/server/photos.mjs; frontend/server/photos.test.mjs; frontend/src/components/SpeciesPhoto.tsx; docs/PHOTOS_WALKTHROUGH.md |
 | Accounts | frontend/src/components/AuthScreen.tsx; frontend/src/lib/auth.ts; frontend/server/auth.mjs; frontend/server/index.mjs; frontend/server/auth.test.mjs |
 | Shared frontend state | frontend/src/App.tsx; frontend/src/types.ts; frontend/src/data/mockData.ts |
 | Stage 1 components | BottomNav.tsx, CommunityScreen.tsx, ExploreScreen.tsx, GlobalSearchScreen.tsx, Header.tsx, HotspotDetailScreen.tsx, HotspotsScreen.tsx, LifeListScreen.tsx, LogObservationScreen.tsx, ProfileScreen.tsx, SettingsScreen.tsx, SpeciesDetailScreen.tsx, all under frontend/src/components |

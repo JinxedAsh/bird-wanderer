@@ -1,8 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { BirdSpecies, ScreenType } from '../types';
 import type { SpeciesLocations } from '../lib/discovery';
+import { SpeciesPhoto } from './SpeciesPhoto';
 
 interface SpeciesDetailScreenProps {
+  onSessionExpired?: () => void;
   locations?: SpeciesLocations;
   locationsError?: string;
   onRetryLocations?: () => void;
@@ -14,6 +16,7 @@ interface SpeciesDetailScreenProps {
 }
 
 export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
+  onSessionExpired,
   locations,
   locationsError,
   onRetryLocations,
@@ -110,12 +113,7 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
 
       {/* Hero Photo Stage */}
       <div className="px-4 pb-3">
-        <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-[#ebeef3] shadow-sm">
-          <img
-            src={species.image}
-            alt={species.name}
-            className="w-full h-full object-cover"
-          />
+        <SpeciesPhoto key={species.id} species={species} hero onSessionExpired={onSessionExpired} frameClassName="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-[#ebeef3] shadow-sm">
 
           {/* Ambient Badge */}
           <div className="absolute bottom-3 left-3 flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/75 backdrop-blur-md text-white text-[11px] font-medium shadow-sm">
@@ -132,7 +130,7 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
               <span className="ml-1">{species.audioCallDesc || "High whistle 'chee-kee'"}</span>
             </div>
           )}
-        </div>
+        </SpeciesPhoto>
       </div>
 
       {/* Species Title & Nomenclature */}
