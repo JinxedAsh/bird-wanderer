@@ -184,13 +184,16 @@ test('detail caches share loads, expire, and retry failures without mixing entit
 });
 
 test('detail HTTP routes keep session protection and expose ID-safe species/hotspot responses', async () => {
-  const { app, db } = createApp({ discovery: createDiscoveryService({ apiKey: 'test-key', fetchImpl: detailUpstream([]) }) });
+  const weatherCalls = [];
+  const { app, db } = createApp({ discovery: createDiscoveryService({ apiKey: 'test-key', fetchImpl: detailUpstream([]), weather: { forecast: async (...coordinates) => { weatherCalls.push(coordinates); return { source: 'Open-Meteo' }; } } }) });
   const server = app.listen(0, '127.0.0.1');
   await new Promise((resolve) => server.once('listening', resolve));
   const base = `http://127.0.0.1:${server.address().port}/api`;
   try {
     assert.equal((await fetch(`${base}/discovery/hotspots/L123`)).status, 401);
     assert.equal((await fetch(`${base}/discovery/species/indrol2/locations`)).status, 401);
+    assert.equal((await fetch(`${base}/discovery/hotspots/L123/weather`)).status, 401);
+    assert.equal(weatherCalls.length, 0);
     const registration = await fetch(`${base}/auth/register`, { method: 'POST', headers: { Origin: 'http://localhost:3000', 'Content-Type': 'application/json' }, body: JSON.stringify({ name: 'Test Observer', email: 'journey@example.test', password: 'test-password-12345' }) });
     const headers = { Cookie: registration.headers.get('set-cookie').split(';')[0] };
     const species = await fetch(`${base}/discovery/species/indrol2/locations`, { headers });
@@ -200,6 +203,13 @@ test('detail HTTP routes keep session protection and expose ID-safe species/hots
     assert.equal(hotspot.status, 200);
     assert.equal((await hotspot.json()).recentSightings[0].speciesId, 'comkin1');
     assert.equal((await fetch(`${base}/discovery/hotspots/L999`, { headers })).status, 404);
+    const weather = await fetch(`${base}/discovery/hotspots/L123/weather`, { headers });
+    assert.equal(weather.status, 200);
+    assert.equal((await weather.json()).hotspotId, 'L123');
+    assert.deepEqual(weatherCalls, [[28.5, 77.2]]);
+    assert.equal((await fetch(`${base}/discovery/hotspots/L999/weather`, { headers })).status, 404);
+    assert.equal((await fetch(`${base}/discovery/hotspots/not-an-id/weather`, { headers })).status, 400);
+    assert.equal(weatherCalls.length, 1);
   } finally {
     await new Promise((resolve) => server.close(resolve));
     db.close();

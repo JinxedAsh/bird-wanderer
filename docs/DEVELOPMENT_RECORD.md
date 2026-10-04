@@ -45,7 +45,7 @@ Bird Wanderer helps birdwatchers and wildlife photographers discover species and
 | Interface | Fifteen screen components exist. Frontend corrections and accessibility improvements have been implemented. Exact visual acceptance remains pending. |
 | Accounts | Real registration, login, session restoration and logout are implemented. Accounts and sessions survive a server restart. |
 | Discovery | eBird taxonomy, regional hotspots and latest regional reports are connected; search and existing detail screens use source IDs. Live API checks passed. Species-to-hotspot links, hotspot-specific recent reports and catalogue-matched all-time species lists are connected. Manual device acceptance remains pending. |
-| Maps and logistics | Interactive hotspot maps and coordinate-based external directions are implemented; map gestures, tile loading and phone acceptance remain unverified. Weather and data-derived photography guidance remain incomplete. |
+| Maps and logistics | Interactive hotspot maps, coordinate-based directions and hotspot forecasts are implemented. Desktop browser checks passed pins/filtering/detail navigation, weather, coordinate directions and a 390-pixel layout. Physical-phone/outage acceptance remains pending. General photography planning tips are labelled as heuristics; open-photo metadata and verified access information remain incomplete. |
 | Journal, profiles and social activity | Many interactions work temporarily within the running app. Most changes are not stored for later use. |
 | Alerts and quizzes | Demonstration screens exist. Automated alerts, complete quiz progress and challenges are not delivered. |
 | Android delivery | The requirement is recorded. No Android package has been produced or device-certified. |
@@ -342,7 +342,36 @@ The header logo now uses a bundled SVG following the supplied green bird emblem,
 
 **Manual recheck:** end a test session in another tab, then return to the original page or trigger a discovery request; confirm login appears without refresh and old records/bookmarks disappear. Check that an isolated eBird outage does not sign the account out, fresh login still restores discovery and the header logo loads. Avoid changing real account data for this test.
 
+**Browser follow-up during Entry 16:** the local logo displayed, authentication regressions passed, and logging out in a second tab followed by opening a hotspot in the original tab returned to login without refresh. Pure window-focus recovery was not confirmed: closing a browser tab/sending keyboard input did not establish a genuine window-focus event through the testing tool. This remains an acceptance limit, not a demonstrated focus-listener pass. Provider-outage behavior is covered by client tests but was not checked in the browser.
+
 **Delivery:** implementation commit `29312fc`, published on `codex/session-and-brand-fixes` in [PR #6](https://github.com/JinxedAsh/bird-wanderer/pull/6). The PR records check/merge results; merging follows passing checks. Next increment: weather and sourced trip-planning information. No test-account credentials or browser screenshots are included in the repository.
+
+### Entry 16 - Hotspot forecasts and photography planning
+
+- **Date:** 4 October 2026, India Standard Time.
+- **Group:** discovery and trip planning.
+- **Phase:** Phase 1 core MVP.
+- **Status:** implemented; automated, live-provider and scoped desktop browser checks passed; remaining acceptance limits below.
+
+**Requirement:** replace unavailable hotspot weather with externally sourced, location-specific information that helps plan a photography visit, preserving the existing detail screen.
+
+**What changed:** a signed-in user can open a real hotspot and expand its existing Detailed Micro-Weather section to see model temperature, wind, humidity, precipitation, cloud cover and conditions; sunrise/sunset for two dates; and up to six upcoming hourly forecasts. The summary temperature chip uses the same response. Open-Meteo source/licence, model time, local timezone and UTC retrieval time are visible. No paid weather key, device GPS, database migration or new framework was introduced.
+
+**How it works:** `/api/discovery/hotspots/:hotspotId/weather` validates the ID against the configured eBird catalogue before using its coordinates. Arbitrary locations cannot be requested through this route. The new weather service fetches Open-Meteo, checks units/timezone/array structure, normalizes missing measurements to null and preserves zero. Successful forecasts are cached for 15 minutes, limited to 100 coordinate pairs; concurrent loads are shared and failures remain retryable. Client requests are cancelled when navigation changes, and responses are matched to the selected hotspot ID. Weather failure does not block the map or species reports. App-session rejection follows Entry 15's login reset; provider failures do not sign out the user.
+
+**Photography guidance:** first hour after sunrise/last hour before sunset are presented as approximate planning windows, not calculated golden-hour boundaries. Wind, precipitation and heavy-cloud tips depend on reported conditions but are explicitly general rules, not predictions of bird activity, measured exposure settings or photo-derived recommendations. Verified fees, access hours, camera passes, entrance information and photo metadata remain unavailable. Explore has no selected/verified location, so its weather placeholder is not filled with an arbitrary hotspot forecast.
+
+**Files changed:** new server/weather.mjs, server/weather.test.mjs and components/HotspotWeatherPanel.tsx; discovery.mjs/discovery.test.mjs/frontend.test.mjs, lib/discovery.ts, App.tsx, HotspotDetailScreen.tsx and package.json; shared setup/README files, this record and WEATHER_WALKTHROUGH.md.
+
+**Verification:** TypeScript, all **35 tests** and production build passed. New weather tests cover coordinates, units, zero/missing values, timezone/local timestamps, sunrise/sunset nulls, upcoming hours, concurrent sharing, cache separation/expiry, invalid structure, HTTP/provider/network failures and retry. Protected-route checks verify signed-out rejection and ID membership before querying weather. Rendering checks cover loading/error, attribution, heuristics and sourced values. Existing account/discovery/map/proxy checks pass.
+
+**Live service evidence:** Lodhi Gardens (`L2265071`) successfully returned an Open-Meteo forecast using the exact eBird coordinates. At model time 4 October 2026, 11:00 in Asia/Kolkata, it reported 32°C, wind 7.8 km/h, humidity 39%, zero precipitation and clear conditions. Sunrise/sunset were 06:15/18:03 for 4 October and 06:16/18:02 for 5 October; 24 upcoming hourly rows were normalized, and a second request used the cache. These are a recorded forecast snapshot, not permanent values or on-site measurements.
+
+**Browser results:** the designated project testing chat reloaded the current app at the computer's Wi-Fi address. The header logo, wrong-password rejection, login, refresh persistence and logout passed. A protected request from an invalidated session returned to login without refresh. Lodhi Gardens showed 32°C, wind 7.8 km/h, humidity 39%, zero precipitation/cloud cover, local model time, two dated sunrise/sunset pairs, six hourly rows, attribution and approximate tips. Rapid navigation from Asola to Lodhi retained the correct final weather; reopening Asola showed its distinct readings. The weather table and map zoom controls were usable at 390 × 844 pixels. Google Maps opened the exact destination coordinates, 28.59253,77.22044, but labelled a nearby business rather than Lodhi Gardens; the coordinate link is not a verified entrance or named-place guarantee. Closely spaced pins overlapped for a broad Lodhi search; filtering to the exact name resolved selection. No source files, server processes or account records were changed by testing, only temporary login sessions.
+
+**Acceptance limits:** pure focus-based session recovery was not confirmed because the tool could not establish a genuine window-focus event. Provider-outage/retry UI, physical-phone gestures, independent weather accuracy, verified entrances and complete design fidelity remain unverified. Rendered phone-width layout is not physical Android certification.
+
+**Delivery:** implementation commit `f2f69fe`, published on `codex/hotspot-weather` in [PR #7](https://github.com/JinxedAsh/bird-wanderer/pull/7). The PR records check/merge results; merging follows passing checks. The [Weather walkthrough](WEATHER_WALKTHROUGH.md) gives the flow, acceptance checklist and viva notes. Next Phase 1 increment: source-attributed species photographs and open-photo metadata; remaining site-access data requires verifiable sources.
 
 ## 4. How the current application fits together
 
@@ -379,7 +408,7 @@ Manual checks still include design comparison for all screens, mobile layout/tou
 
 | Phase | Remaining implementation and acceptance |
 | --- | --- |
-| Phase 1 — core | Complete species enrichment and sourced photography logistics/weather/open-photo metadata; complete design/manual acceptance including maps. External catalogue/search and detail journeys are connected in Entries 12–13; maps/directions are implemented in Entry 14. |
+| Phase 1 — core | Complete species enrichment, open-photo metadata and verified access logistics; complete design/manual/device acceptance. Discovery is connected in Entries 12–13, maps/directions in Entry 14 and hotspot forecasts/general planning tips in Entry 16. |
 | Phase 2 — community | Persistent profiles and sightings; validated photograph upload/storage; EXIF extraction; journal/life-list relationships and reconciled statistics; real feed/follows/likes/comments/reporting; server ownership/visibility checks. |
 | Phase 3 — alerts | Subscriptions/preferences; qualifying-sighting matching; automated delivery; protected-species coordinate handling and privacy checks. Privacy must also be applied earlier wherever location data becomes accessible. |
 | Phase 4 — retention | Complete identification quiz sessions, persistent progress and photography challenges without disrupting discovery. |
@@ -411,6 +440,7 @@ These paths help the developer find implementation details; teammates can unders
 | --- | --- |
 | External discovery | frontend/server/discovery.mjs; frontend/server/discovery.test.mjs; frontend/src/lib/discovery.ts; docs/DISCOVERY_WALKTHROUGH.md |
 | Maps and directions | frontend/src/components/HotspotMap.tsx; frontend/src/lib/maps.ts; HotspotsScreen.tsx; HotspotDetailScreen.tsx; frontend/src/index.css |
+| Weather and planning | frontend/server/weather.mjs; frontend/server/weather.test.mjs; frontend/src/components/HotspotWeatherPanel.tsx; docs/WEATHER_WALKTHROUGH.md |
 | Accounts | frontend/src/components/AuthScreen.tsx; frontend/src/lib/auth.ts; frontend/server/auth.mjs; frontend/server/index.mjs; frontend/server/auth.test.mjs |
 | Shared frontend state | frontend/src/App.tsx; frontend/src/types.ts; frontend/src/data/mockData.ts |
 | Stage 1 components | BottomNav.tsx, CommunityScreen.tsx, ExploreScreen.tsx, GlobalSearchScreen.tsx, Header.tsx, HotspotDetailScreen.tsx, HotspotsScreen.tsx, LifeListScreen.tsx, LogObservationScreen.tsx, ProfileScreen.tsx, SettingsScreen.tsx, SpeciesDetailScreen.tsx, all under frontend/src/components |

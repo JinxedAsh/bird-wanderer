@@ -1,10 +1,14 @@
 import React, { useMemo, useState } from 'react';
 import { Hotspot, ScreenType, BirdSpecies } from '../types';
-import type { HotspotDetails } from '../lib/discovery';
+import type { HotspotDetails, HotspotWeather } from '../lib/discovery';
 import { hotspotDirectionsUrl } from '../lib/maps';
 import { HotspotMap } from './HotspotMap';
+import { HotspotWeatherPanel } from './HotspotWeatherPanel';
 
 interface HotspotDetailScreenProps {
+  weather?: HotspotWeather;
+  weatherError?: string;
+  onRetryWeather?: () => void;
   details?: HotspotDetails;
   detailsError?: string;
   onRetryDetails?: () => void;
@@ -17,6 +21,9 @@ interface HotspotDetailScreenProps {
 }
 
 export const HotspotDetailScreen: React.FC<HotspotDetailScreenProps> = ({
+  weather,
+  weatherError,
+  onRetryWeather,
   details,
   detailsError,
   onRetryDetails,
@@ -123,10 +130,10 @@ export const HotspotDetailScreen: React.FC<HotspotDetailScreenProps> = ({
               thermostat
             </span>
             <span className="text-[17px] font-bold text-[#181c20] leading-tight">
-              {hotspot.temp}
+              {hotspot.source ? (weather?.current.temperatureC == null ? 'Unavailable' : `${weather.current.temperatureC}°C`) : hotspot.temp}
             </span>
             <span className="text-[10px] text-[#42493e] font-semibold mt-0.5 truncate w-full">
-              {hotspot.weatherCondition}
+              {hotspot.source ? weather?.current.condition || 'Forecast pending' : hotspot.weatherCondition}
             </span>
           </div>
         </div>
@@ -356,6 +363,7 @@ export const HotspotDetailScreen: React.FC<HotspotDetailScreenProps> = ({
 
           {openAccordion === 'weather' && (
             <div className="px-3.5 pb-3.5 pt-1 space-y-2">
+              {hotspot.source ? <HotspotWeatherPanel weather={weather} error={weatherError} onRetry={onRetryWeather} /> : <>
               <div className="grid grid-cols-2 gap-2">
                 <div className="p-2.5 rounded-xl bg-[#f1f4f9] flex flex-col">
                   <span className="text-[10px] text-[#42493e] font-semibold">Wind Speed</span>
@@ -376,6 +384,7 @@ export const HotspotDetailScreen: React.FC<HotspotDetailScreenProps> = ({
                 </span>
                 <span>{hotspot.source ? 'Sunrise and golden hour not connected' : 'Sunrise: 06:14 • Golden hour ends 07:45'}</span>
               </div>
+              </>}
             </div>
           )}
         </div>

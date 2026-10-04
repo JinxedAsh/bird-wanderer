@@ -73,6 +73,16 @@ Internet access to `tile.openstreetmap.org` is needed for map imagery. Attributi
 
 See [Discovery walkthrough](../docs/DISCOVERY_WALKTHROUGH.md) for the request flow, tests and manual acceptance checklist.
 
+### Hotspot weather
+
+Open a real hotspot and expand **Detailed Micro-Weather**. Open-Meteo forecasts use that hotspot's eBird coordinates, not the phone's GPS. No additional API key or environment setting is needed for this university project. The existing signed-in session is required. Restart the API if it was already running before this route was added.
+
+Current model conditions, two days of sunrise/sunset and upcoming hourly forecasts load independently of species reports/maps. Times are shown in the provider's location timezone; retrieval time is explicitly UTC. Celsius, km/h, percent and millimetres are checked before normalizing the response. Unknown values display as unavailable; zero is preserved. A failed forecast has its own retry control and does not hide hotspot reports. HTTP 401 from the app returns to login; provider/network failures do not.
+
+The server caches successful forecasts for 15 minutes, shares concurrent requests and limits storage to 100 coordinate pairs. Failed or expired data is not silently reused. Visible Open-Meteo/CC BY 4.0 attribution is included. The free endpoint is for non-commercial use; review provider terms before changing the project's deployment purpose. Opening hours, entry fees, camera passes and entry gates remain unverified; the displayed light/wind/rain tips are explicitly general planning guidance. Explore's weather placeholder remains unavailable because there is no selected hotspot or verified device location there.
+
+See [Weather walkthrough](../docs/WEATHER_WALKTHROUGH.md) for design boundaries, tests and viva notes.
+
 ## Deployment prerequisites
 
 Build the frontend, set `NODE_ENV=production`, `APP_ORIGIN` to the exact HTTPS origin, and `DATABASE_PATH` to a persistent private disk location, then run `pnpm start`. Configure the host and port for the chosen platform and serve HTTPS through its reverse proxy. The Express server serves the built frontend in production. Hosting, backups and a mail provider are not configured yet.

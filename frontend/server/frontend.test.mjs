@@ -17,14 +17,14 @@ let discoveryClient;
 before(async () => {
   temporaryDirectory = mkdtempSync(join(root, '.stage1-render-'));
   const screens = {};
-  const names = ['GlobalSearchScreen', 'SettingsScreen', 'SpeciesDetailScreen', 'HotspotMap', 'HotspotDetailScreen', 'HotspotsScreen', 'ExploreScreen', 'Header'];
+  const names = ['GlobalSearchScreen', 'SettingsScreen', 'SpeciesDetailScreen', 'HotspotMap', 'HotspotWeatherPanel', 'HotspotDetailScreen', 'HotspotsScreen', 'ExploreScreen', 'Header'];
   // Compile these existing TSX screens for Node rendering; no browser or new test framework.
   for (const relative of ['lib/useDialogFocus.ts', 'lib/maps.ts', 'lib/auth.ts', 'lib/discovery.ts', ...names.map((name) => `components/${name}.tsx`)]) {
     const output = join(temporaryDirectory, relative.replace(/\.tsx?$/, '.mjs'));
     mkdirSync(dirname(output), { recursive: true });
     const source = readFileSync(join(root, 'src', relative), 'utf8');
     const { code } = transformSync(source, { loader: 'tsx', format: 'esm', jsx: 'automatic', target: 'es2022' });
-    writeFileSync(output, code.replace('../lib/useDialogFocus"', '../lib/useDialogFocus.mjs"').replace('../lib/maps"', '../lib/maps.mjs"').replace('./HotspotMap"', './HotspotMap.mjs"').replace('./auth"', './auth.mjs"'));
+    writeFileSync(output, code.replace('../lib/useDialogFocus"', '../lib/useDialogFocus.mjs"').replace('../lib/maps"', '../lib/maps.mjs"').replace('./HotspotMap"', './HotspotMap.mjs"').replace('./HotspotWeatherPanel"', './HotspotWeatherPanel.mjs"').replace('./auth"', './auth.mjs"'));
   }
   for (const name of names) {
     const module = await import(pathToFileURL(join(temporaryDirectory, 'components', `${name}.mjs`)).href);
@@ -46,10 +46,24 @@ after(() => {
 const noop = () => {};
 const searchProps = { speciesList: [], hotspots: [], posts: [], onSelectSpecies: noop, onSelectHotspot: noop, onNavigate: noop };
 
+test('hotspot weather presents sourced forecasts, genuine zeros, missing values, loading and retry states', () => {
+  const weather = { source: 'Open-Meteo', timezone: 'Asia/Kolkata', fetchedAt: '2026-10-04T01:00:00Z', cached: true,
+    current: { time: '2026-10-04T07:15', temperatureC: 0, windKmh: 25, humidityPercent: null, precipitationMm: 1, cloudCoverPercent: 90, condition: 'Rain' },
+    days: [{ date: '2026-10-04', sunrise: '2026-10-04T06:14', sunset: null }],
+    hourly: [{ time: '2026-10-04T08:00', temperatureC: 0, rainProbability: 0, windKmh: null }] };
+  assert.match(render('HotspotWeatherPanel', {}), /Loading hotspot weather/);
+  const error = render('HotspotWeatherPanel', { error: 'Weather unavailable', onRetry: noop });
+  assert.match(error, /Retry weather/);
+  assert.doesNotMatch(error, /Loading hotspot weather/);
+  const html = render('HotspotWeatherPanel', { weather });
+  for (const text of ['Asia/Kolkata', '0°C', '0%', 'Unavailable', '06:14', 'Open-Meteo', 'CC BY 4.0', 'Wind is elevated', 'pack a rain cover', 'raise ISO', 'general planning rules', 'not calculated golden-hour boundaries']) assert.ok(html.includes(text), text);
+  assert.doesNotMatch(html, /Mist burns|Ideal for perched birds|Golden hour ends/);
+});
+
 test('protected discovery rejects ended sessions distinctly from provider/network failures and incorrect passwords', async () => {
   const previousFetch = globalThis.fetch;
   const signal = new AbortController().signal;
-  const loads = [() => discoveryClient.loadDiscovery(signal), () => discoveryClient.loadSpeciesLocations('comkin1', signal), () => discoveryClient.loadHotspotDetails('L123', signal)];
+  const loads = [() => discoveryClient.loadDiscovery(signal), () => discoveryClient.loadSpeciesLocations('comkin1', signal), () => discoveryClient.loadHotspotDetails('L123', signal), () => discoveryClient.loadHotspotWeather('L123', signal)];
   try {
     globalThis.fetch = async () => new Response(JSON.stringify({ error: 'Sign in required.' }), { status: 401 });
     for (const load of loads) await assert.rejects(load, authClient.SessionExpiredError);
