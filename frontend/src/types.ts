@@ -110,6 +110,7 @@ export interface Hotspot {
   transitTip: string;
   isSaved?: boolean;
   recentSightings: Array<{
+    speciesId?: string;
     species: string;
     scientific: string;
     image: string;
@@ -122,6 +123,7 @@ export interface Hotspot {
     image: string;
   }>;
   speciesList: Array<{
+    speciesId?: string;
     name: string;
     scientific: string;
     status: string;

@@ -44,7 +44,7 @@ Bird Wanderer helps birdwatchers and wildlife photographers discover species and
 | --- | --- |
 | Interface | Fifteen screen components exist. Frontend corrections and accessibility improvements have been implemented. Exact visual acceptance remains pending. |
 | Accounts | Real registration, login, session restoration and logout are implemented. Accounts and sessions survive a server restart. |
-| Discovery | eBird taxonomy, regional hotspots and latest regional reports are connected; search and existing detail screens use source IDs. Live API checks passed. Complete hotspot inventory and manual device acceptance remain pending. |
+| Discovery | eBird taxonomy, regional hotspots and latest regional reports are connected; search and existing detail screens use source IDs. Live API checks passed. Species-to-hotspot links, hotspot-specific recent reports and catalogue-matched all-time species lists are connected. Manual device acceptance remains pending. |
 | Maps and logistics | Their interface exists; real interactive maps and data-derived photography guidance remain incomplete. |
 | Journal, profiles and social activity | Many interactions work temporarily within the running app. Most changes are not stored for later use. |
 | Alerts and quizzes | Demonstration screens exist. Automated alerts, complete quiz progress and challenges are not delivered. |
@@ -279,6 +279,26 @@ Newer changes were found in eight existing files: frontend/.env.example, fronten
 
 **Delivery:** implementation commit `ddb8b83`, published on `codex/external-discovery` in [PR #3](https://github.com/JinxedAsh/bird-wanderer/pull/3). The PR records the GitHub check and merge results; merging follows passing checks. Details and the manual checklist are in [Discovery walkthrough](DISCOVERY_WALKTHROUGH.md).
 
+### Entry 13 - Species and hotspot discovery journey
+
+- **Date:** 4 October 2026.
+- **Group:** Phase 1 navigation and external detail datasets.
+- **Status:** implemented; automated/live data checks passed; phone/browser acceptance pending.
+
+**Problem:** a species report did not open its location, and hotspot details only showed the regional summary. That summary can omit species recently seen at a particular hotspot. Name-based links and screen-only history could also select or restore the wrong record.
+
+**What changed:** added protected routes for species-specific regional locations and hotspot-specific recent reports/all-time taxon lists. Results are joined using stable eBird IDs and checked against the configured catalogue. Unknown taxa remain unmatched; explicitly private observations are excluded. Detail responses use a bounded 100-entry cache with a 15-minute lifetime, shared concurrent loads and retryable failures.
+
+**User-visible result:** a species page lists matching hotspots that can be opened. A hotspot displays its own recent reported species and a catalogue-matched all-time list, with links back to species pages. Loading/error/empty states are explicit. Keyboard controls are available, and app history stores the selected record so Back restores the original species or hotspot. Existing account behavior, shared temporary bookmarks and later-phase prototypes remain intact.
+
+**Verification:** TypeScript checking, all 26 tests and the production build passed. New regressions cover ID validation, public regional membership, multiple locations, private/unknown filtering, taxon joins, dedicated hotspot reports, cache/retry behavior, authenticated HTTP routes and rendering states. Live Lesser Whistling-Duck data led to Kanjhawala wetlands, which returned 69 recently reported species and 164 catalogue-matched all-time species; all recent species IDs were navigable. Separate empty recent responses were also observed and remained distinct from all-time records. An isolated live HTTP check returned 200 from both detail routes and 401 for signed-out access, without touching existing accounts.
+
+**Affected files:** frontend/server/discovery.mjs, discovery.test.mjs and frontend.test.mjs; frontend/src/App.tsx, lib/discovery.ts and types.ts; SpeciesDetailScreen.tsx and HotspotDetailScreen.tsx; README/setup instructions, this record and the discovery walkthrough.
+
+**Limits:** reports are the latest per location/species in a 14-day window, not a full observation history or a sighting guarantee. The all-time list may contain unmatched non-species taxa. In-app Back is implemented; browser URLs/deep links are not. Physical-phone interaction and visual/back-navigation acceptance are still manual. Maps, photography logistics, photo metadata, persistence and Android delivery remain separate work.
+
+**Delivery:** implementation commit `1c3a4a9`, published on `codex/discovery-journey` in [PR #4](https://github.com/JinxedAsh/bird-wanderer/pull/4). The PR records check/merge results; merging follows passing checks. The [Discovery walkthrough](DISCOVERY_WALKTHROUGH.md) includes the current flow and manual checklist.
+
 ## 4. How the current application fits together
 
 The interface is what the user sees and interacts with. The backend is the program that receives requests and checks account information. The database is where persistent account information is saved.
@@ -314,7 +334,7 @@ Manual checks still include design comparison for all screens, mobile layout/tou
 
 | Phase | Remaining implementation and acceptance |
 | --- | --- |
-| Phase 1 — core | Complete species enrichment and hotspot-specific inventory/history; interactive geographic maps; sourced photography logistics/weather/open-photo metadata; complete design/manual acceptance. External catalogue/search is connected in Entry 12. |
+| Phase 1 — core | Complete species enrichment and geographic maps; sourced photography logistics/weather/open-photo metadata; complete design/manual acceptance. External catalogue/search is connected in Entry 12. |
 | Phase 2 — community | Persistent profiles and sightings; validated photograph upload/storage; EXIF extraction; journal/life-list relationships and reconciled statistics; real feed/follows/likes/comments/reporting; server ownership/visibility checks. |
 | Phase 3 — alerts | Subscriptions/preferences; qualifying-sighting matching; automated delivery; protected-species coordinate handling and privacy checks. Privacy must also be applied earlier wherever location data becomes accessible. |
 | Phase 4 — retention | Complete identification quiz sessions, persistent progress and photography challenges without disrupting discovery. |

@@ -1,7 +1,12 @@
 import React, { useState } from 'react';
 import { Hotspot, ScreenType, BirdSpecies } from '../types';
+import type { HotspotDetails } from '../lib/discovery';
 
 interface HotspotDetailScreenProps {
+  details?: HotspotDetails;
+  detailsError?: string;
+  onRetryDetails?: () => void;
+  onSelectSpeciesById?: (id: string) => void;
   hotspot: Hotspot;
   onToggleSave: (hotspotId: string) => void;
   onNavigate: (screen: ScreenType) => void;
@@ -10,6 +15,10 @@ interface HotspotDetailScreenProps {
 }
 
 export const HotspotDetailScreen: React.FC<HotspotDetailScreenProps> = ({
+  details,
+  detailsError,
+  onRetryDetails,
+  onSelectSpeciesById,
   hotspot,
   onToggleSave,
   onNavigate,
@@ -18,6 +27,14 @@ export const HotspotDetailScreen: React.FC<HotspotDetailScreenProps> = ({
 }) => {
   const isSaved = Boolean(hotspot.isSaved);
   const [openAccordion, setOpenAccordion] = useState<string | null>('visit');
+  const recentSightings = hotspot.source ? details?.recentSightings || [] : hotspot.recentSightings;
+  const speciesList = hotspot.source ? details?.speciesList || [] : hotspot.speciesList;
+  const selectSpecies = (id: string | undefined, name: string) => {
+    if (hotspot.source) {
+      if (id && onSelectSpeciesById) onSelectSpeciesById(id);
+      else showToast('This species is not available in the loaded catalogue.');
+    } else onSelectSpeciesByName(name);
+  };
 
   const toggleAccordion = (id: string) => {
     setOpenAccordion((prev) => (prev === id ? null : id));
@@ -160,15 +177,22 @@ export const HotspotDetailScreen: React.FC<HotspotDetailScreenProps> = ({
             <span className="w-2 h-2 rounded-full bg-[#154212]"></span>
             <h3 className="text-[17px] font-bold text-[#181c20]">Recent Sightings</h3>
           </div>
-          <span className="text-[11px] text-[#42493e] font-semibold">{hotspot.source ? 'Regional latest reports, 14 days' : 'Past 4 hours'}</span>
+          <span className="text-[11px] text-[#42493e] font-semibold">{hotspot.source ? 'This hotspot, past 14 days' : 'Past 4 hours'}</span>
         </div>
 
         <div className="flex flex-col gap-2">
-          {hotspot.source && <p className="text-[12px] text-[#42493e]">Regional results contain the latest report per species, not a complete hotspot history. Empty results do not mean no birds occur here.</p>}
-          {hotspot.recentSightings.map((sight, idx) => (
+          {hotspot.source && <p className="text-[12px] text-[#42493e]">Latest report per species at this hotspot, not total sightings or a complete history.</p>}
+          {hotspot.source && !details && !detailsError && <p role="status" className="text-[12px] text-[#42493e]">Loading hotspot reports and species...</p>}
+          {hotspot.source && detailsError && <div role="alert" className="text-[12px] text-[#42493e]"><p>{detailsError}</p><button type="button" onClick={onRetryDetails} className="mt-2 font-semibold text-[#154212] underline">Try again</button></div>}
+          {details && <p className="text-[11px] text-[#42493e]">Retrieved {new Date(details.fetchedAt).toLocaleString()}{details.cached ? ' (cached)' : ''}. Observation times are local to the location.</p>}
+          {details && recentSightings.length === 0 && <p className="text-[12px] text-[#42493e]">No recent reports returned. This does not mean no birds occur here.</p>}
+          {recentSightings.map((sight, idx) => (
             <div
               key={idx}
-              onClick={() => onSelectSpeciesByName(sight.species)}
+              role="button"
+              tabIndex={0}
+              onClick={() => selectSpecies(sight.speciesId, sight.species)}
+              onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); selectSpecies(sight.speciesId, sight.species); } }}
               className="flex items-center justify-between p-2.5 bg-white rounded-xl shadow-xs hover:shadow-sm transition-all cursor-pointer"
             >
               <div className="flex items-center gap-3 min-w-0">
@@ -379,11 +403,15 @@ export const HotspotDetailScreen: React.FC<HotspotDetailScreenProps> = ({
 
           {openAccordion === 'species' && (
             <div className="px-3.5 pb-3.5 pt-1 space-y-1.5">
-              {hotspot.source && <p className="text-[12px] text-[#42493e]">The total is supplied by eBird. A complete hotspot species list is not connected yet.</p>}
-              {hotspot.speciesList.map((sp, i) => (
+              {hotspot.source && <p className="text-[12px] text-[#42493e]">All-time recorded species, distinct from recent activity. {details ? `${speciesList.length} catalogue species matched; ${details.unmatchedTaxa} other taxa could not be matched.` : detailsError ? 'Species list unavailable; retry above.' : 'Loading species list...'}</p>}
+              {details && speciesList.length === 0 && <p className="text-[12px] text-[#42493e]">No catalogue species matched this list.</p>}
+              {speciesList.map((sp, i) => (
                 <div
                   key={i}
-                  onClick={() => onSelectSpeciesByName(sp.name)}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => selectSpecies(sp.speciesId, sp.name)}
+                  onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); selectSpecies(sp.speciesId, sp.name); } }}
                   className="flex items-center justify-between py-2 px-2.5 rounded-lg hover:bg-[#f1f4f9] cursor-pointer transition-colors"
                 >
                   <div>

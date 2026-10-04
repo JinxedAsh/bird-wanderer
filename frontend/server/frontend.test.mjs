@@ -44,8 +44,10 @@ test('external species details show genuine reports without fabricated photos, c
   const html = render('SpeciesDetailScreen', {
     species: { id: 'indrol2', name: 'Indian Roller', scientificName: 'Coracias benghalensis', source: 'eBird', sourceUrl: 'https://ebird.org/species/indrol2', image: '/discovery-placeholder.svg', habitat: 'Not available from eBird', habitatDetail: 'Not available from eBird', bestTime: 'Not available from eBird', bestTimeDetail: 'Not available from eBird', fieldGuideNotes: 'Not available from eBird', audioCallDuration: 'Unavailable', recentObservations: [{ hotspotId: 'L123', location: 'Test Wetland', observedAt: '2026-10-04 07:15' }] },
     onNavigate: noop, onQuickLog: noop, showToast: noop,
+    locations: { speciesId: 'indrol2', locations: [{ hotspotId: 'L123', name: 'Test Wetland', coordinates: '28.5, 77.2', observedAt: '2026-10-04 07:15', count: 3 }], fetchedAt: '2026-10-04T00:00:00Z', cached: false }, onSelectHotspotById: noop,
   });
   assert.match(html, /Test Wetland/);
+  assert.match(html, /aria-label="Open hotspot Test Wetland"/);
   assert.match(html, /Status unavailable/);
   assert.match(html, /Photo metadata not connected/);
   assert.doesNotMatch(html, /Verified Field Shot|1\/2500|32 uploads|Okhla|Yamuna Bio-Diversity/);
@@ -70,6 +72,34 @@ test('external explore works with an empty catalogue and does not show sample we
   const html = render('ExploreScreen', { observerName: 'Test Birder', speciesList: [], externalDiscovery: true, discoveryRegion: 'IN-DL', onSelectSpecies: noop, onNavigate: noop, onQuickLog: noop });
   assert.match(html, /No recent species reports loaded/);
   assert.doesNotMatch(html, /24°C|8 km\/h|Seen 2h ago|14 nearby/);
+});
+
+test('species location loading, retry and empty states remain distinct from real reports', () => {
+  const props = { species: { id: 'comkin1', name: 'Common Kingfisher', scientificName: 'Alcedo atthis', source: 'eBird', image: '/discovery-placeholder.svg' }, onNavigate: noop, onQuickLog: noop, showToast: noop };
+  assert.match(render('SpeciesDetailScreen', props), /Loading locations for Common Kingfisher/);
+  const failed = render('SpeciesDetailScreen', { ...props, locationsError: 'Provider unavailable', onRetryLocations: noop });
+  assert.match(failed, /Provider unavailable/);
+  assert.match(failed, /Try again/);
+  assert.doesNotMatch(failed, /Loading locations/);
+  const empty = render('SpeciesDetailScreen', { ...props, locations: { speciesId: 'comkin1', locations: [], fetchedAt: '2026-10-04T00:00:00Z', cached: true } });
+  assert.match(empty, /No recent reports at hotspots/);
+  assert.doesNotMatch(empty, /Loading locations|Okhla|Yamuna Bio-Diversity/);
+});
+
+test('hotspot detail displays its own reports and never reuses regional reports during loading or failure', () => {
+  const hotspot = { id: 'L123', name: 'Test Wetland', source: 'eBird', imageUrl: '/discovery-placeholder.svg', recentSightings: [{ species: 'Wrong Regional Bird', scientific: 'Wrong scientific', image: '/test.svg', count: 5, timeAgo: 'Yesterday' }], photos: [], speciesList: [] };
+  const props = { hotspot, onNavigate: noop, onToggleSave: noop, onSelectSpeciesByName: noop, onSelectSpeciesById: noop, showToast: noop };
+  const loading = render('HotspotDetailScreen', props);
+  assert.match(loading, /Loading hotspot reports/);
+  assert.doesNotMatch(loading, /Wrong Regional Bird/);
+  const failed = render('HotspotDetailScreen', { ...props, detailsError: 'Provider unavailable', onRetryDetails: noop });
+  assert.match(failed, /Try again/);
+  assert.doesNotMatch(failed, /Wrong Regional Bird/);
+  const loaded = render('HotspotDetailScreen', { ...props, details: { hotspotId: 'L123', recentSightings: [{ speciesId: 'comkin1', species: 'Common Kingfisher', scientific: 'Alcedo atthis', image: '/test.svg', count: 0, timeAgo: '2026-10-04 07:15' }], speciesList: [], unmatchedTaxa: 0, fetchedAt: '2026-10-04T00:00:00Z', cached: false } });
+  assert.match(loaded, /Common Kingfisher/);
+  assert.match(loaded, /0 individuals/);
+  assert.match(loaded, /role="button" tabindex="0"/);
+  assert.doesNotMatch(loaded, /Wrong Regional Bird/);
 });
 
 test('search renders its only matching hotspot and every matching bird', () => {
