@@ -21,6 +21,7 @@ export default defineConfig(({mode}) => {
       },
     },
     server: {
+      host: env.FRONTEND_HOST || '127.0.0.1',
       port,
       strictPort: true,
       proxy,
@@ -30,6 +31,6 @@ export default defineConfig(({mode}) => {
       // Disable file watching when DISABLE_HMR is true to save CPU during agent edits.
       watch: process.env.DISABLE_HMR === 'true' ? null : {},
     },
-    preview: { port, host: '127.0.0.1', strictPort: true, proxy },
+    preview: { port, host: env.FRONTEND_HOST || '127.0.0.1', strictPort: true, proxy },
   };
 });

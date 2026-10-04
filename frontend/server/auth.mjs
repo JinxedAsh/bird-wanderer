@@ -12,7 +12,8 @@ const digest = (value) => createHash('sha256').update(value).digest('hex');
 const publicUser = (row) => ({ id: row.id, name: row.name, email: row.email });
 const passwordOptions = { N: 32768, r: 8, p: 3, maxmem: 64 * 1024 * 1024 };
 
-export function createApp({ dbPath = ':memory:', origin = 'http://localhost:3000', secureCookies = false, now = Date.now, rateLimit = 30 } = {}) {
+export function createApp({ dbPath = ':memory:', origin = 'http://localhost:3000', additionalOrigins = [], secureCookies = false, now = Date.now, rateLimit = 30 } = {}) {
+  const allowedOrigins = new Set([origin, ...additionalOrigins]);
   if (dbPath !== ':memory:') mkdirSync(dirname(dbPath), { recursive: true });
   const db = new DatabaseSync(dbPath);
   db.exec(`
@@ -35,7 +36,7 @@ export function createApp({ dbPath = ':memory:', origin = 'http://localhost:3000
   app.disable('x-powered-by');
   app.use('/api', (req, res, next) => {
     res.set({ 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
-    if (!['GET', 'HEAD', 'OPTIONS'].includes(req.method) && req.get('origin') !== origin) {
+    if (!['GET', 'HEAD', 'OPTIONS'].includes(req.method) && !allowedOrigins.has(req.get('origin'))) {
       return res.status(403).json({ error: 'Request origin is not allowed.' });
     }
     next();

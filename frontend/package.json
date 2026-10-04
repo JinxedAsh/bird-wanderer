@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "node scripts/dev.mjs",
-    "dev:client": "vite --host=127.0.0.1",
+    "dev:client": "vite",
     "dev:server": "node --watch server/index.mjs",
     "start": "node server/index.mjs",
     "test": "node --test server/auth.test.mjs server/frontend.test.mjs server/proxy.test.mjs",

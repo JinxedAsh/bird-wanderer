@@ -14,3 +14,7 @@ coverage/
 *.key
 .DS_Store
 Thumbs.db
+
+# Local working notes; shared documentation belongs in docs/.
+/PROJECT_REVIEW.md
+/PROJECT_CONTEXT.md
