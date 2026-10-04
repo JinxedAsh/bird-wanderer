@@ -66,6 +66,22 @@ test('validation, duplicate email, foreign origin and malformed cookies', async 
   } finally { await f.close(); }
 });
 
+test('phone origin supports login and sessions while unknown origins remain blocked', async () => {
+  const phoneOrigin = 'http://192.168.1.3:3000';
+  const f = await fixture({ additionalOrigins: [phoneOrigin] });
+  try {
+    assert.equal((await f.request('register', account)).status, 201);
+    const login = await f.request('login', account, undefined, phoneOrigin);
+    assert.equal(login.status, 200);
+    const session = cookie(login);
+    assert.equal((await f.request('me', undefined, session, phoneOrigin)).status, 200);
+    for (const forbiddenOrigin of ['http://192.168.1.3:3001', 'http://192.168.1.3:3000.evil.test', 'https://other.example', 'null', '']) {
+      assert.equal((await f.request('logout', {}, session, forbiddenOrigin)).status, 403);
+    }
+    assert.equal((await f.request('logout', {}, session, phoneOrigin)).status, 204);
+  } finally { await f.close(); }
+});
+
 test('session expires and production cookie is secure', async () => {
   let time = Date.now();
   const f = await fixture({ now: () => time, secureCookies: true });

@@ -6,12 +6,20 @@ import { createApp } from './auth.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const production = process.env.NODE_ENV === 'production';
+const additionalOrigins = (process.env.ADDITIONAL_APP_ORIGINS || '').split(',').map((value) => value.trim()).filter(Boolean);
+for (const origin of additionalOrigins) {
+  const parsed = new URL(origin);
+  if (parsed.origin !== origin || !['http:', 'https:'].includes(parsed.protocol) || (production && parsed.protocol !== 'https:')) {
+    throw new Error('ADDITIONAL_APP_ORIGINS must contain exact HTTP origins (HTTPS in production), without paths.');
+  }
+}
 if (production && !process.env.APP_ORIGIN?.startsWith('https://')) {
   throw new Error('Production requires an HTTPS APP_ORIGIN.');
 }
 const { app, db } = createApp({
   dbPath: process.env.DATABASE_PATH || resolve(root, 'data/bird-wanderer.sqlite'),
   origin: process.env.APP_ORIGIN || 'http://localhost:3000',
+  additionalOrigins,
   secureCookies: production,
 });
 if (production) {

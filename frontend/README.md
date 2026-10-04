@@ -27,6 +27,8 @@ To preview the production frontend locally, first run `pnpm build`. Start `pnpm 
 
 Development and preview read the frontend port from `APP_ORIGIN` and the API port from `PORT` in `.env`. Keep `APP_ORIGIN` equal to the URL you open (including the port). For example, `APP_ORIGIN=http://localhost:3100` and `PORT=3101` move both servers without changing source files. No environment secrets are exposed by this proxy configuration.
 
+For phone access on the same local network, set `FRONTEND_HOST=0.0.0.0` and add the computer's Wi-Fi origin to `ADDITIONAL_APP_ORIGINS`, for example `http://192.168.1.3:3000`. Leave `APP_ORIGIN=http://localhost:3000` to keep desktop login working. Extra origins are comma-separated, with no trailing slash or path; update them if your network address changes. Restart both servers after changing `.env`, then open that Wi-Fi URL on the phone. The API can stay bound to `127.0.0.1` because Vite proxies its requests. Production extra origins must use HTTPS.
+
 ```sh
 pnpm lint
 pnpm test
@@ -40,7 +42,7 @@ The suite also includes server-rendered frontend regression checks and HTTP chec
 
 Implemented: registration, password hashing, login, session restoration, logout, origin checks and authentication rate limiting. Most other screens still display prototype fixtures. Password recovery does not send email yet; the interface reports this honestly.
 
-See `../docs/AUTH_WALKTHROUGH.md` for the request/data flow and `../PROJECT_CONTEXT.md` for deadlines and the living documentation link. Original screen designs are in `../docs/design-reference`.
+See `../docs/AUTH_WALKTHROUGH.md` for the request/data flow and `../docs/DEVELOPMENT_RECORD.md` for deadlines and the living documentation link. Original screen designs are in `../docs/design-reference`.
 
 ## Deployment prerequisites
 

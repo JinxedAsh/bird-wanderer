@@ -7,7 +7,7 @@
 
 ## 1. Purpose and how to use this record
 
-This is the main chronological record of development: what existed, what we changed, why we changed it, how it was checked and what remains unfinished. It brings together work that was previously spread across the README, review notes, implementation walkthroughs and conversations.
+This is the main chronological record of development: what existed, what we changed, why we changed it, how it was checked and what remains unfinished. It brings together implementation history, verification evidence and team handover information.
 
 Use this file as the factual basis for progress reports and additions to the team's original documentation. The [living project specification](https://docs.google.com/document/d/1_KcOFYP8ELQf6WegrDuPw5uNlLqqlc90Gf2x46mSUvc/edit?usp=sharing) remains the source of requirements and final designs. This record explains implementation progress; it does not replace or silently amend those requirements. The shared Google Doc has not been edited as part of creating this file.
 
@@ -32,9 +32,8 @@ Bird Wanderer helps birdwatchers and wildlife photographers discover species and
 
 - All four specification phases are mandatory.
 - The supplied screen designs are final and must be followed. A source review does not establish visual conformity.
-- The first checkpoint is Tuesday, **6 October 2026**. A refined frontend and working login backend are the user's stated minimum; full Phase 1 also requires discovery, maps and externally derived logistics.
+- The first checkpoint is Tuesday, **6 October 2026**. A refined frontend and working login backend are the checkpoint minimum; full Phase 1 also requires discovery, maps and externally derived logistics.
 - The overall development deadline is **20 October 2026**. A possible extension is unconfirmed.
-- The user is the sole developer and needs to understand and explain each increment.
 - No technology stack was mandated. Preserve working code and avoid unnecessary rewrites or complex infrastructure.
 - The final submission requires an **Android app/APK**, confirmed on 4 October. A browser-only or installable web application does not, by itself, satisfy that delivery requirement.
 - Keep the private GitHub repository updated with tested, focused commits. Do not publish secrets, personal account data, databases or build output.
@@ -50,9 +49,9 @@ Bird Wanderer helps birdwatchers and wildlife photographers discover species and
 | Journal, profiles and social activity | Many interactions work temporarily within the running app. Most changes are not stored for later use. |
 | Alerts and quizzes | Demonstration screens exist. Automated alerts, complete quiz progress and challenges are not delivered. |
 | Android delivery | The requirement is recorded. No Android package has been produced or device-certified. |
-| Hosting | Local development is supported. There is no public production website URL recorded. |
+| Hosting | Local development and configurable same-network phone preview are supported. There is no public production website URL recorded. |
 
-Phase 1 is **not complete**. The earlier conversational estimate of 30–40% was a rough planning estimate, not an audited completion measure. Track the acceptance criteria and demonstrated behavior instead of relying on that percentage.
+Phase 1 is **not complete**. Track acceptance criteria and demonstrated behavior rather than an estimated completion percentage.
 
 ## 3. Chronological development history
 
@@ -66,11 +65,11 @@ Entries are recorded in the order of work and decisions. Dates identify the know
 
 **Starting point:** the project already had a React frontend with fifteen screens and a substantial amount of styling and sample content. Navigation and several interactions were implemented in the browser. Much of the apparent functionality was a demonstration rather than a stored, live service.
 
-**Work performed:** inspected the source and the shared specification, identified the initial architecture and distinguished real functionality from sample behavior. Noted gaps in backend implementation, validation, persistent records, external data, privacy and complete user flows. Recorded the first review in PROJECT_REVIEW.md.
+**Work performed:** inspected the source and the shared specification, identified the initial architecture and distinguished real functionality from sample behavior. Noted gaps in backend implementation, validation, persistent records, external data, privacy and complete user flows.
 
 **Why this mattered:** the presence of a screen could otherwise be mistaken for a completed feature. The review established a baseline and helped prevent an unnecessary rewrite.
 
-**Outcome and limits:** the initial review was source-level. Its statements about missing dependencies, untracked files and absent authentication describe that earlier snapshot and are now historical. They must not be quoted as the current project status. A prominent historical notice was later added.
+**Outcome and limits:** the initial review was source-level. Its statements about missing dependencies, untracked files and absent authentication describe that earlier snapshot and are now historical. They must not be quoted as the current project status.
 
 ### Entry 02 — Scope, designs and development approach confirmed
 
@@ -78,7 +77,7 @@ Entries are recorded in the order of work and decisions. Dates identify the know
 - **Group:** requirements and planning.
 - **Phase:** applies to all four phases.
 
-**Decisions recorded:** all four phases are required; the supplied designs must be preserved; the checkpoint and overall deadline were confirmed; one developer is available for most of each day; no particular stack is required. The living documentation link was retained in PROJECT_CONTEXT.md.
+**Decisions recorded:** all four phases are required; the supplied designs must be preserved; the checkpoint and overall deadline were confirmed; no particular stack is required. The living specification is linked in this record.
 
 **Approach selected:** build on the existing frontend, deliver small understandable increments and prioritize the early checkpoint. Keep implementation explanations suitable for evaluation/viva. Do not assume that login alone fulfills the formal Phase 1 acceptance criteria.
 
@@ -103,7 +102,7 @@ Entries are recorded in the order of work and decisions. Dates identify the know
 
 **Verification:** TypeScript checking, production build and five authentication test groups passed. Coverage included invalid credentials, duplicate accounts, input errors, token rotation, expiry, logout invalidation, origin checks, rate limiting, persistence after restart and separate user sessions.
 
-**Limitations:** password recovery, verification emails and password changes are not connected. Account persistence does not mean that journals, profiles, uploads or social interactions are persistent. Browser/device and complete visual verification were not performed; agent localhost browser access was denied.
+**Limitations:** password recovery, verification emails and password changes are not connected. Account persistence does not mean that journals, profiles, uploads or social interactions are persistent. Browser/device and complete visual verification were not performed.
 
 **Detailed explanation:** [Authentication walkthrough](AUTH_WALKTHROUGH.md).
 
@@ -117,7 +116,7 @@ Entries are recorded in the order of work and decisions. Dates identify the know
 
 **Correction made:** an ignore rule intended for the runtime database also excluded frontend fixtures. It was corrected so that sample source data is tracked while private runtime data remains excluded. This prevents a fresh checkout from losing required application files.
 
-**Standing workflow:** check completed changes before pushing, keep commits focused, and inspect CI results. The repository remains private. The user completed GitHub sign-in; credentials and device codes are intentionally omitted from this documentation.
+**Standing workflow:** check completed changes before pushing, keep commits focused, and inspect CI results. The repository remains private.
 
 **Evidence:** initial setup commit `56cb81e`; fixture-tracking correction `41ec052`; ongoing repository-sync documentation `b5b9b7d`.
 
@@ -139,7 +138,7 @@ Entries are recorded in the order of work and decisions. Dates identify the know
 - The database stored only accounts, sessions and authentication limits; other user-owned records were absent.
 - Exact design fidelity, accessibility interactions, deployment and complete end-to-end flows still needed verification.
 
-**Plan prepared:** incremental stages for frontend stabilization, persistent records, real discovery/maps/logistics, observations/uploads, community, alerts, retention and submission checks. Dependencies and risks were explained. The user authorized Stage 1 only and explicitly requested stopping afterward.
+**Plan prepared:** incremental stages for frontend stabilization, persistent records, real discovery/maps/logistics, observations/uploads, community, alerts, retention and submission checks. Dependencies and risks were explained. Stage 1 was the first implementation increment.
 
 **Terminology:** specification **Phase 1** is the larger discovery/logistics MVP. Implementation **Stage 1** is the smaller frontend stabilization step. Completing Stage 1 does not complete Phase 1. The Android delivery decision below requires future packaging work to be added to the implementation plan.
 
@@ -156,7 +155,7 @@ Entries are recorded in the order of work and decisions. Dates identify the know
 | 7 | Complete quizzes, progress and photography challenges after core flows work. | 16–17 October |
 | 8 | Perform end-to-end acceptance, deployment/backup checks and submission documentation. | 18–20 October |
 
-These are planning windows, not completion promises. The later Android APK clarification requires revising the plan to allocate packaging and device testing. Only Stage 1 was authorized for implementation at this point. Each stage should preserve previous behavior, use small commits, include relevant tests and explain its changes to the developer.
+These are planning windows, not completion promises. The later Android APK clarification requires revising the plan to allocate packaging and device testing. Each stage should preserve previous behavior, use small commits, include relevant tests and explain its changes to the developer.
 
 ### Entry 06 — Stage 1 frontend stabilization
 
@@ -200,20 +199,20 @@ The existing stack, screens and working authentication were preserved. No later-
 
 The user clarified that the intended product is a mobile app and selected **Android app/APK** as the evaluation deliverable. The current repository implements its interface as a mobile web application, which can run in a browser. That is a useful development foundation, but it is not yet an Android installation package.
 
-The requirement was added to README.md, PROJECT_CONTEXT.md and the Stage 1 walkthrough. Future work must select an appropriate packaging approach, provide working backend connectivity from the installed application and verify physical-device behavior. No native framework or packaging tool was selected or installed in Stage 1. Preserve the existing implementation where practical; do not assume a rewrite is necessary.
+The requirement was added to README.md and the Stage 1 walkthrough. Future work must select an appropriate packaging approach, provide working backend connectivity from the installed application and verify physical-device behavior. No native framework or packaging tool was selected or installed in Stage 1. Preserve the existing implementation where practical; do not assume a rewrite is necessary.
 
 ### Entry 08 — Phase 1 progress explained and phone preview guidance
 
 - **Date:** 4 October 2026, after Stage 1 delivery.
 - **Group:** demonstration guidance and status reporting.
 
-**Progress explained:** authentication and frontend stabilization are implemented; live discovery, interactive maps, externally derived logistics, design acceptance and Android packaging remain. An informal 30–40% estimate was discussed with the user, with the explicit limitation that it is not a measured completion percentage.
+**Progress explained:** authentication and frontend stabilization are implemented; live discovery, interactive maps, externally derived logistics, design acceptance and Android packaging remain.
 
 **Local access explained:** the development address is `http://localhost:3000` on the computer running the server. No public deployment URL was provided. Instructions were given for starting the backend and frontend separately and accessing the interface from a phone on the same Wi-Fi, using the computer's local-network address and a matching allowed request origin.
 
-The Wi-Fi address observed during that session was `192.168.1.3`; this is a temporary network observation, not a permanent project URL. It can change. The phone cannot use its own localhost address to reach the computer's server.
+The computer's local-network address can change; it is not a permanent project URL. The phone cannot use its own localhost address to reach the computer's server.
 
-**Verification limit:** instructions were provided; no successful physical-phone test, installed Android build or visual acceptance was reported. Browser site-permission troubleshooting was also discussed; it was not recorded as proof that agent browser access had been restored.
+**Verification limit:** instructions were provided; no successful physical-phone test, installed Android build or visual acceptance was reported.
 
 ### Entry 09 — Phone-access configuration present in the working folder
 
@@ -238,11 +237,27 @@ Newer changes were found in eight existing files: frontend/.env.example, fronten
 
 **Request:** provide one proper, chronological and clearly grouped file that team members can understand without working with the source, and that can support the original documentation.
 
-**Work performed:** consolidated the baseline, requirements, account implementation, repository setup, review/plan, Stage 1 changes, Android clarification, phone guidance, verification evidence and remaining limitations into this record. Linked it from the README and project context. Added a maintenance rule to the contribution guide.
+**Work performed:** consolidated the baseline, requirements, account implementation, repository setup, review/plan, Stage 1 changes, Android clarification, phone guidance, verification evidence and remaining limitations into this record. Linked it from the README. Added a maintenance rule to the contribution guide.
 
 **Scope:** documentation only. Existing application work in progress is left intact. The detailed walkthroughs remain available as supporting references rather than being deleted or rewritten.
 
 **Repository status verified during handover:** Stage 1 PR #1 has subsequently been merged into main (`27c259c`). The draft/unmerged status in Entry 06 describes the end of that earlier implementation session. This record was introduced in documentation commit `cdae702`, whose push checks passed. The documentation changes are proposed separately from the already merged application increment.
+
+### Entry 11 - Phone preview and shared-documentation publication
+
+- **Date:** 4 October 2026.
+- **Group:** local-network testing and repository documentation.
+- **Status:** implemented; local automated checks passed; manual phone testing pending.
+
+**What changed:** prepared the eight phone-access files listed in Entry 09 for publication. Desktop localhost login remains supported while explicitly configured phone origins can sign in through the frontend proxy. Unknown origins remain blocked. Setup instructions explain the frontend network binding and origin allowlist.
+
+**Documentation policy:** the Development Record, README, contribution guide, design references and implementation walkthroughs remain shared project documentation. Personal review/context notes are retained locally, removed from the current tracked contents and ignored for future commits. Shared documents no longer depend on those local notes or reproduce private working discussions. Earlier committed versions remain in Git history; this update does not rewrite history.
+
+**Affected files:** the eight files in Entry 09, root .gitignore, README.md, CONTRIBUTING.md and this record. Two personal working-note files are untracked without deleting their local copies.
+
+**Verification:** TypeScript checking, all twelve tests and the production build passed for this increment. Physical-phone login, mobile layout and Android packaging remain unverified. This increment does not implement later project stages.
+
+**Delivery:** proposed in [PR #2](https://github.com/JinxedAsh/bird-wanderer/pull/2), alongside the shared development history. Publication and merge are separate steps; GitHub check results will be verified after pushing.
 
 ## 4. How the current application fits together
 
@@ -258,7 +273,7 @@ Other current screens -> sample information and temporary React memory
 
 In development, Vite serves the interface and forwards account requests to Express. SQLite currently stores users, sessions and authentication rate-limit records. There are no persistent sighting, journal, media, follow or alert tables in the delivered Stage 1 implementation.
 
-React, TypeScript, Tailwind CSS, Vite, Express, Node.js 24 and SQLite remain the chosen implementation. Keeping one frontend/backend package is intentional for a manageable university project. The specification mentions microservices, but the current backend is a single Express application; that architectural wording still needs reconciliation against evaluator expectations. No microservice conversion has been authorized or implemented.
+React, TypeScript, Tailwind CSS, Vite, Express, Node.js 24 and SQLite remain the chosen implementation. Keeping one frontend/backend package is intentional for a manageable university project. The specification mentions microservices, but the current backend is a single Express application; that architectural wording still needs reconciliation against evaluator expectations. No microservice conversion has been implemented.
 
 ## 5. Verification and demonstration boundaries
 
@@ -287,7 +302,7 @@ Manual checks still include design comparison for all screens, mobile layout/tou
 
 Other incomplete existing controls include password recovery, sourced audio, entity-specific sharing/navigation and simulated messaging. Their final scope and priority should follow the specification. No additional feature should be assumed complete from its appearance in the interface.
 
-The next implementation step requires a plan that explicitly includes Android delivery. This documentation request does not authorize implementing another stage.
+The next implementation step requires a plan that explicitly includes Android delivery.
 
 ### Known issues still requiring follow-up
 
@@ -316,9 +331,9 @@ These paths help the developer find implementation details; teammates can unders
 | Runtime and checks | Start-Dev.ps1; frontend/scripts/dev.mjs; frontend/vite.config.ts; frontend/package.json; frontend/pnpm-lock.yaml; frontend/pnpm-workspace.yaml; frontend/.env.example; .github/workflows/ci.yml |
 | Stage 1 regression tests | frontend/server/frontend.test.mjs; frontend/server/proxy.test.mjs |
 | Repository hygiene | .gitignore; frontend/.gitignore; .gitattributes; CONTRIBUTING.md; .github/pull_request_template.md; .github/ISSUE_TEMPLATE/bug_report.md |
-| Supporting documentation | README.md; frontend/README.md; PROJECT_CONTEXT.md; historical PROJECT_REVIEW.md; AUTH_WALKTHROUGH.md; STAGE_1_WALKTHROUGH.md; design-reference/README.md and original images |
+| Supporting documentation | README.md; frontend/README.md; AUTH_WALKTHROUGH.md; STAGE_1_WALKTHROUGH.md; design-reference/README.md and original images |
 
-The Stage 1 delivery changed 26 files: twelve components, App.tsx, index.css, the focus hook, index.html, package.json, dev.mjs, vite.config.ts, two new test files and five documentation files. Its walkthrough/PR provide the detailed delivery context. The eight phone-access files in Entry 09 are a separate uncommitted snapshot.
+The Stage 1 delivery changed 26 files: twelve components, App.tsx, index.css, the focus hook, index.html, package.json, dev.mjs, vite.config.ts, two new test files and five documentation files. Its walkthrough/PR provide the detailed delivery context. Entry 09 describes the initial uncommitted phone-access snapshot; Entry 11 records its publication checks.
 
 ## 8. Updating this record after future work
 

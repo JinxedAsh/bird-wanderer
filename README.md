@@ -89,8 +89,6 @@ All four phases are required by **20 October 2026**. Password recovery, live ext
 
 - [Main chronological development record — start here](docs/DEVELOPMENT_RECORD.md)
 - [Living project specification](https://docs.google.com/document/d/1_KcOFYP8ELQf6WegrDuPw5uNlLqqlc90Gf2x46mSUvc/edit?usp=sharing)
-- [Agreed scope and deadlines](PROJECT_CONTEXT.md)
-- [Initial source review](PROJECT_REVIEW.md)
 - [Authentication walkthrough](docs/AUTH_WALKTHROUGH.md)
 - [Stage 1 walkthrough and manual checks](docs/STAGE_1_WALKTHROUGH.md)
 - [Design reference index](docs/design-reference/README.md)
