@@ -44,20 +44,32 @@ Browser findings and fixes in this increment:
 - Labels are associated with inputs; mode/password-visibility targets are 44px high.
 - Primary header/back/profile/bookmark/location and Explore controls have larger touch targets. The Explore report-scope label sits below its heading so All sights remains readable. The logo uses a native button with its existing image size.
 - Search clear/filter/history controls gain 44px targets, retaining the existing bar/cards. Inputs and long search chips can shrink/wrap at narrow widths.
+- Missing hotspot summary values use smaller text at narrow widths; actual numeric values retain their size.
 - Long compact author metadata appears under Full photo credit & rights. Licence/source/crop notice remain visible and full source text remains available without truncation. Short captions and full detail credits retain their prior behavior.
 
-Fresh per-screen browser acceptance is recorded in Development Record Entry26. Automated rendering tests do not measure CSS or replace direct browser comparison.
+Fresh browser acceptance on 4 October passed at 390px and 320px after the fixes. Automated rendering tests do not measure CSS or replace direct browser comparison.
+
+| Screen | Observed browser result |
+| --- | --- |
+| Authentication | Local logo, labels, registration, wrong-password rejection, login, refresh and logout passed. |
+| Explore | Heading/All sights fit at both widths; controls measured 44px; selected-location weather worked. |
+| Species | Photograph, EXIF, planning guide and controls worked; added evidence makes the page longer than the mockup. |
+| Hotspots | Map, filters, cards and detail navigation worked. |
+| Hotspot detail | Controls, weather and access disclosures worked; missing summary values fit at both widths during loading and after weather arrived. |
+| Search | Filters, clearing, history removal and long history wrapping passed without horizontal page overflow. |
+
+Saved items survived refresh on a disposable account. Full long photo credits opened by keyboard without navigating the enclosing card; visible licence/source links and complete terms remained available. Native logo/back keyboard navigation passed. Final browser console checks reported no warnings or errors. This is responsive desktop-browser evidence, separate from the physical-phone checklist below. Development Record Entry 26 records the same acceptance scope.
 
 ## Oppo K13 physical-phone checklist
 
 Proposed device: Oppo K13, supplied by the developer. Phone browser and Android version are not yet confirmed. [Zen's official FAQ](https://docs.zen-browser.app/faq) states that its browser has no Android version; use an installed Chrome or Firefox for phone acceptance, and keep Zen for desktop if preferred.
 
-Record the date, Android/browser version and actual result beside each item. Until the developer reports results, all physical-device items are pending.
+Record the date, Android/browser version and actual result beside each item. On 4 October the developer reported that the app opens and login works on the Oppo K13 using the supplied LAN link. Exact browser/version and the remaining physical checks are unconfirmed; this is user-reported evidence, not agent-observed testing.
 
 | Check | Pass condition | Result |
 | --- | --- | --- |
-| Same-Wi-Fi access | App opens using the computer's Wi-Fi URL, with readable logo and no horizontal page scrolling | Pending |
-| Authentication and keyboard | Signup/login/errors work; labels focus fields, password toggle works, keyboard does not prevent submit | Pending |
+| Same-Wi-Fi access | App opens using the computer's Wi-Fi URL; readability/overflow checked separately | App opening passed, user-reported 4 October; layout pending |
+| Authentication and keyboard | Signup/login/errors work; labels focus fields, password toggle works, keyboard does not prevent submit | Login passed, user-reported 4 October; remaining interactions pending |
 | Session | Refresh remains signed in; logout returns to authentication | Pending |
 | Search and touch | Type/select/clear; filters/history work; nonsense query gives empty state; controls are reachable | Pending |
 | Nearby/weather | Manual 28.59, 77.22 point produces distances and attributed forecast, or an honest retry state | Pending |

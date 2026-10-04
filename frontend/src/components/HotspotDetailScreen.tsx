@@ -115,7 +115,7 @@ export const HotspotDetailScreen: React.FC<HotspotDetailScreenProps> = ({
             <span className="material-symbols-outlined text-[20px] text-[#2d5a27] mb-0.5">
               flutter_dash
             </span>
-            <span className="text-[17px] font-bold text-[#181c20] leading-tight">
+            <span className={`max-w-full break-words font-bold text-[#181c20] leading-tight ${hotspot.activeTodayCount == null ? 'text-[11px]' : 'text-[17px]'}`}>
               {hotspot.activeTodayCount ?? 'Unavailable'}
             </span>
             <span className="text-[10px] text-[#42493e] font-semibold mt-0.5">Active today</span>
@@ -125,7 +125,7 @@ export const HotspotDetailScreen: React.FC<HotspotDetailScreenProps> = ({
             <span className="material-symbols-outlined text-[20px] text-[#904d00] mb-0.5">
               wb_twilight
             </span>
-            <span className="text-[17px] font-bold text-[#181c20] leading-tight">{hotspot.source ? 'Unavailable' : '06:00'}</span>
+            <span className={`max-w-full break-words font-bold text-[#181c20] leading-tight ${hotspot.source ? 'text-[11px]' : 'text-[17px]'}`}>{hotspot.source ? 'Unavailable' : '06:00'}</span>
             <span className="text-[10px] text-[#42493e] font-semibold mt-0.5">{hotspot.source ? 'Peak time' : 'Peak (06–09h)'}</span>
           </div>
 
@@ -133,7 +133,7 @@ export const HotspotDetailScreen: React.FC<HotspotDetailScreenProps> = ({
             <span className="material-symbols-outlined text-[20px] text-[#154212] mb-0.5">
               thermostat
             </span>
-            <span className="text-[17px] font-bold text-[#181c20] leading-tight">
+            <span className={`max-w-full break-words font-bold text-[#181c20] leading-tight ${hotspot.source && weather?.current.temperatureC == null ? 'text-[11px]' : 'text-[17px]'}`}>
               {hotspot.source ? (weather?.current.temperatureC == null ? 'Unavailable' : `${weather.current.temperatureC}°C`) : hotspot.temp}
             </span>
             <span className="text-[10px] text-[#42493e] font-semibold mt-0.5 truncate w-full">
