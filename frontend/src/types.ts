@@ -16,6 +16,9 @@ export type ScreenType =
   | 'settings';
 
 export interface BirdSpecies {
+  source?: 'eBird';
+  sourceUrl?: string;
+  recentObservations?: Array<{ hotspotId: string; location: string; observedAt: string }>;
   id: string;
   name: string;
   scientificName: string;
@@ -83,15 +86,19 @@ export interface CommunityPost {
 }
 
 export interface Hotspot {
+  source?: 'eBird';
+  sourceUrl?: string;
+  latitude?: number;
+  longitude?: number;
   id: string;
   name: string;
-  speciesCount: number;
-  distanceKm: number;
+  speciesCount: number | null;
+  distanceKm: number | null;
   bestTime: string;
   imageUrl: string;
   region: string;
   coordinates: string;
-  activeTodayCount: number;
+  activeTodayCount: number | null;
   temp: string;
   weatherCondition: string;
   wind: string;
@@ -106,7 +113,7 @@ export interface Hotspot {
     species: string;
     scientific: string;
     image: string;
-    count: number;
+    count: number | null;
     timeAgo: string;
   }>;
   photos: Array<{

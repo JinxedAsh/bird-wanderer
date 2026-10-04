@@ -67,7 +67,7 @@ export const HotspotDetailScreen: React.FC<HotspotDetailScreenProps> = ({
               {hotspot.region}
             </span>
             <span className="inline-flex items-center px-2 py-0.5 rounded bg-[#fe932c] text-white text-[11px] font-bold">
-              Wetland Hotspot
+              {hotspot.source ? 'eBird Hotspot' : 'Wetland Hotspot'}
             </span>
           </div>
           <h2 className="text-[24px] font-bold text-white tracking-tight leading-none drop-shadow-sm">
@@ -84,7 +84,7 @@ export const HotspotDetailScreen: React.FC<HotspotDetailScreenProps> = ({
               flutter_dash
             </span>
             <span className="text-[17px] font-bold text-[#181c20] leading-tight">
-              {hotspot.activeTodayCount}
+              {hotspot.activeTodayCount ?? 'Unavailable'}
             </span>
             <span className="text-[10px] text-[#42493e] font-semibold mt-0.5">Active today</span>
           </div>
@@ -93,8 +93,8 @@ export const HotspotDetailScreen: React.FC<HotspotDetailScreenProps> = ({
             <span className="material-symbols-outlined text-[20px] text-[#904d00] mb-0.5">
               wb_twilight
             </span>
-            <span className="text-[17px] font-bold text-[#181c20] leading-tight">06:00</span>
-            <span className="text-[10px] text-[#42493e] font-semibold mt-0.5">Peak (06–09h)</span>
+            <span className="text-[17px] font-bold text-[#181c20] leading-tight">{hotspot.source ? 'Unavailable' : '06:00'}</span>
+            <span className="text-[10px] text-[#42493e] font-semibold mt-0.5">{hotspot.source ? 'Peak time' : 'Peak (06–09h)'}</span>
           </div>
 
           <div className="flex flex-col items-center justify-center text-center p-2 rounded-xl bg-white shadow-xs">
@@ -160,10 +160,11 @@ export const HotspotDetailScreen: React.FC<HotspotDetailScreenProps> = ({
             <span className="w-2 h-2 rounded-full bg-[#154212]"></span>
             <h3 className="text-[17px] font-bold text-[#181c20]">Recent Sightings</h3>
           </div>
-          <span className="text-[11px] text-[#42493e] font-semibold">Past 4 hours</span>
+          <span className="text-[11px] text-[#42493e] font-semibold">{hotspot.source ? 'Regional latest reports, 14 days' : 'Past 4 hours'}</span>
         </div>
 
         <div className="flex flex-col gap-2">
+          {hotspot.source && <p className="text-[12px] text-[#42493e]">Regional results contain the latest report per species, not a complete hotspot history. Empty results do not mean no birds occur here.</p>}
           {hotspot.recentSightings.map((sight, idx) => (
             <div
               key={idx}
@@ -188,7 +189,7 @@ export const HotspotDetailScreen: React.FC<HotspotDetailScreenProps> = ({
 
               <div className="flex flex-col items-end flex-shrink-0 pl-2">
                 <span className="px-2 py-0.5 rounded-full bg-[#f1f4f9] text-[#154212] text-[10px] font-bold">
-                  {sight.count} sightings
+                  {hotspot.source ? sight.count === null ? 'Count unavailable' : `${sight.count} individuals` : `${sight.count} sightings`}
                 </span>
                 <span className="text-[10px] text-[#42493e] mt-1">{sight.timeAgo}</span>
               </div>
@@ -332,20 +333,20 @@ export const HotspotDetailScreen: React.FC<HotspotDetailScreenProps> = ({
                   <span className="text-[10px] text-[#42493e] font-semibold">Wind Speed</span>
                   <span className="text-[14px] font-bold text-[#181c20]">{hotspot.wind}</span>
                   <span className="text-[11px] text-[#154212] font-medium">
-                    Ideal for perched birds
+                    {hotspot.source ? 'Guidance not connected' : 'Ideal for perched birds'}
                   </span>
                 </div>
                 <div className="p-2.5 rounded-xl bg-[#f1f4f9] flex flex-col">
                   <span className="text-[10px] text-[#42493e] font-semibold">Humidity & Mist</span>
-                  <span className="text-[14px] font-bold text-[#181c20]">68% • Clearing</span>
-                  <span className="text-[11px] text-[#42493e]">Mist burns by 07:15</span>
+                  <span className="text-[14px] font-bold text-[#181c20]">{hotspot.source ? 'Unavailable' : '68% • Clearing'}</span>
+                  <span className="text-[11px] text-[#42493e]">{hotspot.source ? 'Weather not connected' : 'Mist burns by 07:15'}</span>
                 </div>
               </div>
               <div className="p-2.5 rounded-xl bg-[#f1f4f9] flex items-center gap-2 text-[12px] text-[#181c20]">
                 <span className="material-symbols-outlined text-[18px] text-[#904d00]">
                   light_mode
                 </span>
-                <span>Sunrise: 06:14 • Golden hour ends 07:45</span>
+                <span>{hotspot.source ? 'Sunrise and golden hour not connected' : 'Sunrise: 06:14 • Golden hour ends 07:45'}</span>
               </div>
             </div>
           )}
@@ -364,7 +365,7 @@ export const HotspotDetailScreen: React.FC<HotspotDetailScreenProps> = ({
                 </span>
               </div>
               <span className="text-[15px] font-bold text-[#181c20]">
-                View All Hotspot Species ({hotspot.speciesCount || 188})
+                {hotspot.source ? `Species recorded all time (${hotspot.speciesCount ?? 'Unknown'})` : `View All Hotspot Species (${hotspot.speciesCount || 188})`}
               </span>
             </div>
             <span
@@ -378,6 +379,7 @@ export const HotspotDetailScreen: React.FC<HotspotDetailScreenProps> = ({
 
           {openAccordion === 'species' && (
             <div className="px-3.5 pb-3.5 pt-1 space-y-1.5">
+              {hotspot.source && <p className="text-[12px] text-[#42493e]">The total is supplied by eBird. A complete hotspot species list is not connected yet.</p>}
               {hotspot.speciesList.map((sp, i) => (
                 <div
                   key={i}
@@ -398,6 +400,7 @@ export const HotspotDetailScreen: React.FC<HotspotDetailScreenProps> = ({
         </div>
       </div>
 
+      {!hotspot.source && <>
       {/* Sanctuary Map & Access */}
       <div className="px-4 pt-5">
         <div className="p-3.5 bg-white rounded-2xl shadow-xs border border-[#f1f4f9]">
@@ -419,6 +422,11 @@ export const HotspotDetailScreen: React.FC<HotspotDetailScreenProps> = ({
           </div>
         </div>
       </div>
+      </>}
+      {hotspot.source && <div className="mx-4 mt-4 rounded-xl bg-white p-4 text-[13px] text-[#42493e]">
+        <p>{hotspot.coordinates}. Interactive map not connected yet.</p>
+        <a href={hotspot.sourceUrl} target="_blank" rel="noreferrer" className="mt-2 inline-block font-semibold text-[#154212] underline">View hotspot on eBird</a>
+      </div>}
     </div>
   );
 };

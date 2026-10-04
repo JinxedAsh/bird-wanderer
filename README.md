@@ -4,7 +4,7 @@ A mobile-first birdwatching and wildlife photography application built for a sem
 
 Bird Wanderer brings species discovery, hotspots, photography logistics, personal observations and community activity into one interface. Development follows four increments, with the documented screen designs serving as the visual specification.
 
-> **In development:** account registration, login, persistent sessions and logout are implemented. Most other screens currently use sample data. This repository is not a finished production service.
+> **In development:** account registration, login, persistent sessions and logout are implemented. External discovery is connected to eBird and requires a server API key. Later-phase screens still use sample data. This repository is not a finished production service.
 
 **Required delivery:** an Android app/APK. The current runtime is a React mobile web interface; Android packaging and device testing are still pending. Stage 1 frontend stabilization does not produce an APK.
 
@@ -15,6 +15,8 @@ Bird Wanderer brings species discovery, hotspots, photography logistics, persona
 - Input validation, authentication rate limiting, origin checks and session invalidation on logout.
 - Automated authentication integration tests, TypeScript checks and a production build.
 - Stage 1 frontend fixes: complete local search results, shared hotspot bookmarks, live comment-panel updates, account identity, keyboard-accessible sheets and configurable API proxying.
+
+- External discovery: worldwide species taxonomy, regional hotspots and latest regional reports from eBird, with stable source IDs, server-side key handling, a short cache and explicit error/unavailable states. Live provider acceptance requires a configured key.
 
 ## Technology
 
@@ -89,6 +91,7 @@ All four phases are required by **20 October 2026**. Password recovery, live ext
 
 - [Main chronological development record — start here](docs/DEVELOPMENT_RECORD.md)
 - [Living project specification](https://docs.google.com/document/d/1_KcOFYP8ELQf6WegrDuPw5uNlLqqlc90Gf2x46mSUvc/edit?usp=sharing)
+- [External discovery setup and walkthrough](docs/DISCOVERY_WALKTHROUGH.md)
 - [Authentication walkthrough](docs/AUTH_WALKTHROUGH.md)
 - [Stage 1 walkthrough and manual checks](docs/STAGE_1_WALKTHROUGH.md)
 - [Design reference index](docs/design-reference/README.md)
