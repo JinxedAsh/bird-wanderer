@@ -38,7 +38,11 @@ Photography tips are transparent rules: consider approximately the first hour af
 
 TypeScript checking, all 35 tests and the production build passed. Weather tests use injected provider responses rather than internet access, covering units, coordinates, timezones, upcoming rows, null/zero values, cache sharing/expiry, malformed data and retryable failures. HTTP tests check session protection and prevent unknown/invalid hotspot queries reaching the weather provider. Rendering tests verify source labels, loading/retry and general-guidance wording.
 
-A separate real-provider check confirmed Lodhi Gardens coordinates, an Asia/Kolkata forecast, two days of sunrise/sunset, 24 upcoming rows and cache reuse. The recorded values are in Entry 16 of DEVELOPMENT_RECORD.md and may change. Browser acceptance of these new changes is tracked separately; no automated rendering test proves actual clicks, touch or layout.
+A separate real-provider check confirmed Lodhi Gardens coordinates, an Asia/Kolkata forecast, two days of sunrise/sunset, 24 upcoming rows and cache reuse. The recorded values are in Entry 16 of DEVELOPMENT_RECORD.md and may change. No automated rendering test proves actual clicks, touch or layout.
+
+**Desktop browser acceptance:** the designated testing chat verified Lodhi Gardens weather fields, location timezone, two sunrise/sunset dates, six hourly rows, attribution and approximate tips. A rapid Asola-to-Lodhi sequence retained the correct forecast; reopening Asola showed distinct values. The table/map controls were usable at 390 × 844 pixels. The local logo and login/refresh/logout regressions passed, and a protected request after cross-tab logout returned to login. Directions opened Google Maps at the exact eBird coordinates, although Google displayed a nearby business name. Pins can overlap in broad searches; zoom or exact-name filtering helps select the intended location.
+
+Physical-phone interaction, provider-outage UI, exact design acceptance and pure window-focus recovery remain unverified. The testing tool could not establish a genuine window-focus event; recovery on a protected request passed. The check confirms displayed behavior, not independent weather accuracy or entrance suitability.
 
 ## Manual acceptance checklist
 

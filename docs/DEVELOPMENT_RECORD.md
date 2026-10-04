@@ -45,7 +45,7 @@ Bird Wanderer helps birdwatchers and wildlife photographers discover species and
 | Interface | Fifteen screen components exist. Frontend corrections and accessibility improvements have been implemented. Exact visual acceptance remains pending. |
 | Accounts | Real registration, login, session restoration and logout are implemented. Accounts and sessions survive a server restart. |
 | Discovery | eBird taxonomy, regional hotspots and latest regional reports are connected; search and existing detail screens use source IDs. Live API checks passed. Species-to-hotspot links, hotspot-specific recent reports and catalogue-matched all-time species lists are connected. Manual device acceptance remains pending. |
-| Maps and logistics | Interactive hotspot maps, coordinate-based directions and hotspot forecasts are implemented. A desktop browser check passed pins/filtering/detail navigation. Physical-phone acceptance and new weather acceptance remain pending. General photography planning tips are labelled as heuristics; open-photo metadata and verified access information remain incomplete. |
+| Maps and logistics | Interactive hotspot maps, coordinate-based directions and hotspot forecasts are implemented. Desktop browser checks passed pins/filtering/detail navigation, weather, coordinate directions and a 390-pixel layout. Physical-phone/outage acceptance remains pending. General photography planning tips are labelled as heuristics; open-photo metadata and verified access information remain incomplete. |
 | Journal, profiles and social activity | Many interactions work temporarily within the running app. Most changes are not stored for later use. |
 | Alerts and quizzes | Demonstration screens exist. Automated alerts, complete quiz progress and challenges are not delivered. |
 | Android delivery | The requirement is recorded. No Android package has been produced or device-certified. |
@@ -342,6 +342,8 @@ The header logo now uses a bundled SVG following the supplied green bird emblem,
 
 **Manual recheck:** end a test session in another tab, then return to the original page or trigger a discovery request; confirm login appears without refresh and old records/bookmarks disappear. Check that an isolated eBird outage does not sign the account out, fresh login still restores discovery and the header logo loads. Avoid changing real account data for this test.
 
+**Browser follow-up during Entry 16:** the local logo displayed, authentication regressions passed, and logging out in a second tab followed by opening a hotspot in the original tab returned to login without refresh. Pure window-focus recovery was not confirmed: closing a browser tab/sending keyboard input did not establish a genuine window-focus event through the testing tool. This remains an acceptance limit, not a demonstrated focus-listener pass. Provider-outage behavior is covered by client tests but was not checked in the browser.
+
 **Delivery:** implementation commit `29312fc`, published on `codex/session-and-brand-fixes` in [PR #6](https://github.com/JinxedAsh/bird-wanderer/pull/6). The PR records check/merge results; merging follows passing checks. Next increment: weather and sourced trip-planning information. No test-account credentials or browser screenshots are included in the repository.
 
 ### Entry 16 - Hotspot forecasts and photography planning
@@ -349,7 +351,7 @@ The header logo now uses a bundled SVG following the supplied green bird emblem,
 - **Date:** 4 October 2026, India Standard Time.
 - **Group:** discovery and trip planning.
 - **Phase:** Phase 1 core MVP.
-- **Status:** implemented; automated and live-provider checks passed; browser acceptance requested.
+- **Status:** implemented; automated, live-provider and scoped desktop browser checks passed; remaining acceptance limits below.
 
 **Requirement:** replace unavailable hotspot weather with externally sourced, location-specific information that helps plan a photography visit, preserving the existing detail screen.
 
@@ -365,9 +367,11 @@ The header logo now uses a bundled SVG following the supplied green bird emblem,
 
 **Live service evidence:** Lodhi Gardens (`L2265071`) successfully returned an Open-Meteo forecast using the exact eBird coordinates. At model time 4 October 2026, 11:00 in Asia/Kolkata, it reported 32°C, wind 7.8 km/h, humidity 39%, zero precipitation and clear conditions. Sunrise/sunset were 06:15/18:03 for 4 October and 06:16/18:02 for 5 October; 24 upcoming hourly rows were normalized, and a second request used the cache. These are a recorded forecast snapshot, not permanent values or on-site measurements.
 
-**Manual testing:** browser acceptance of weather and Entry 15's fixes was requested in the designated project testing chat. Actual results will be appended after receipt. Physical-phone layout/gestures, Google Maps opening, provider outage UI and exact visual fidelity remain pending unless separately verified.
+**Browser results:** the designated project testing chat reloaded the current app at the computer's Wi-Fi address. The header logo, wrong-password rejection, login, refresh persistence and logout passed. A protected request from an invalidated session returned to login without refresh. Lodhi Gardens showed 32°C, wind 7.8 km/h, humidity 39%, zero precipitation/cloud cover, local model time, two dated sunrise/sunset pairs, six hourly rows, attribution and approximate tips. Rapid navigation from Asola to Lodhi retained the correct final weather; reopening Asola showed its distinct readings. The weather table and map zoom controls were usable at 390 × 844 pixels. Google Maps opened the exact destination coordinates, 28.59253,77.22044, but labelled a nearby business rather than Lodhi Gardens; the coordinate link is not a verified entrance or named-place guarantee. Closely spaced pins overlapped for a broad Lodhi search; filtering to the exact name resolved selection. No source files, server processes or account records were changed by testing, only temporary login sessions.
 
-**Delivery:** prepared on `codex/hotspot-weather`; publication evidence follows before merging. The [Weather walkthrough](WEATHER_WALKTHROUGH.md) gives the flow, acceptance checklist and viva notes. Next Phase 1 increment: source-attributed species photographs and open-photo metadata; remaining site-access data requires verifiable sources.
+**Acceptance limits:** pure focus-based session recovery was not confirmed because the tool could not establish a genuine window-focus event. Provider-outage/retry UI, physical-phone gestures, independent weather accuracy, verified entrances and complete design fidelity remain unverified. Rendered phone-width layout is not physical Android certification.
+
+**Delivery:** implementation commit `f2f69fe`, published on `codex/hotspot-weather` in [PR #7](https://github.com/JinxedAsh/bird-wanderer/pull/7). The PR records check/merge results; merging follows passing checks. The [Weather walkthrough](WEATHER_WALKTHROUGH.md) gives the flow, acceptance checklist and viva notes. Next Phase 1 increment: source-attributed species photographs and open-photo metadata; remaining site-access data requires verifiable sources.
 
 ## 4. How the current application fits together
 
