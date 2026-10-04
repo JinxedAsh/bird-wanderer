@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Hotspot, ScreenType } from '../types';
+import { HotspotMap } from './HotspotMap';
 
 interface HotspotsScreenProps {
   externalDiscovery?: boolean;
@@ -20,7 +21,7 @@ export const HotspotsScreen: React.FC<HotspotsScreenProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [activePinId, setActivePinId] = useState<string | null>(null);
 
-  const filteredHotspots = hotspots.filter((h) => {
+  const filteredHotspots = useMemo(() => hotspots.filter((h) => {
     if (searchQuery.trim()) {
       const q = searchQuery.trim().toLowerCase();
       const matches = (
@@ -37,7 +38,7 @@ export const HotspotsScreen: React.FC<HotspotsScreenProps> = ({
       return h.isSaved;
     }
     return true;
-  });
+  }), [hotspots, searchQuery, activeFilter]);
 
   const handlePinClick = (id: string) => {
     setActivePinId(id);
@@ -160,7 +161,13 @@ export const HotspotsScreen: React.FC<HotspotsScreenProps> = ({
       </div>
 
       }
-      {externalDiscovery && <p className="px-4 py-3 text-[12px] text-[#42493e]">Real hotspot coordinates are available in each location. Interactive maps are the next step. Popular filters by at least 15 species recorded all time.</p>}
+      {externalDiscovery && <div className="px-4 my-2">
+        <HotspotMap hotspots={filteredHotspots} label="Map of filtered eBird hotspots" selectedId={activePinId} onSelect={setActivePinId} onOpen={(id) => {
+          const hotspot = filteredHotspots.find((h) => h.id === id);
+          if (hotspot) onSelectHotspot(hotspot);
+        }} />
+        <p className="mt-2 text-[12px] text-[#42493e]">Select a pin to open its location. Popular filters by at least 15 species recorded all time. GPS and distance sorting are not connected yet.</p>
+      </div>}
       {/* Location Cards List */}
       <div className="px-4 pt-1 flex flex-col gap-2.5">
         {filteredHotspots.map((hotspot) => {

@@ -17,12 +17,14 @@ Bird Wanderer brings species discovery, hotspots, photography logistics, persona
 - Stage 1 frontend fixes: complete local search results, shared hotspot bookmarks, live comment-panel updates, account identity, keyboard-accessible sheets and configurable API proxying.
 
 - External discovery: worldwide species taxonomy, regional hotspots and latest regional reports from eBird, with stable source IDs, server-side key handling, a short cache and explicit error/unavailable states. Species pages link to matching hotspots, and hotspot-specific reports/all-time lists link back by species ID. Live checks passed with a local key; each installation must configure its own key.
+- Interactive hotspot maps use Leaflet and OpenStreetMap. Pins follow the displayed filters and open the selected hotspot; its detail page links to Google Maps directions using validated coordinates. Phone interaction and visual acceptance remain pending.
 
 ## Technology
 
 | Layer | Implementation |
 | --- | --- |
 | Frontend | React 19, TypeScript, Vite, Tailwind CSS |
+| Maps | Leaflet 1.9.4, OpenStreetMap tiles, Google Maps directions links |
 | API | Node.js 24, Express |
 | Database | SQLite through Node's built-in SQLite module |
 | Authentication | scrypt password hashing, hashed session tokens, HttpOnly cookies |
@@ -85,7 +87,7 @@ The frontend and backend currently share one package under `frontend/`. Keeping 
 | 3 — Alerts | Subscriptions, sighting notifications, conservation privacy filters | Planned |
 | 4 — Retention | Quiz and engagement features, remaining required interactions | Planned |
 
-All four phases are required by **20 October 2026**. Password recovery, live external data, production hosting and complete visual acceptance are not implemented yet. Prototype content and statistics must not be mistaken for live observations.
+All four phases are required by **20 October 2026**. Password recovery, weather and photography logistics, production hosting and complete visual acceptance are not implemented yet. Prototype content and statistics must not be mistaken for live observations.
 
 ## Documentation
 

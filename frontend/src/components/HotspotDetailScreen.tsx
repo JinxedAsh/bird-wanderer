@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Hotspot, ScreenType, BirdSpecies } from '../types';
 import type { HotspotDetails } from '../lib/discovery';
+import { hotspotDirectionsUrl } from '../lib/maps';
+import { HotspotMap } from './HotspotMap';
 
 interface HotspotDetailScreenProps {
   details?: HotspotDetails;
@@ -27,6 +29,8 @@ export const HotspotDetailScreen: React.FC<HotspotDetailScreenProps> = ({
 }) => {
   const isSaved = Boolean(hotspot.isSaved);
   const [openAccordion, setOpenAccordion] = useState<string | null>('visit');
+  const mapHotspots = useMemo(() => [hotspot], [hotspot]);
+  const directionsUrl = hotspotDirectionsUrl(hotspot);
   const recentSightings = hotspot.source ? details?.recentSightings || [] : hotspot.recentSightings;
   const speciesList = hotspot.source ? details?.speciesList || [] : hotspot.speciesList;
   const selectSpecies = (id: string | undefined, name: string) => {
@@ -452,7 +456,10 @@ export const HotspotDetailScreen: React.FC<HotspotDetailScreenProps> = ({
       </div>
       </>}
       {hotspot.source && <div className="mx-4 mt-4 rounded-xl bg-white p-4 text-[13px] text-[#42493e]">
-        <p>{hotspot.coordinates}. Interactive map not connected yet.</p>
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-2"><h3 className="font-semibold text-[#181c20]">Sanctuary Map &amp; Access</h3><span className="text-[11px] font-mono">{hotspot.coordinates}</span></div>
+        <HotspotMap hotspots={mapHotspots} label={`Map of ${hotspot.name}`} selectedId={hotspot.id} />
+        {directionsUrl ? <a href={directionsUrl} target="_blank" rel="noreferrer" className="mt-3 flex h-11 items-center justify-center gap-2 rounded-xl bg-[#2d5a27] font-semibold text-white"><span className="material-symbols-outlined text-[18px]">directions</span>Open directions</a> : <p role="status" className="mt-2">Directions unavailable: this hotspot has no valid coordinates.</p>}
+        <p className="mt-2 text-[11px]">Directions open Google Maps at the hotspot coordinates. Entry-gate information remains unavailable.</p>
         <a href={hotspot.sourceUrl} target="_blank" rel="noreferrer" className="mt-2 inline-block font-semibold text-[#154212] underline">View hotspot on eBird</a>
       </div>}
     </div>

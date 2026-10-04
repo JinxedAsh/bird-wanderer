@@ -45,7 +45,7 @@ Bird Wanderer helps birdwatchers and wildlife photographers discover species and
 | Interface | Fifteen screen components exist. Frontend corrections and accessibility improvements have been implemented. Exact visual acceptance remains pending. |
 | Accounts | Real registration, login, session restoration and logout are implemented. Accounts and sessions survive a server restart. |
 | Discovery | eBird taxonomy, regional hotspots and latest regional reports are connected; search and existing detail screens use source IDs. Live API checks passed. Species-to-hotspot links, hotspot-specific recent reports and catalogue-matched all-time species lists are connected. Manual device acceptance remains pending. |
-| Maps and logistics | Their interface exists; real interactive maps and data-derived photography guidance remain incomplete. |
+| Maps and logistics | Interactive hotspot maps and coordinate-based external directions are implemented; map gestures, tile loading and phone acceptance remain unverified. Weather and data-derived photography guidance remain incomplete. |
 | Journal, profiles and social activity | Many interactions work temporarily within the running app. Most changes are not stored for later use. |
 | Alerts and quizzes | Demonstration screens exist. Automated alerts, complete quiz progress and challenges are not delivered. |
 | Android delivery | The requirement is recorded. No Android package has been produced or device-certified. |
@@ -299,6 +299,29 @@ Newer changes were found in eight existing files: frontend/.env.example, fronten
 
 **Delivery:** implementation commit `1c3a4a9`, published on `codex/discovery-journey` in [PR #4](https://github.com/JinxedAsh/bird-wanderer/pull/4). The PR records check/merge results; merging follows passing checks. The [Discovery walkthrough](DISCOVERY_WALKTHROUGH.md) includes the current flow and manual checklist.
 
+### Entry 14 - Interactive hotspot maps and directions
+
+- **Date:** 4 October 2026, India Standard Time.
+- **Group:** discovery and trip planning.
+- **Phase:** Phase 1 core MVP.
+- **Status:** implemented; automated checks passed; manual browser/phone verification pending.
+
+**Requirement:** let a user see real discovery locations geographically and get directions to the selected hotspot, preserving the supplied screen structure.
+
+**What changed:** the external Hotspots screen now has an interactive Leaflet map with OpenStreetMap imagery. Pins follow the same search, All, Popular and Saved filters as the cards. Selecting a pin highlights it and displays its name; its popup opens the corresponding hotspot by stable ID. The hotspot detail screen shows a map of that record and an Open directions link to Google Maps. Existing prototype map behavior is preserved on sample screens.
+
+**How it works:** eBird supplies location coordinates, Leaflet provides map interaction, and OpenStreetMap supplies map tiles. A shared helper accepts only finite numeric latitude/longitude within valid ranges, preserving genuine zero values. Invalid locations have no map pin or directions link. Google Maps receives the destination coordinates through its documented URL format, without a maps API key. Popup names are inserted as text, not interpreted as HTML. Map resources are released when the screen closes, and resize handling keeps the map aligned with its container.
+
+**Design and failure handling:** the Hotspots and Hotspot Detail reference images were reviewed. Rounded map areas and green pins remain within the existing screen layout; exact visual conformity is not yet certified. Loading, missing-coordinate and map-error states are explicit. Failed tiles offer Retry map; the hotspot list and external directions remain usable. OpenStreetMap attribution stays visible. No bulk tile downloads, offline map storage or GPS collection were added.
+
+**Affected files:** new `frontend/src/components/HotspotMap.tsx` and `frontend/src/lib/maps.ts`; existing HotspotsScreen.tsx, HotspotDetailScreen.tsx, main.tsx, index.css, package.json, pnpm-lock.yaml and server/frontend.test.mjs; README.md, frontend/README.md and the discovery walkthrough/documentation record.
+
+**Verification:** TypeScript checking, all **29 automated tests** and the production build passed. Three additional tests cover invalid/missing/zero/boundary coordinates, the exact Google Maps destination URL, and external map/directions/empty rendering. Existing account, discovery and proxy tests continue to pass. Leaflet is loaded as a separate browser module; server-rendering tests do not initialize a map.
+
+**Manual checks and limits:** browser interaction verification was unavailable for this increment. Map tile loading, pan/zoom, touch, keyboard selection, pin popups, layout and opening Google Maps on a phone still need manual checks. Directions target the hotspot point, not a confirmed entry gate. GPS/distance sorting, weather, photo metadata, persistent bookmarks and Android packaging are separate work. This web build is not an APK.
+
+**Delivery:** prepared on `codex/hotspot-maps`; publication evidence will be recorded before merging. See the [Discovery walkthrough](DISCOVERY_WALKTHROUGH.md) for manual checks and viva explanations.
+
 ## 4. How the current application fits together
 
 The interface is what the user sees and interacts with. The backend is the program that receives requests and checks account information. The database is where persistent account information is saved.
@@ -334,7 +357,7 @@ Manual checks still include design comparison for all screens, mobile layout/tou
 
 | Phase | Remaining implementation and acceptance |
 | --- | --- |
-| Phase 1 — core | Complete species enrichment and geographic maps; sourced photography logistics/weather/open-photo metadata; complete design/manual acceptance. External catalogue/search is connected in Entry 12. |
+| Phase 1 — core | Complete species enrichment and sourced photography logistics/weather/open-photo metadata; complete design/manual acceptance including maps. External catalogue/search and detail journeys are connected in Entries 12–13; maps/directions are implemented in Entry 14. |
 | Phase 2 — community | Persistent profiles and sightings; validated photograph upload/storage; EXIF extraction; journal/life-list relationships and reconciled statistics; real feed/follows/likes/comments/reporting; server ownership/visibility checks. |
 | Phase 3 — alerts | Subscriptions/preferences; qualifying-sighting matching; automated delivery; protected-species coordinate handling and privacy checks. Privacy must also be applied earlier wherever location data becomes accessible. |
 | Phase 4 — retention | Complete identification quiz sessions, persistent progress and photography challenges without disrupting discovery. |
@@ -365,6 +388,7 @@ These paths help the developer find implementation details; teammates can unders
 | Group | Important files |
 | --- | --- |
 | External discovery | frontend/server/discovery.mjs; frontend/server/discovery.test.mjs; frontend/src/lib/discovery.ts; docs/DISCOVERY_WALKTHROUGH.md |
+| Maps and directions | frontend/src/components/HotspotMap.tsx; frontend/src/lib/maps.ts; HotspotsScreen.tsx; HotspotDetailScreen.tsx; frontend/src/index.css |
 | Accounts | frontend/src/components/AuthScreen.tsx; frontend/src/lib/auth.ts; frontend/server/auth.mjs; frontend/server/index.mjs; frontend/server/auth.test.mjs |
 | Shared frontend state | frontend/src/App.tsx; frontend/src/types.ts; frontend/src/data/mockData.ts |
 | Stage 1 components | BottomNav.tsx, CommunityScreen.tsx, ExploreScreen.tsx, GlobalSearchScreen.tsx, Header.tsx, HotspotDetailScreen.tsx, HotspotsScreen.tsx, LifeListScreen.tsx, LogObservationScreen.tsx, ProfileScreen.tsx, SettingsScreen.tsx, SpeciesDetailScreen.tsx, all under frontend/src/components |
