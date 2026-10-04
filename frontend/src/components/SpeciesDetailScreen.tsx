@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { BirdSpecies, ScreenType } from '../types';
 import type { SpeciesLocations } from '../lib/discovery';
-import { SpeciesPhoto } from './SpeciesPhoto';
+import { SpeciesPhoto, type PhotoLoadState } from './SpeciesPhoto';
+import { PhotoPlanning } from './PhotoPlanning';
 
 interface SpeciesDetailScreenProps {
   onSessionExpired?: () => void;
@@ -29,6 +30,7 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [isSightingsExpanded, setIsSightingsExpanded] = useState(true);
+  const [photoState, setPhotoState] = useState<PhotoLoadState>({ speciesId: species.id, photo: null, loading: true, error: '' });
   const audioTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => () => {
@@ -56,6 +58,12 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
         ? `${species.name} saved to your field target list!`
         : `Removed from target list`
     );
+  };
+
+  const focusSection = (id: string) => {
+    const section = document.getElementById(id);
+    section?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    section?.focus({ preventScroll: true });
   };
 
   return (
@@ -113,7 +121,7 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
 
       {/* Hero Photo Stage */}
       <div className="px-4 pb-3">
-        <SpeciesPhoto key={species.id} species={species} hero onSessionExpired={onSessionExpired} frameClassName="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-[#ebeef3] shadow-sm">
+        <SpeciesPhoto key={species.id} species={species} hero onSessionExpired={onSessionExpired} onPhotoStateChange={setPhotoState} frameClassName="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-[#ebeef3] shadow-sm">
 
           {/* Ambient Badge */}
           {!species.source && <div className="absolute bottom-3 left-3 flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/75 backdrop-blur-md text-white text-[11px] font-medium shadow-sm">
@@ -233,7 +241,9 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
         </button>
 
         <button
-          onClick={() => showToast(species.source ? 'Photography logistics are not connected yet.' : `Suggested early morning session for ${species.name}. Trip saving is not connected yet.`)}
+          type="button"
+          aria-controls={species.source ? 'photography-planning' : undefined}
+          onClick={() => species.source ? focusSection('photography-planning') : showToast(`Suggested early morning session for ${species.name}. Trip saving is not connected yet.`)}
           className="flex-1 h-12 rounded-xl bg-[#2d5a27] text-white font-semibold text-[13px] flex items-center justify-center gap-2 shadow-sm hover:opacity-95 active:scale-[0.98] transition-all"
         >
           <span className="material-symbols-outlined text-[18px]">add_a_photo</span>
@@ -243,17 +253,17 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
 
       {/* Photography Field Note Card */}
       <div className="px-4 pb-5">
-        <div className="bg-white p-4 rounded-2xl shadow-sm border border-[#f1f4f9]">
+        <div id="photography-planning" tabIndex={-1} role="region" aria-label="Field Guide and Technique" className="bg-white p-4 rounded-2xl shadow-sm border border-[#f1f4f9]">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-7 h-7 rounded-lg bg-[#ffdcc3] flex items-center justify-center text-[#6e3900]">
               <span className="material-symbols-outlined text-[16px]">tips_and_updates</span>
             </div>
             <h3 className="text-[16px] font-bold text-[#181c20]">Field Guide & Technique</h3>
           </div>
-          <p className="text-[13px] text-[#42493e] leading-relaxed">
+          {species.source ? <PhotoPlanning speciesId={species.id} state={photoState} onChooseHotspot={() => focusSection('sightings-sheet-anchor')} /> : <p className="text-[13px] text-[#42493e] leading-relaxed">
             {species.fieldGuideNotes ||
               '400mm+ recommended. Kingfishers dive rapidly from low perches; maintain shutter speed at 1/2000s or faster in morning light. Look for regular fishing perches 1–2 meters above stagnant river channels.'}
-          </p>
+          </p>}
 
           {/* Audio Spectrogram Bar Pattern */}
           <div className="mt-3.5 bg-[#f1f4f9] rounded-xl p-2.5 flex items-center gap-2.5">
@@ -453,9 +463,9 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
       </section>
       </>}
       {species.source && (
-        <section id="sightings-sheet-anchor" className="mx-4 rounded-xl bg-white p-4 text-[13px] text-[#42493e]">
+        <section id="sightings-sheet-anchor" tabIndex={-1} className="mx-4 rounded-xl bg-white p-4 text-[13px] text-[#42493e]">
           <h3 className="font-bold text-[#181c20]">Recent Sightings &amp; Hotspots</h3>
-          <p className="mt-2">Latest report at each matching hotspot in {species.region}, within 14 days. Select a location to explore it. Reports do not guarantee a sighting; interactive maps are not connected yet.</p>
+          <p className="mt-2">Latest report at each matching hotspot in {species.region}, within 14 days. Select a location for its map, weather and directions. Reports do not guarantee a sighting; the reported point is not a verified entrance.</p>
           {!locations && !locationsError && <p role="status" className="mt-2">Loading locations for {species.name}...</p>}
           {locationsError && <div role="alert" className="mt-2"><p>{locationsError}</p><button type="button" onClick={onRetryLocations} className="mt-2 font-semibold text-[#154212] underline">Try again</button></div>}
           {locations && <p className="mt-2 text-[11px]">Retrieved {new Date(locations.fetchedAt).toLocaleString()}{locations.cached ? ' (cached)' : ''}. Observation times below are local to the location.</p>}

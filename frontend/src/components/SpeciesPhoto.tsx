@@ -10,6 +10,14 @@ interface SpeciesPhotoProps {
   hero?: boolean;
   onSessionExpired?: () => void;
   children?: React.ReactNode;
+  onPhotoStateChange?: (state: PhotoLoadState) => void;
+}
+
+export interface PhotoLoadState {
+  speciesId: string;
+  photo: Photo | null;
+  loading: boolean;
+  error: string;
 }
 
 export const PhotoCredit: React.FC<{ photo: Photo; full?: boolean }> = ({ photo, full = false }) => (
@@ -24,10 +32,12 @@ export const PhotoCredit: React.FC<{ photo: Photo; full?: boolean }> = ({ photo,
   </figcaption>
 );
 
-export const SpeciesPhoto: React.FC<SpeciesPhotoProps> = ({ species, frameClassName, hero = false, onSessionExpired, children }) => {
+export const SpeciesPhoto: React.FC<SpeciesPhotoProps> = ({ species, frameClassName, hero = false, onSessionExpired, onPhotoStateChange, children }) => {
   const frame = useRef<HTMLDivElement>(null);
   const expired = useRef(onSessionExpired);
   expired.current = onSessionExpired;
+  const photoStateChanged = useRef(onPhotoStateChange);
+  photoStateChanged.current = onPhotoStateChange;
   const [visible, setVisible] = useState(hero);
   const [photo, setPhoto] = useState<Photo | null>(null);
   const [loaded, setLoaded] = useState(false);
@@ -47,12 +57,20 @@ export const SpeciesPhoto: React.FC<SpeciesPhotoProps> = ({ species, frameClassN
     if (!species.source || !visible) return;
     const controller = new AbortController();
     setPhoto(null); setLoaded(false); setError(''); setBroken(false);
+    photoStateChanged.current?.({ speciesId: species.id, photo: null, loading: true, error: '' });
     loadSpeciesPhoto(species.id, controller.signal).then((result) => {
-      if (!controller.signal.aborted) { setPhoto(result.photo); setLoaded(true); }
+      if (!controller.signal.aborted) {
+        setPhoto(result.photo); setLoaded(true);
+        photoStateChanged.current?.({ speciesId: species.id, photo: result.photo, loading: false, error: '' });
+      }
     }).catch((error) => {
       if (!controller.signal.aborted) {
         if (error instanceof SessionExpiredError) expired.current?.();
-        else { setError(error.message || 'Photo unavailable.'); setLoaded(true); }
+        else {
+          const message = error.message || 'Photo unavailable.';
+          setError(message); setLoaded(true);
+          photoStateChanged.current?.({ speciesId: species.id, photo: null, loading: false, error: message });
+        }
       }
     });
     return () => controller.abort();

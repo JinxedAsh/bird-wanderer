@@ -93,6 +93,12 @@ Successful matches and no-match results are cached in memory for 24 hours (300 e
 
 The same Commons response now requests decoded file EXIF with `iiprop=metadata` and `iimetadataversion=latest`. No image download, upload parser or additional environment key is needed. Details display validated make/model/lens, exposure seconds, f-number, ISO, focal length and original capture time. Missing or malformed fields are null; unsupported/absent EXIF is explicit. Camera clocks are not converted into a hotspot timezone; only an explicit `OffsetTimeOriginal` provides an offset. GPS, owner and serial fields are never returned. Photography recommendations remain a separate next step. Restart a server without Node watch to clear the previous in-memory response shape. See [EXIF walkthrough](../docs/EXIF_WALKTHROUGH.md).
 
+### Photography planning
+
+On an external species detail, **Plan a Shot** scrolls to and focuses the existing Field Guide & Technique card. It reuses the same photo/EXIF request, displaying available exposure/focal-length examples and conditional preparation tips. General camera advice is separately labelled and linked to Nikon's technique reference. **Choose a reported hotspot** focuses the existing recent-location list; selecting a location opens its map, forecast/daylight and directions. No trip record is saved. No new API, dependency or environment setting is needed.
+
+Photo-derived tips are withheld during loading/errors, for a different species ID or without supported settings. Missing values are not estimated. The example's shutter, lens and aperture are comparisons, not universal prescriptions. Capture timestamps are not used to infer activity, season or visit timing. Access hours/fees/permissions/entrances remain unverified. See [Photography planning walkthrough](../docs/PHOTO_PLANNING_WALKTHROUGH.md).
+
 ## Deployment prerequisites
 
 Build the frontend, set `NODE_ENV=production`, `APP_ORIGIN` to the exact HTTPS origin, and `DATABASE_PATH` to a persistent private disk location, then run `pnpm start`. Configure the host and port for the chosen platform and serve HTTPS through its reverse proxy. The Express server serves the built frontend in production. Hosting, backups and a mail provider are not configured yet.

@@ -17,14 +17,14 @@ let discoveryClient;
 before(async () => {
   temporaryDirectory = mkdtempSync(join(root, '.stage1-render-'));
   const screens = {};
-  const names = ['GlobalSearchScreen', 'SettingsScreen', 'SpeciesDetailScreen', 'SpeciesPhoto', 'PhotoMetadata', 'HotspotMap', 'HotspotWeatherPanel', 'HotspotDetailScreen', 'HotspotsScreen', 'ExploreScreen', 'Header'];
+  const names = ['GlobalSearchScreen', 'SettingsScreen', 'SpeciesDetailScreen', 'SpeciesPhoto', 'PhotoMetadata', 'PhotoPlanning', 'HotspotMap', 'HotspotWeatherPanel', 'HotspotDetailScreen', 'HotspotsScreen', 'ExploreScreen', 'Header'];
   // Compile these existing TSX screens for Node rendering; no browser or new test framework.
   for (const relative of ['lib/useDialogFocus.ts', 'lib/maps.ts', 'lib/auth.ts', 'lib/discovery.ts', ...names.map((name) => `components/${name}.tsx`)]) {
     const output = join(temporaryDirectory, relative.replace(/\.tsx?$/, '.mjs'));
     mkdirSync(dirname(output), { recursive: true });
     const source = readFileSync(join(root, 'src', relative), 'utf8');
     const { code } = transformSync(source, { loader: 'tsx', format: 'esm', jsx: 'automatic', target: 'es2022' });
-    writeFileSync(output, code.replace('../lib/useDialogFocus"', '../lib/useDialogFocus.mjs"').replace('../lib/maps"', '../lib/maps.mjs"').replace('./HotspotMap"', './HotspotMap.mjs"').replace('./HotspotWeatherPanel"', './HotspotWeatherPanel.mjs"').replace('./SpeciesPhoto"', './SpeciesPhoto.mjs"').replace('./PhotoMetadata"', './PhotoMetadata.mjs"').replace('../lib/discovery"', '../lib/discovery.mjs"').replace('../lib/auth"', '../lib/auth.mjs"').replace('./auth"', './auth.mjs"'));
+    writeFileSync(output, code.replace('../lib/useDialogFocus"', '../lib/useDialogFocus.mjs"').replace('../lib/maps"', '../lib/maps.mjs"').replace('./HotspotMap"', './HotspotMap.mjs"').replace('./HotspotWeatherPanel"', './HotspotWeatherPanel.mjs"').replace('./SpeciesPhoto"', './SpeciesPhoto.mjs"').replace('./PhotoMetadata"', './PhotoMetadata.mjs"').replace('./PhotoPlanning"', './PhotoPlanning.mjs"').replace('../lib/discovery"', '../lib/discovery.mjs"').replace('../lib/auth"', '../lib/auth.mjs"').replace('./auth"', './auth.mjs"'));
   }
   for (const name of names) {
     const module = await import(pathToFileURL(join(temporaryDirectory, 'components', `${name}.mjs`)).href);
@@ -46,6 +46,40 @@ after(() => {
 
 const noop = () => {};
 const searchProps = { speciesList: [], hotspots: [], posts: [], onSelectSpecies: noop, onSelectHotspot: noop, onNavigate: noop };
+
+test('photo planning uses the current reference, separates general rules and never infers trip timing from EXIF', () => {
+  const exif = { status: 'available', cameraMake: 'Canon', cameraModel: 'Canon Camera', lens: 'EF100-400mm', exposureSeconds: 0.0025, aperture: 9, iso: 200, focalLengthMm: 400, capturedAt: '2014-10-25 11:02:12', utcOffset: null };
+  const photo = { sourceUrl: 'https://commons.wikimedia.org/wiki/File:Kingfisher.jpg', exif };
+  const props = { speciesId: 'comkin1', state: { speciesId: 'comkin1', photo, loading: false, error: '' }, onChooseHotspot: noop };
+  const html = render('PhotoPlanning', props);
+  for (const text of ['1/400 s', 'f/9', 'ISO 200', '400 mm', 'EF100-400mm', photo.sourceUrl, 'One reference photo', 'not a minimum lens requirement', 'General technique guidance', 'Choose a reported hotspot', 'Trip saving is not connected', 'opening hours', 'camera permissions']) assert.ok(html.includes(text), text);
+  assert.match(html, /may be too slow for fast flight/);
+  assert.doesNotMatch(html, /2014-10-25|11:02:12|400mm\+ recommended|Best Time:|Optimal settings|Verified Field Shot/);
+  const faster = render('PhotoPlanning', { ...props, state: { ...props.state, photo: { ...photo, exif: { ...exif, exposureSeconds: 0.0005 } } } });
+  assert.match(faster, /uses a short exposure/);
+  assert.doesNotMatch(faster, /may be too slow for fast flight/);
+});
+
+test('photo planning remains useful with loading, failed, missing and partial evidence without leaking a previous species', () => {
+  const exif = { status: 'available', cameraMake: null, cameraModel: null, lens: null, exposureSeconds: null, aperture: null, iso: null, focalLengthMm: 145, capturedAt: null, utcOffset: null };
+  const photo = { sourceUrl: 'https://commons.wikimedia.org/wiki/File:Duck.jpg', exif };
+  const props = { speciesId: 'duck', state: { speciesId: 'duck', photo, loading: false, error: '' }, onChooseHotspot: noop };
+  const partial = render('PhotoPlanning', props);
+  assert.match(partial, /145 mm/);
+  assert.doesNotMatch(partial, /f\/5.6|1\/500|ISO 400|reference exposure/);
+  for (const state of [{ ...props.state, speciesId: 'previous' }, { ...props.state, loading: true }]) {
+    const html = render('PhotoPlanning', { ...props, state });
+    assert.match(html, /Loading this species/);
+    assert.doesNotMatch(html, /145 mm|Duck.jpg/);
+  }
+  const missing = render('PhotoPlanning', { ...props, state: { ...props.state, photo: null } });
+  assert.match(missing, /No exposure or focal-length evidence/);
+  assert.match(missing, /General technique guidance/);
+  assert.doesNotMatch(missing, /ISO 400|1\/500|145 mm/);
+  const failed = render('PhotoPlanning', { ...props, state: { ...props.state, photo: null, error: 'Provider unavailable' } });
+  assert.match(failed, /Use Retry photo above/);
+  assert.match(failed, /Choose a reported hotspot/);
+});
 
 test('photo credit retains author/licence/source and escapes supplied markup without inventing sighting or EXIF evidence', () => {
   const photo = { title: 'File:Roller.jpg', author: '<img src=x onerror=alert(1)>', license: 'CC BY-SA 4.0', licenseUrl: 'https://creativecommons.org/licenses/by-sa/4.0/', sourceUrl: 'https://commons.wikimedia.org/wiki/File:Roller.jpg', matchUrl: 'https://www.wikidata.org/wiki/Q123', credit: 'Original creator', attribution: 'Required attribution', usageTerms: 'Creative Commons', restrictions: 'Source notice' };

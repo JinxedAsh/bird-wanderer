@@ -45,7 +45,7 @@ Bird Wanderer helps birdwatchers and wildlife photographers discover species and
 | Interface | Fifteen screen components exist. Frontend corrections and accessibility improvements have been implemented. Exact visual acceptance remains pending. |
 | Accounts | Real registration, login, session restoration and logout are implemented. Accounts and sessions survive a server restart. |
 | Discovery | eBird taxonomy, regional hotspots and latest regional reports are connected; search and existing detail screens use source IDs. Live API checks passed. Species-to-hotspot links, hotspot-specific recent reports and catalogue-matched all-time species lists are connected. Manual device acceptance remains pending. |
-| Species photographs | Explore, Search and species details load credited Commons reference photos through exact scientific-name/species-rank matches. Details extract supported camera EXIF from the same source file, with missing fields and timezone limits disclosed. Coverage is not universal; photo-derived recommendations remain pending. |
+| Species photographs and planning | Credited Commons photos and same-file camera EXIF are connected. Plan a Shot opens the existing guide card with the selected photo's settings, conditional preparation, general technique and a hotspot/weather/directions path. Guidance uses one photo; verified environmental matching and multi-photo recommendations remain unfinished. |
 | Maps and logistics | Interactive hotspot maps, coordinate-based directions and hotspot forecasts are implemented. Desktop browser checks passed pins/filtering/detail navigation, weather, coordinate directions and a 390-pixel layout. Physical-phone/outage acceptance remains pending. General photography planning tips are labelled as heuristics; open-photo metadata and verified access information remain incomplete. |
 | Journal, profiles and social activity | Many interactions work temporarily within the running app. Most changes are not stored for later use. |
 | Alerts and quizzes | Demonstration screens exist. Automated alerts, complete quiz progress and challenges are not delivered. |
@@ -432,6 +432,31 @@ The header logo now uses a bundled SVG following the supplied green bird emblem,
 
 **Delivery:** implementation commit `151d79e`, published on `codex/external-photo-exif` in [PR #9](https://github.com/JinxedAsh/bird-wanderer/pull/9). Local checks and the configured-key scan passed; the PR records final GitHub check/merge status, with automatic merge following passing checks under standing authorization. Private context/reviews, environment secrets and databases remain excluded. The [EXIF walkthrough](EXIF_WALKTHROUGH.md) explains supported fields, privacy/timezone rules, acceptance checks and Viva Notes. Next: evidence-based photography logistics, keeping source-photo examples distinct from general guidance.
 
+### Entry 19 — Source-aware photography planning and a usable Plan a Shot action
+
+- **Date:** 4 October 2026, India Standard Time.
+- **Group:** photography preparation and trip planning.
+- **Phase:** Phase 1, remaining itinerary item 3 (initial planning increment).
+- **Status:** implemented; automated checks passed; scoped browser results below.
+
+**Requirement and scope:** reread the living specification's external-data photography logistics, camera equipment and progressive-disclosure requirements, and inspected the original species-detail design. The existing Field Guide & Technique card and Plan a Shot button were reused. This delivers initial source-aware preparation and navigation; a single photo cannot establish optimal or similar-environment settings, so those stronger requirements are not silently declared complete.
+
+**What changed:** Plan a Shot now scrolls to and focuses the guide card instead of reporting disconnected logistics. The card shows the current reference photo's supported shutter, aperture, ISO and focal length, links to its source and describes exposure/lens comparisons. Separately labelled general technique links to Nikon's guidance. Choose a reported hotspot moves to the existing recent-location section; selecting a location opens the existing map, forecast/daylight and directions. The old description saying maps were disconnected was corrected. The guide and location sections accept programmatic keyboard focus, and scrolling respects reduced-motion preference. Prototype species keep their prior behavior.
+
+**How it works:** SpeciesPhoto reports loading/success/error through an optional callback from the same photo request. SpeciesDetailScreen holds this state. PhotoPlanning checks species ID and successful completion before using photo values. Existing metadata formatters are reused so the example and EXIF panel agree. No duplicated request, backend/database change, package dependency or new screen was introduced. Existing abort/session handling remains.
+
+**Evidence versus advice:** examples describe one photo, not a typical range, optimal preset or equipment requirement. A simple rule flags exposures longer than 0.001 seconds for a fast-flight blur check; shorter exposures still require testing. The threshold is an app rule of thumb, not a source-derived freeze-motion guarantee. Recorded focal length/lens and aperture are comparisons. General motion/ISO/autofocus advice is editorial and source-linked, not extracted EXIF. Capture dates do not infer visit time, season or current environment. Site access and actual entrance remain unverified; the guide asks the user to confirm them. Trip saving is explicitly unavailable.
+
+**Files changed:** new `frontend/src/components/PhotoPlanning.tsx` and `docs/PHOTO_PLANNING_WALKTHROUGH.md`; updated `SpeciesPhoto.tsx`, `SpeciesDetailScreen.tsx`, `PhotoMetadata.tsx`, `server/frontend.test.mjs`, both READMEs and this record.
+
+**Automated verification:** TypeScript, all **51 tests** and production build passed. Two new planning checks cover current-photo units/provenance, slow/short exposure guidance, partial/missing/loading/error evidence, mismatched species and no inferred photo timing or invented presets. One initial loading-state test failed because a supplied photo could contribute guidance during loading; source values are now withheld until successful completion, and the rerun passed. Existing authentication, discovery, photo/EXIF, map, weather and proxy tests remain passing.
+
+**Browser verification:** Test chat confirmed Enter on Plan a Shot scrolls/focuses the guide, and Choose a reported hotspot scrolls/focuses the recent-location section. Kingfisher showed 1/400 s, f/9, ISO 200, 400 mm; Roller showed 1/500 s, f/8, ISO 400, 390 mm. Switching updated the correct example; planning source matched the photo's Commons source. Photos, EXIF and credits stayed intact. Single-photo, conditional, general Nikon technique and travel-check sections remained distinct, without optimal-preset, verified-environment, best-time or saved-trip claims. Graylag Goose's missing lens remained unavailable and was not invented in guidance. Its Lodhi Gardens report opened the correct hotspot, forecast and coordinate directions. At 390 pixels, cards wrapped/scrolled correctly. An initially stale server-unavailable screen recovered on reload without restarting or shared-file edits; the viewport was restored.
+
+**Limitations:** no multi-photo statistics or verified matching of environmental conditions; no sourced best-time/season/difficulty inference; no saved itinerary. Fully absent EXIF/provider outages, physical-phone behavior and full design acceptance still need manual verification; one missing-lens case passed in the browser. Source-photo settings remain unverified records, and reports are not sighting guarantees. APK packaging remains deferred for this phase.
+
+**Delivery:** prepared on `codex/photo-planning`; publication evidence will follow. The [Photography planning walkthrough](PHOTO_PLANNING_WALKTHROUGH.md) contains the rules, source boundaries, manual checks and Viva Notes. Next: sourced detailed species enrichment, retaining the current discovery and planning flow.
+
 ## 4. How the current application fits together
 
 The interface is what the user sees and interacts with. The backend is the program that receives requests and checks account information. The database is where persistent account information is saved.
@@ -467,7 +492,7 @@ Manual checks still include design comparison for all screens, mobile layout/tou
 
 | Phase | Remaining implementation and acceptance |
 | --- | --- |
-| Phase 1 — core | Complete species enrichment, evidence-based photography logistics, persistent saves/search history, GPS/Explore weather, verified access information and design/manual/device acceptance. Discovery is connected in Entries 12–13, maps/directions in Entry 14, forecasts/general tips in Entry 16, photos in Entry 17 and supported external-photo EXIF in Entry 18. APK delivery is deferred for this phase, not cancelled. |
+| Phase 1 — core | Complete species enrichment, stronger source/environment-supported logistics, persistent saves/search history, GPS/Explore weather, verified access information and design/manual/device acceptance. Discovery: Entries 12–13; maps/directions: Entry 14; weather: Entry 16; photos/EXIF: Entries 17–18; initial source-aware planning: Entry 19. APK delivery is deferred for this phase, not cancelled. |
 | Phase 2 — community | Persistent profiles and sightings; validated photograph upload/storage; EXIF extraction; journal/life-list relationships and reconciled statistics; real feed/follows/likes/comments/reporting; server ownership/visibility checks. |
 | Phase 3 — alerts | Subscriptions/preferences; qualifying-sighting matching; automated delivery; protected-species coordinate handling and privacy checks. Privacy must also be applied earlier wherever location data becomes accessible. |
 | Phase 4 — retention | Complete identification quiz sessions, persistent progress and photography challenges without disrupting discovery. |
@@ -502,6 +527,7 @@ These paths help the developer find implementation details; teammates can unders
 | Weather and planning | frontend/server/weather.mjs; frontend/server/weather.test.mjs; frontend/src/components/HotspotWeatherPanel.tsx; docs/WEATHER_WALKTHROUGH.md |
 | Species photographs | frontend/server/photos.mjs; frontend/server/photos.test.mjs; frontend/src/components/SpeciesPhoto.tsx; docs/PHOTOS_WALKTHROUGH.md |
 | External-photo EXIF | frontend/server/exif.mjs; frontend/server/exif.test.mjs; frontend/src/components/PhotoMetadata.tsx; docs/EXIF_WALKTHROUGH.md |
+| Photography planning | frontend/src/components/PhotoPlanning.tsx; SpeciesDetailScreen.tsx; SpeciesPhoto.tsx; docs/PHOTO_PLANNING_WALKTHROUGH.md |
 | Accounts | frontend/src/components/AuthScreen.tsx; frontend/src/lib/auth.ts; frontend/server/auth.mjs; frontend/server/index.mjs; frontend/server/auth.test.mjs |
 | Shared frontend state | frontend/src/App.tsx; frontend/src/types.ts; frontend/src/data/mockData.ts |
 | Stage 1 components | BottomNav.tsx, CommunityScreen.tsx, ExploreScreen.tsx, GlobalSearchScreen.tsx, Header.tsx, HotspotDetailScreen.tsx, HotspotsScreen.tsx, LifeListScreen.tsx, LogObservationScreen.tsx, ProfileScreen.tsx, SettingsScreen.tsx, SpeciesDetailScreen.tsx, all under frontend/src/components |
