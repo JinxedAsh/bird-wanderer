@@ -479,7 +479,7 @@ The header logo now uses a bundled SVG following the supplied green bird emblem,
 
 ### Entry 21 — Persistent eBird bookmarks and real search history
 
-**Date:** 4 October 2026 (India Standard Time). **Group:** Phase 1, personal discovery activity. **Status:** implemented locally; browser/publication evidence follows before delivery.
+**Date:** 4 October 2026 (India Standard Time). **Group:** Phase 1, personal discovery activity. **Status:** implemented; browser checks passed, with physical-device/outage acceptance still pending.
 
 **Problem and user-visible result:** bird bookmarks lived inside a detail screen, hotspot bookmarks reset after refresh and Recent Searches showed fixed examples. Both eBird bird targets and hotspot saves now belong to the signed-in account and survive refresh, logout/login and server restart. The existing hotspot Saved filter uses confirmed records. Search adds a Saved birds only control so targets can be found; it starts empty and records actual queries on Enter or opening a bird/hotspot result. Recent chips replay/promote searches; individual removal and Clear All persist.
 
@@ -491,9 +491,11 @@ The header logo now uses a bundled SVG following the supplied green bird emblem,
 
 **Automated checks:** TypeScript, all 64 tests and production build passed. New coverage checks session/origin protection, account separation, trusted source validation, idempotent saves, malformed inputs, provider error handling, provider-independent removal/history, normalized deduplication and ordering, ten-search/500-save bounds, removal/clear, SQL-like search text, database reopen, safe history rendering, controlled bookmark state and typed client/session errors. Existing authentication, discovery, photos, EXIF, species information, planning, weather and proxy checks remain passing.
 
+**Browser verification:** Test chat used two disposable accounts on its permitted LAN URL. Fresh history was empty; Enter/result selection, case-insensitive deduplication, newest-first order, chip replay, single removal and Clear All worked. History and bird/hotspot saves survived refresh and logout/login. Pending save controls stayed disabled until confirmation. Saved-only birds with an empty query, hotspot Saved filtering, both hotspot controls, and persistent unsaving passed. The second account remained separate and returning to the first restored its activity. Keyboard/quick interactions and 390-pixel layout passed, as did common/scientific search, species references, photos, EXIF, planning and hotspot weather. No console warnings/errors were observed. Browser-control timeouts recovered with fresh observations; physical-phone behavior and forced outages were not tested. No shared files were changed by Test chat.
+
 **Limits:** this stores source references, not a complete offline catalogue or saved trips. Hotspots outside the configured region and removed taxa remain stored but are not listed without matching loaded provider records. Cross-tab realtime synchronization is not implemented; refresh reloads activity. Prototype community bookmarks and journal/life-list statistics remain separate, and a saved target does not mean a logged sighting. Physical-phone/design and genuine outage presentation still need manual acceptance.
 
-**Delivery:** prepared on codex/discovery-saves. The [Discovery activity walkthrough](DISCOVERY_ACTIVITY_WALKTHROUGH.md) contains the implementation, checks, limits and five Viva questions. Next: GPS/Explore weather and remaining Phase 1 access/design/acceptance work; Android packaging remains deferred for this checkpoint.
+**Delivery:** implementation commit `1d1734f`, published on `codex/discovery-saves` in [PR #12](https://github.com/JinxedAsh/bird-wanderer/pull/12). The configured-key scan found zero leaks across 111 files; private reviews/context, secrets, databases and build output remain excluded. The PR records final GitHub checks/merge status; automatic merge follows passing final-commit checks under standing authorization. The [Discovery activity walkthrough](DISCOVERY_ACTIVITY_WALKTHROUGH.md) contains the implementation, checks, limits and five Viva questions. Next: GPS/Explore weather and remaining Phase 1 access/design/acceptance work; Android packaging remains deferred for this checkpoint.
 
 ## 4. How the current application fits together
 
