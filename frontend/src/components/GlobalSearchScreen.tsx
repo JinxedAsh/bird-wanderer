@@ -281,7 +281,7 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
                 </span>
               </div>
               <p className="text-[12px] text-[#72796e] truncate">
-                {hotspot.region} • {hotspot.distanceKm === null ? 'Distance unavailable' : `${hotspot.distanceKm} km away`}
+                {hotspot.region} • {hotspot.distanceKm == null ? 'Distance unavailable' : `${hotspot.distanceKm.toFixed(1)} km away`}
               </p>
               <div className="flex items-center gap-1 mt-1 text-[#42493e] text-[11px] font-semibold">
                 <span className="material-symbols-outlined text-[#154212] text-[14px]">eco</span>

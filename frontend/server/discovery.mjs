@@ -103,6 +103,11 @@ export function createDiscoveryService({ apiKey = '', region = 'IN-DL', fetchImp
     return { species, hotspots, region, source: 'eBird', fetchedAt: new Date(now()).toISOString(), observationDays: 14 };
   }
   const service = {
+    async locationWeather(latitude, longitude) {
+      // Round on the server too; never persist an account's device coordinates.
+      if (!Number.isFinite(latitude) || Math.abs(latitude) > 90 || !Number.isFinite(longitude) || Math.abs(longitude) > 180) throw new DiscoveryError(400, 'Valid location coordinates are required.');
+      return weather.forecast(Number(latitude.toFixed(2)), Number(longitude.toFixed(2)));
+    },
     async speciesInformation(speciesId) {
       if (!/^[a-z0-9]{3,16}$/.test(speciesId)) throw new DiscoveryError(400, 'Invalid species ID.');
       const catalogue = await service.catalogue();
@@ -182,6 +187,7 @@ export function discoveryRouter(service) {
     }
   };
   router.get('/catalogue', send(() => service.catalogue()));
+  router.post('/weather', send((req) => service.locationWeather(req.body?.latitude, req.body?.longitude)));
   router.get('/species/:speciesId/locations', send((req) => service.speciesLocations(req.params.speciesId)));
   router.get('/species/:speciesId/photo', send((req) => service.speciesPhoto(req.params.speciesId)));
   router.get('/species/:speciesId/info', send((req) => service.speciesInformation(req.params.speciesId)));

@@ -13,7 +13,8 @@ const conditions = new Map([
 const localTime = (value) => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value);
 const valueIn = (value, min, max) => typeof value === 'number' && Number.isFinite(value) && value >= min && value <= max ? value : null;
 
-// Shared location forecasts, not user GPS. Inject fetch/time for isolated tests.
+// Shared forecasts contain no account identity. Device/selected points are rounded
+// by discovery before reaching this service. Inject fetch/time for isolated tests.
 export function createWeatherService({ fetchImpl = fetch, now = Date.now, ttl = 15 * 60 * 1000 } = {}) {
   const cache = new Map();
   const pending = new Map();
@@ -65,6 +66,7 @@ export function createWeatherService({ fetchImpl = fetch, now = Date.now, ttl = 
       const key = `${latitude},${longitude}`;
       const entry = cache.get(key);
       if (entry && now() - entry.time < ttl) return { ...entry.data, cached: true };
+      if (!pending.has(key) && pending.size >= 20) throw new WeatherError(503, 'Weather forecasts are busy. Please try again shortly.');
       if (!pending.has(key)) pending.set(key, load(latitude, longitude).then((data) => {
         cache.delete(key);
         if (cache.size >= 100) cache.delete(cache.keys().next().value);

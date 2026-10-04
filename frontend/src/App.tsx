@@ -6,6 +6,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { auth, SessionExpiredError, type AuthUser } from './lib/auth';
 import { activity, type DiscoveryActivity, type SaveKind } from './lib/activity';
+import { distanceKm, nearbyRadiusKm, type LocationPoint } from './lib/location';
+import { loadLocationWeather } from './lib/discovery';
+import { LocationPicker } from './components/LocationPicker';
 import { loadDiscovery, loadSpeciesLocations, loadHotspotDetails, loadHotspotWeather, type DiscoveryCatalogue, type SpeciesLocations, type HotspotDetails, type HotspotWeather } from './lib/discovery';
 import {
   ScreenType,
@@ -75,6 +78,27 @@ export default function App() {
   const activityPending = useRef(false);
   const activityController = useRef<AbortController | null>(null);
   const activityOwner = useRef<string | null>(null);
+  const [location, setLocation] = useState<LocationPoint | null>(null);
+  const [locationPickerOpen, setLocationPickerOpen] = useState(false);
+  const [exploreWeather, setExploreWeather] = useState<{ key: string; data?: Awaited<ReturnType<typeof loadLocationWeather>>; error?: string }>({ key: '' });
+  const [exploreWeatherAttempt, setExploreWeatherAttempt] = useState(0);
+  const locationKey = location ? `${location.latitude.toFixed(2)},${location.longitude.toFixed(2)}` : '';
+
+  useEffect(() => {
+    if (!sessionUser || !location || currentScreen !== 'explore') return;
+    const controller = new AbortController();
+    const key = locationKey;
+    setExploreWeather({ key });
+    loadLocationWeather(location.latitude, location.longitude, controller.signal).then((data) => {
+      if (!controller.signal.aborted) setExploreWeather({ key, data });
+    }).catch((error) => {
+      if (!controller.signal.aborted) {
+        if (error instanceof SessionExpiredError) resetSession();
+        else setExploreWeather({ key, error: error.message || 'Location weather is unavailable.' });
+      }
+    });
+    return () => controller.abort();
+  }, [sessionUser?.id, currentScreen, locationKey, exploreWeatherAttempt]);
 
   useEffect(() => {
     if (!sessionUser) return;
@@ -117,6 +141,9 @@ export default function App() {
   }, [sessionUser?.id, discoveryAttempt]);
 
   const acceptSession = (user: AuthUser) => {
+    setLocation(null);
+    setLocationPickerOpen(false);
+    setExploreWeather({ key: '' });
     activityController.current?.abort();
     activityOwner.current = user.id;
     activityPending.current = false;
@@ -477,6 +504,9 @@ export default function App() {
   const unreadNotifsCount = notifications.filter((n) => n.isUnread).length;
 
   function resetSession() {
+    setLocation(null);
+    setLocationPickerOpen(false);
+    setExploreWeather({ key: '' });
     activityController.current?.abort();
     activityOwner.current = null;
     activityPending.current = false;
@@ -511,7 +541,9 @@ export default function App() {
     }
   };
 
-  const externalHotspots = discovery?.hotspots.map((hotspot) => ({ ...hotspot, isSaved: isDiscoverySaved('hotspot', hotspot.id) })) || [];
+  const externalHotspots = discovery?.hotspots.map((hotspot) => ({ ...hotspot, isSaved: isDiscoverySaved('hotspot', hotspot.id), distanceKm: location ? distanceKm(location, hotspot) : null })) || [];
+  const nearbyIds = new Set(externalHotspots.filter((hotspot) => hotspot.distanceKm !== null && hotspot.distanceKm <= nearbyRadiusKm).map((hotspot) => hotspot.id));
+  const exploreSpecies = discovery?.species.filter((bird) => bird.recentObservations?.some((report) => !location || nearbyIds.has(report.hotspotId))) || [];
   const saveDisabled = !activityReady || activityBusy;
 
   if (checkingSession || sessionError) return (
@@ -545,6 +577,9 @@ export default function App() {
             currentScreen !== 'auth' ? 'pt-16' : ''
           }`}
         >
+          {sessionUser && locationPickerOpen && ['explore', 'hotspots'].includes(currentScreen) && (
+            <LocationPicker location={location} onSelect={setLocation} onClose={() => setLocationPickerOpen(false)} />
+          )}
           {sessionUser && !activityReady && (
             <div role="status" className="mx-4 mt-2 rounded-xl bg-[#f1f4f9] p-3 text-[12px] text-[#42493e]">
               {activityError || 'Loading your saved birds, hotspots and searches...'}
@@ -566,9 +601,14 @@ export default function App() {
 
           {currentScreen === 'explore' && (
             <ExploreScreen
+              location={location}
+              onChooseLocation={() => setLocationPickerOpen(true)}
+              weather={exploreWeather.key === locationKey ? exploreWeather.data : undefined}
+              weatherError={exploreWeather.key === locationKey ? exploreWeather.error : undefined}
+              onRetryWeather={() => setExploreWeatherAttempt((attempt) => attempt + 1)}
               onSessionExpired={resetSession}
               observerName={userProfile.name}
-              speciesList={discovery?.species.filter((s) => s.recentObservations?.length) || []}
+              speciesList={exploreSpecies}
               externalDiscovery
               discoveryRegion={discovery?.region}
               onSelectSpecies={handleSelectSpecies}
@@ -591,6 +631,8 @@ export default function App() {
 
           {currentScreen === 'hotspots' && (
             <HotspotsScreen
+              nearbyEnabled={Boolean(location)}
+              onChooseLocation={() => setLocationPickerOpen(true)}
               hotspots={externalHotspots}
               externalDiscovery
               onSelectHotspot={handleSelectHotspot}

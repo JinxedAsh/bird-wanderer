@@ -23,6 +23,7 @@ Bird Wanderer brings species discovery, hotspots, photography logistics, persona
 - **Plan a Shot** opens the existing Field Guide & Technique card: the selected photo's settings, conditional exposure/lens preparation, separately labelled general technique and a hotspot/weather/directions planning path. It does not save a trip or claim an optimal species-wide preset.
 - Species details include a collapsible, credited Wikipedia reference for identification, habitat/range and behaviour, matched through the exact Wikidata species. Unsupported sections stay unavailable; general migration information does not become a local best-season claim.
 - Per-account eBird bird/hotspot bookmarks and the latest ten real searches persist in SQLite. Search has a Saved birds only control; Hotspots retains its existing Saved filter. New saves require a valid provider record, while viewing/removing saved references and history do not call eBird.
+- Optional one-time device/manual location adds nearest-first straight-line distances and 50-km discovery within the configured eBird region. Explore shows an attributed Open-Meteo forecast for the rounded selected point. Clear location restores regional browsing; location is not saved to the account.
 
 ## Technology
 
@@ -106,6 +107,7 @@ All four phases are required by **20 October 2026**. Password recovery, verified
 - [Photography planning walkthrough and viva notes](docs/PHOTO_PLANNING_WALKTHROUGH.md)
 - [Sourced species information walkthrough and viva notes](docs/SPECIES_INFORMATION_WALKTHROUGH.md)
 - [Discovery saves and search history walkthrough, including Viva Notes](docs/DISCOVERY_ACTIVITY_WALKTHROUGH.md)
+- [Nearby discovery and Explore weather walkthrough, including Viva Notes](docs/NEARBY_WEATHER_WALKTHROUGH.md)
 - [Authentication walkthrough](docs/AUTH_WALKTHROUGH.md)
 - [Stage 1 walkthrough and manual checks](docs/STAGE_1_WALKTHROUGH.md)
 - [Design reference index](docs/design-reference/README.md)

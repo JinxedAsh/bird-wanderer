@@ -10,6 +10,22 @@ function forecast() {
     daily: { time: ['2026-10-04', '2026-10-05'], sunrise: ['2026-10-04T06:14', '2026-10-05T06:15'], sunset: ['2026-10-04T18:02', null] } };
 }
 
+test('weather caps distinct in-flight coordinates while sharing an existing request', async () => {
+  let release;
+  const gate = new Promise((resolve) => { release = resolve; });
+  let calls = 0;
+  const service = createWeatherService({ fetchImpl: async () => { calls++; await gate; return Response.json(forecast()); } });
+  const loads = Array.from({ length: 20 }, (_, i) => service.forecast(i, 0));
+  const shared = service.forecast(0, 0);
+  await assert.rejects(service.forecast(21, 0), /busy/);
+  assert.equal(calls, 20);
+  release();
+  await Promise.all([...loads, shared]);
+  assert.equal(calls, 20);
+  await service.forecast(21, 0);
+  assert.equal(calls, 21);
+});
+
 test('weather requests correct coordinates/units and preserves zero, missing data, timezone and future forecasts', async () => {
   let requested;
   const service = createWeatherService({ fetchImpl: async (url) => { requested = url; return Response.json(forecast()); }, now: () => 1000 });

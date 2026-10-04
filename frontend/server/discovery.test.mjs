@@ -9,6 +9,30 @@ const taxonomy = [
 ];
 const locations = [{ locId: 'L123', locName: 'Test Wetland', lat: 28.5, lng: 77.2, numSpeciesAllTime: 42 }];
 const observations = [{ speciesCode: 'indrol2', comName: 'Indian Roller', sciName: 'Coracias benghalensis', locId: 'L123', locName: 'Test Wetland', obsDt: '2026-10-04 07:15', howMany: 3 }];
+
+test('location forecast is protected, validates coordinates and rounds independently of eBird availability', async () => {
+  const calls = [];
+  const discovery = createDiscoveryService({ weather: { forecast: async (...coordinates) => { calls.push(coordinates); return { source: 'Open-Meteo' }; } } });
+  const { app, db } = createApp({ discovery });
+  const server = app.listen(0, '127.0.0.1');
+  await new Promise((resolve) => server.once('listening', resolve));
+  const base = `http://127.0.0.1:${server.address().port}/api`;
+  const request = (body, cookie, origin = 'http://localhost:3000') => fetch(`${base}/discovery/weather`, { method: 'POST', headers: { origin, 'Content-Type': 'application/json', ...(cookie ? { cookie } : {}) }, body: JSON.stringify(body) });
+  try {
+    assert.equal((await request({ latitude: 0, longitude: 0 })).status, 401);
+    assert.equal(calls.length, 0);
+    const registered = await fetch(`${base}/auth/register`, { method: 'POST', headers: { origin: 'http://localhost:3000', 'Content-Type': 'application/json' }, body: JSON.stringify({ name: 'Test Birder', email: 'location@example.test', password: 'test-password-12345' }) });
+    const cookie = registered.headers.get('set-cookie').split(';')[0];
+    assert.equal((await request({ latitude: 28.551234, longitude: 77.221234 }, cookie)).status, 200);
+    assert.deepEqual(calls, [[28.55, 77.22]]);
+    assert.equal((await request({ latitude: 0, longitude: 0 }, cookie)).status, 200);
+    assert.deepEqual(calls[1], [0, 0]);
+    for (const body of [{}, null, { latitude: '28', longitude: 77 }, { latitude: 91, longitude: 77 }, { latitude: 28, longitude: -181 }]) assert.equal((await request(body, cookie)).status, 400);
+    assert.equal((await request({ latitude: 0, longitude: 0 }, cookie, 'https://other.example')).status, 403);
+    assert.equal(calls.length, 2);
+    assert.equal((await fetch(`${base}/discovery/weather`, { headers: { cookie } })).status, 404);
+  } finally { await new Promise((resolve) => server.close(resolve)); db.close(); }
+});
 function upstream(calls) {
   return async (url, options) => {
     calls.push({ url: String(url), options });
