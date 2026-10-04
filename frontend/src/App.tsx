@@ -5,7 +5,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { auth, SessionExpiredError, type AuthUser } from './lib/auth';
-import { loadDiscovery, loadSpeciesLocations, loadHotspotDetails, type DiscoveryCatalogue, type SpeciesLocations, type HotspotDetails } from './lib/discovery';
+import { loadDiscovery, loadSpeciesLocations, loadHotspotDetails, loadHotspotWeather, type DiscoveryCatalogue, type SpeciesLocations, type HotspotDetails, type HotspotWeather } from './lib/discovery';
 import {
   ScreenType,
   BirdSpecies,
@@ -139,6 +139,8 @@ export default function App() {
   const [selectedHotspot, setSelectedHotspot] = useState<Hotspot>(HOTSPOTS_DATA[1]); // Okhla Sanctuary
   const [speciesLocations, setSpeciesLocations] = useState<{ id: string; data?: SpeciesLocations; error?: string }>({ id: '' });
   const [hotspotDetails, setHotspotDetails] = useState<{ id: string; data?: HotspotDetails; error?: string }>({ id: '' });
+  const [hotspotWeather, setHotspotWeather] = useState<{ id: string; data?: HotspotWeather; error?: string }>({ id: '' });
+  const [weatherAttempt, setWeatherAttempt] = useState(0);
   const [detailAttempt, setDetailAttempt] = useState(0);
 
   useEffect(() => {
@@ -172,6 +174,22 @@ export default function App() {
     });
     return () => controller.abort();
   }, [sessionUser?.id, currentScreen, selectedHotspot.id, selectedHotspot.source, detailAttempt]);
+
+  useEffect(() => {
+    if (!sessionUser || currentScreen !== 'hotspot-detail' || !selectedHotspot.source) return;
+    const id = selectedHotspot.id;
+    const controller = new AbortController();
+    setHotspotWeather({ id });
+    loadHotspotWeather(id, controller.signal).then((data) => {
+      if (!controller.signal.aborted) setHotspotWeather({ id, data });
+    }).catch((error) => {
+      if (!controller.signal.aborted) {
+        if (error instanceof SessionExpiredError) resetSession();
+        else setHotspotWeather({ id, error: error.message });
+      }
+    });
+    return () => controller.abort();
+  }, [sessionUser?.id, currentScreen, selectedHotspot.id, selectedHotspot.source, weatherAttempt]);
 
   // Global Toast State
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -394,6 +412,7 @@ export default function App() {
     setDiscoveryError('');
     setSpeciesLocations({ id: '' });
     setHotspotDetails({ id: '' });
+    setHotspotWeather({ id: '' });
     setNavigationHistory([{ screen: 'auth' }]);
     setCurrentScreen('auth');
     setToastMessage(null);
@@ -541,6 +560,9 @@ export default function App() {
               details={hotspotDetails.id === selectedHotspot.id ? hotspotDetails.data : undefined}
               detailsError={hotspotDetails.id === selectedHotspot.id ? hotspotDetails.error : undefined}
               onRetryDetails={() => setDetailAttempt((prev) => prev + 1)}
+              weather={hotspotWeather.id === selectedHotspot.id ? hotspotWeather.data : undefined}
+              weatherError={hotspotWeather.id === selectedHotspot.id ? hotspotWeather.error : undefined}
+              onRetryWeather={() => setWeatherAttempt((prev) => prev + 1)}
               onSelectSpeciesById={handleSelectSpeciesById}
             />
           )}

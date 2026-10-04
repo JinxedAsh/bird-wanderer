@@ -27,6 +27,20 @@ export interface HotspotDetails {
   cached: boolean;
 }
 
+export interface HotspotWeather {
+  hotspotId: string;
+  source: 'Open-Meteo';
+  sourceUrl: string;
+  latitude: number;
+  longitude: number;
+  timezone: string;
+  fetchedAt: string;
+  cached: boolean;
+  current: { time: string; temperatureC: number | null; windKmh: number | null; humidityPercent: number | null; precipitationMm: number | null; cloudCoverPercent: number | null; condition: string };
+  hourly: Array<{ time: string; temperatureC: number | null; rainProbability: number | null; windKmh: number | null }>;
+  days: Array<{ date: string; sunrise: string | null; sunset: string | null }>;
+}
+
 async function request(path: string, signal: AbortSignal) {
   let response: Response;
   try {
@@ -56,5 +70,11 @@ export async function loadSpeciesLocations(id: string, signal: AbortSignal): Pro
 export async function loadHotspotDetails(id: string, signal: AbortSignal): Promise<HotspotDetails> {
   const data = await request(`hotspots/${encodeURIComponent(id)}`, signal);
   if (data?.hotspotId !== id || !Array.isArray(data?.recentSightings) || !Array.isArray(data?.speciesList)) throw new Error('Unexpected hotspot detail response.');
+  return data;
+}
+
+export async function loadHotspotWeather(id: string, signal: AbortSignal): Promise<HotspotWeather> {
+  const data = await request(`hotspots/${encodeURIComponent(id)}/weather`, signal);
+  if (data?.hotspotId !== id || data?.source !== 'Open-Meteo' || !data?.current || !Array.isArray(data?.days) || !Array.isArray(data?.hourly)) throw new Error('Unexpected hotspot weather response.');
   return data;
 }

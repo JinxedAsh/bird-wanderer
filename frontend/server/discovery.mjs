@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { createWeatherService, WeatherError } from './weather.mjs';
 
 const placeholder = '/discovery-placeholder.svg';
 const unavailable = 'Not available from eBird';
@@ -9,7 +10,7 @@ export class DiscoveryError extends Error {
 
 // One regional catalogue, shared by all users. No credentials or private observations
 // are returned to the browser. Inject fetch/time in tests instead of contacting eBird.
-export function createDiscoveryService({ apiKey = '', region = 'IN-DL', fetchImpl = fetch, now = Date.now, ttl = 15 * 60 * 1000 } = {}) {
+export function createDiscoveryService({ apiKey = '', region = 'IN-DL', fetchImpl = fetch, now = Date.now, ttl = 15 * 60 * 1000, weather = createWeatherService() } = {}) {
   if (!/^[A-Z]{2}(?:-[A-Z0-9]{1,8}){0,2}$/.test(region)) throw new Error('EBIRD_REGION must be an eBird region code, for example IN-DL.');
   let cached;
   let pending;
@@ -100,6 +101,13 @@ export function createDiscoveryService({ apiKey = '', region = 'IN-DL', fetchImp
     return { species, hotspots, region, source: 'eBird', fetchedAt: new Date(now()).toISOString(), observationDays: 14 };
   }
   const service = {
+    async hotspotWeather(hotspotId) {
+      if (!/^L\d+$/.test(hotspotId)) throw new DiscoveryError(400, 'Invalid hotspot ID.');
+      const catalogue = await service.catalogue();
+      const hotspot = catalogue.hotspots.find((point) => point.id === hotspotId);
+      if (!hotspot) throw new DiscoveryError(404, 'Hotspot not found in the configured region.');
+      return { ...await weather.forecast(hotspot.latitude, hotspot.longitude), hotspotId };
+    },
     async catalogue() {
       if (cached && now() - cached.time < ttl) return { ...cached.data, cached: true };
       if (!pending) pending = load().then((data) => { cached = { data, time: now() }; return data; }).finally(() => { pending = undefined; });
@@ -153,12 +161,13 @@ export function discoveryRouter(service) {
   const send = (load) => async (req, res, next) => {
     try { res.json(await load(req)); }
     catch (error) {
-      if (error instanceof DiscoveryError) return res.status(error.status).json({ error: error.message });
+      if (error instanceof DiscoveryError || error instanceof WeatherError) return res.status(error.status).json({ error: error.message });
       next(error);
     }
   };
   router.get('/catalogue', send(() => service.catalogue()));
   router.get('/species/:speciesId/locations', send((req) => service.speciesLocations(req.params.speciesId)));
   router.get('/hotspots/:hotspotId', send((req) => service.hotspotDetails(req.params.hotspotId)));
+  router.get('/hotspots/:hotspotId/weather', send((req) => service.hotspotWeather(req.params.hotspotId)));
   return router;
 }
