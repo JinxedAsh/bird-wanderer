@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { hotspotAccess } from './access.mjs';
 import { createWeatherService, WeatherError } from './weather.mjs';
 import { createPhotoService, PhotoError } from './photos.mjs';
 import { createSpeciesInfoService, SpeciesInfoError } from './species-info.mjs';
@@ -99,6 +100,7 @@ export function createDiscoveryService({ apiKey = '', region = 'IN-DL', fetchImp
         species: obs.comName, scientific: obs.sciName, image: placeholder, count: Number.isFinite(obs.howMany) ? obs.howMany : null, timeAgo: obs.obsDt,
       })), photos: [], speciesList: [],
     }));
+    for (const hotspot of hotspots) hotspot.access = hotspotAccess(hotspot, now());
     if ((taxonomy.length && !species.length) || (locations.length && !hotspots.length)) throw new DiscoveryError(502, 'eBird returned unsupported discovery records.');
     return { species, hotspots, region, source: 'eBird', fetchedAt: new Date(now()).toISOString(), observationDays: 14 };
   }
