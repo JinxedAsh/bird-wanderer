@@ -4,7 +4,7 @@
  */
 
 import React, { useEffect, useRef, useState } from 'react';
-import { auth, type AuthUser } from './lib/auth';
+import { auth, SessionExpiredError, type AuthUser } from './lib/auth';
 import { loadDiscovery, loadSpeciesLocations, loadHotspotDetails, type DiscoveryCatalogue, type SpeciesLocations, type HotspotDetails } from './lib/discovery';
 import {
   ScreenType,
@@ -76,7 +76,10 @@ export default function App() {
     loadDiscovery(controller.signal).then((data) => {
       if (!controller.signal.aborted) setDiscovery(data);
     }).catch((error) => {
-      if (!controller.signal.aborted) setDiscoveryError(error.message || 'Discovery is unavailable.');
+      if (!controller.signal.aborted) {
+        if (error instanceof SessionExpiredError) resetSession();
+        else setDiscoveryError(error.message || 'Discovery is unavailable.');
+      }
     }).finally(() => {
       if (!controller.signal.aborted) setDiscoveryLoading(false);
     });
@@ -107,6 +110,30 @@ export default function App() {
     return () => { active = false; };
   }, []);
 
+  // Recheck when returning to the app: the cookie may have expired or been
+  // signed out in another tab. A connection failure does not prove logout.
+  useEffect(() => {
+    if (!sessionUser) return;
+    let active = true;
+    let pending = false;
+    const check = async () => {
+      if (document.visibilityState === 'hidden' || pending) return;
+      pending = true;
+      try {
+        const user = await auth.me();
+        if (active && !user) resetSession();
+      } catch { /* Keep the session UI during a temporary network failure. */ }
+      finally { pending = false; }
+    };
+    window.addEventListener('focus', check);
+    document.addEventListener('visibilitychange', check);
+    return () => {
+      active = false;
+      window.removeEventListener('focus', check);
+      document.removeEventListener('visibilitychange', check);
+    };
+  }, [sessionUser?.id]);
+
   // Selected item states
   const [selectedSpecies, setSelectedSpecies] = useState<BirdSpecies>(SPECIES_DATABASE[1]); // Common Kingfisher by default
   const [selectedHotspot, setSelectedHotspot] = useState<Hotspot>(HOTSPOTS_DATA[1]); // Okhla Sanctuary
@@ -122,7 +149,10 @@ export default function App() {
     loadSpeciesLocations(id, controller.signal).then((data) => {
       if (!controller.signal.aborted) setSpeciesLocations({ id, data });
     }).catch((error) => {
-      if (!controller.signal.aborted) setSpeciesLocations({ id, error: error.message });
+      if (!controller.signal.aborted) {
+        if (error instanceof SessionExpiredError) resetSession();
+        else setSpeciesLocations({ id, error: error.message });
+      }
     });
     return () => controller.abort();
   }, [sessionUser?.id, currentScreen, selectedSpecies.id, selectedSpecies.source, detailAttempt]);
@@ -135,7 +165,10 @@ export default function App() {
     loadHotspotDetails(id, controller.signal).then((data) => {
       if (!controller.signal.aborted) setHotspotDetails({ id, data });
     }).catch((error) => {
-      if (!controller.signal.aborted) setHotspotDetails({ id, error: error.message });
+      if (!controller.signal.aborted) {
+        if (error instanceof SessionExpiredError) resetSession();
+        else setHotspotDetails({ id, error: error.message });
+      }
     });
     return () => controller.abort();
   }, [sessionUser?.id, currentScreen, selectedHotspot.id, selectedHotspot.source, detailAttempt]);
@@ -348,17 +381,28 @@ export default function App() {
 
   const unreadNotifsCount = notifications.filter((n) => n.isUnread).length;
 
+  function resetSession() {
+    setSessionUser(null);
+    setSessionError('');
+    setUserProfile(INITIAL_USER_PROFILE);
+    setPosts(COMMUNITY_POSTS);
+    setJournalEntries(JOURNAL_ENTRIES);
+    setNotifications(APP_NOTIFICATIONS);
+    setSpeciesList(SPECIES_DATABASE);
+    setHotspotsList(HOTSPOTS_DATA);
+    setDiscovery(null);
+    setDiscoveryError('');
+    setSpeciesLocations({ id: '' });
+    setHotspotDetails({ id: '' });
+    setNavigationHistory([{ screen: 'auth' }]);
+    setCurrentScreen('auth');
+    setToastMessage(null);
+  }
+
   const handleLogout = async () => {
     try {
       await auth.logout();
-      setSessionUser(null);
-      setUserProfile(INITIAL_USER_PROFILE);
-      setPosts(COMMUNITY_POSTS);
-      setJournalEntries(JOURNAL_ENTRIES);
-      setNotifications(APP_NOTIFICATIONS);
-      setNavigationHistory([{ screen: 'auth' }]);
-      setCurrentScreen('auth');
-      setToastMessage(null);
+      resetSession();
     } catch (error) {
       showToast(error instanceof Error ? error.message : 'Could not sign out. Please try again.');
     }

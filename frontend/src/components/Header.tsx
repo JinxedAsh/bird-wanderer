@@ -68,8 +68,7 @@ export const Header: React.FC<HeaderProps> = ({
     }
   };
 
-  const logoUrl =
-    'https://lh3.googleusercontent.com/aida/AEtjO1W8yln5EatqNnqKbQzoUitk58-CzWZFsehpZ_GK_zrmrGN3Rf6DRUAAPQOWkobP98hENh3t1gmnVPXejRTXiM2TGKjiQekU3Rg-unebzUWBRENy0VWqkTuIh1Sn-JG2oOC0nXRl1mcsPKuw3fjC_1M72Xv5uLfUz_I-MVJCbPW9iGgR4qgONFxTYDeymWN81E-fZkTP47jwWhru75_7Y-Xh7gyI3W3itKbKoEGU6949uH_m1ajz26fkPFI';
+  const logoUrl = '/bird-wanderer-logo.svg';
 
   const avatarUrl =
     userProfile.avatarUrl;
