@@ -17,19 +17,20 @@ let discoveryClient;
 before(async () => {
   temporaryDirectory = mkdtempSync(join(root, '.stage1-render-'));
   const screens = {};
-  const names = ['GlobalSearchScreen', 'SettingsScreen', 'SpeciesDetailScreen', 'SpeciesPhoto', 'PhotoMetadata', 'PhotoPlanning', 'HotspotMap', 'HotspotWeatherPanel', 'HotspotDetailScreen', 'HotspotsScreen', 'ExploreScreen', 'Header'];
+  const names = ['GlobalSearchScreen', 'SettingsScreen', 'SpeciesDetailScreen', 'SpeciesPhoto', 'PhotoMetadata', 'PhotoPlanning', 'SpeciesInfoPanel', 'HotspotMap', 'HotspotWeatherPanel', 'HotspotDetailScreen', 'HotspotsScreen', 'ExploreScreen', 'Header'];
   // Compile these existing TSX screens for Node rendering; no browser or new test framework.
   for (const relative of ['lib/useDialogFocus.ts', 'lib/maps.ts', 'lib/auth.ts', 'lib/discovery.ts', ...names.map((name) => `components/${name}.tsx`)]) {
     const output = join(temporaryDirectory, relative.replace(/\.tsx?$/, '.mjs'));
     mkdirSync(dirname(output), { recursive: true });
     const source = readFileSync(join(root, 'src', relative), 'utf8');
     const { code } = transformSync(source, { loader: 'tsx', format: 'esm', jsx: 'automatic', target: 'es2022' });
-    writeFileSync(output, code.replace('../lib/useDialogFocus"', '../lib/useDialogFocus.mjs"').replace('../lib/maps"', '../lib/maps.mjs"').replace('./HotspotMap"', './HotspotMap.mjs"').replace('./HotspotWeatherPanel"', './HotspotWeatherPanel.mjs"').replace('./SpeciesPhoto"', './SpeciesPhoto.mjs"').replace('./PhotoMetadata"', './PhotoMetadata.mjs"').replace('./PhotoPlanning"', './PhotoPlanning.mjs"').replace('../lib/discovery"', '../lib/discovery.mjs"').replace('../lib/auth"', '../lib/auth.mjs"').replace('./auth"', './auth.mjs"'));
+    writeFileSync(output, code.replace('../lib/useDialogFocus"', '../lib/useDialogFocus.mjs"').replace('../lib/maps"', '../lib/maps.mjs"').replace('./HotspotMap"', './HotspotMap.mjs"').replace('./HotspotWeatherPanel"', './HotspotWeatherPanel.mjs"').replace('./SpeciesPhoto"', './SpeciesPhoto.mjs"').replace('./PhotoMetadata"', './PhotoMetadata.mjs"').replace('./PhotoPlanning"', './PhotoPlanning.mjs"').replace('./SpeciesInfoPanel"', './SpeciesInfoPanel.mjs"').replace('../lib/discovery"', '../lib/discovery.mjs"').replace('../lib/auth"', '../lib/auth.mjs"').replace('./auth"', './auth.mjs"'));
   }
   for (const name of names) {
     const module = await import(pathToFileURL(join(temporaryDirectory, 'components', `${name}.mjs`)).href);
     screens[name] = module[name];
     if (module.PhotoCredit) screens.PhotoCredit = module.PhotoCredit;
+    if (module.SpeciesInformationContent) screens.SpeciesInformationContent = module.SpeciesInformationContent;
   }
   render = (name, props) => renderToStaticMarkup(createElement(screens[name], props));
   mapHelpers = await import(pathToFileURL(join(temporaryDirectory, 'lib/maps.mjs')).href);
@@ -46,6 +47,39 @@ after(() => {
 
 const noop = () => {};
 const searchProps = { speciesList: [], hotspots: [], posts: [], onSelectSpecies: noop, onSelectHotspot: noop, onNavigate: noop };
+
+test('species information renders credited excerpts, missing sections, loading and retry without local timing claims', () => {
+  const profile = { title: 'Indian roller', scientificName: 'Coracias benghalensis', summary: 'A bird of a broad range.', identification: { heading: 'Description', text: 'Blue wings <img onerror=steal()>' }, habitat: { heading: 'Habitat', text: 'Open woodland' }, behaviour: null, seasonality: null, source: 'Wikipedia', sourceUrl: 'https://en.wikipedia.org/wiki/Indian_roller', revisionUrl: 'https://en.wikipedia.org/w/index.php?oldid=123', historyUrl: 'https://en.wikipedia.org/w/index.php?action=history', revisionId: 123, matchUrl: 'https://www.wikidata.org/wiki/Q477133', license: 'CC BY-SA 4.0', licenseUrl: 'https://creativecommons.org/licenses/by-sa/4.0/' };
+  const data = { speciesId: 'indrol2', profile, fetchedAt: '2026-10-04T12:00:00Z', cached: true };
+  const html = render('SpeciesInformationContent', { data });
+  for (const value of ['Open woodland', 'No supported source section', 'Wikipedia contributors', 'Author history', 'CC BY-SA 4.0', 'General species-range', 'not a local sighting forecast', 'cached']) assert.ok(html.includes(value), value);
+  assert.match(html, /&lt;img onerror=steal\(\)&gt;/);
+  assert.doesNotMatch(html, /<img onerror|Best month:|Difficulty: Medium/);
+  assert.match(render('SpeciesInformationContent', {}), /Loading sourced species information/);
+  assert.match(render('SpeciesInformationContent', { error: 'Provider unavailable', onRetry: noop }), /Retry species information/);
+  assert.match(render('SpeciesInformationContent', { data: { ...data, profile: null } }), /No matching species article/);
+  const panel = render('SpeciesInfoPanel', { speciesId: 'indrol2' });
+  assert.match(panel, /<details id="species-information"/);
+  assert.doesNotMatch(panel, /open=""/);
+});
+
+test('species information client validates identity and section shape including a genuine no-match', async () => {
+  const previous = globalThis.fetch;
+  const profile = { title: 'Bird', scientificName: 'Test species', summary: 'Summary', identification: null, habitat: null, behaviour: null, seasonality: null, source: 'Wikipedia', sourceUrl: 'https://en.wikipedia.org/wiki/Bird', revisionUrl: 'https://en.wikipedia.org/w/index.php?oldid=123', historyUrl: 'https://en.wikipedia.org/w/index.php?action=history', revisionId: 123, matchUrl: 'https://www.wikidata.org/wiki/Q1', license: 'CC BY-SA 4.0', licenseUrl: 'https://creativecommons.org/licenses/by-sa/4.0/' };
+  const signal = new AbortController().signal;
+  try {
+    globalThis.fetch = async () => Response.json({ speciesId: 'indrol2', profile });
+    assert.equal((await discoveryClient.loadSpeciesInformation('indrol2', signal)).profile.summary, 'Summary');
+    for (const invalid of [{ ...profile, habitat: { text: 42 } }, { ...profile, revisionId: null }, { ...profile, source: 'Unknown' }]) {
+      globalThis.fetch = async () => Response.json({ speciesId: 'indrol2', profile: invalid });
+      await assert.rejects(discoveryClient.loadSpeciesInformation('indrol2', signal), /Unexpected species information/);
+    }
+    globalThis.fetch = async () => Response.json({ speciesId: 'wrong', profile });
+    await assert.rejects(discoveryClient.loadSpeciesInformation('indrol2', signal), /Unexpected species information/);
+    globalThis.fetch = async () => Response.json({ speciesId: 'indrol2', profile: null });
+    assert.equal((await discoveryClient.loadSpeciesInformation('indrol2', signal)).profile, null);
+  } finally { globalThis.fetch = previous; }
+});
 
 test('photo planning uses the current reference, separates general rules and never infers trip timing from EXIF', () => {
   const exif = { status: 'available', cameraMake: 'Canon', cameraModel: 'Canon Camera', lens: 'EF100-400mm', exposureSeconds: 0.0025, aperture: 9, iso: 200, focalLengthMm: 400, capturedAt: '2014-10-25 11:02:12', utcOffset: null };
@@ -147,7 +181,7 @@ test('hotspot weather presents sourced forecasts, genuine zeros, missing values,
 test('protected discovery rejects ended sessions distinctly from provider/network failures and incorrect passwords', async () => {
   const previousFetch = globalThis.fetch;
   const signal = new AbortController().signal;
-  const loads = [() => discoveryClient.loadDiscovery(signal), () => discoveryClient.loadSpeciesLocations('comkin1', signal), () => discoveryClient.loadHotspotDetails('L123', signal), () => discoveryClient.loadHotspotWeather('L123', signal), () => discoveryClient.loadSpeciesPhoto('comkin1', signal)];
+  const loads = [() => discoveryClient.loadDiscovery(signal), () => discoveryClient.loadSpeciesLocations('comkin1', signal), () => discoveryClient.loadHotspotDetails('L123', signal), () => discoveryClient.loadHotspotWeather('L123', signal), () => discoveryClient.loadSpeciesPhoto('comkin1', signal), () => discoveryClient.loadSpeciesInformation('comkin1', signal)];
   try {
     globalThis.fetch = async () => new Response(JSON.stringify({ error: 'Sign in required.' }), { status: 401 });
     for (const load of loads) await assert.rejects(load, authClient.SessionExpiredError);

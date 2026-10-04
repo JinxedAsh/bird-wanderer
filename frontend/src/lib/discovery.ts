@@ -81,6 +81,29 @@ export interface SpeciesPhotoResponse {
   cached: boolean;
 }
 
+export interface SpeciesInformation {
+  speciesId: string;
+  profile: {
+    title: string;
+    scientificName: string;
+    summary: string;
+    identification: { heading: string; text: string } | null;
+    habitat: { heading: string; text: string } | null;
+    behaviour: { heading: string; text: string } | null;
+    seasonality: { heading: string; text: string } | null;
+    source: 'Wikipedia';
+    sourceUrl: string;
+    revisionUrl: string;
+    historyUrl: string;
+    revisionId: number;
+    matchUrl: string;
+    license: string;
+    licenseUrl: string;
+  } | null;
+  fetchedAt: string;
+  cached: boolean;
+}
+
 async function request(path: string, signal: AbortSignal) {
   let response: Response;
   try {
@@ -128,5 +151,15 @@ export async function loadSpeciesPhoto(id: string, signal: AbortSignal): Promise
       || ['cameraMake', 'cameraModel', 'lens', 'capturedAt', 'utcOffset'].some((key) => exif[key] !== null && typeof exif[key] !== 'string')
       || ['exposureSeconds', 'aperture', 'iso', 'focalLengthMm'].some((key) => exif[key] !== null && (typeof exif[key] !== 'number' || !Number.isFinite(exif[key]) || exif[key] <= 0))) throw new Error('Unexpected species photo metadata response.');
   }
+  return data;
+}
+
+export async function loadSpeciesInformation(id: string, signal: AbortSignal): Promise<SpeciesInformation> {
+  const data = await request(`species/${encodeURIComponent(id)}/info`, signal);
+  if (data?.speciesId !== id || !Object.hasOwn(data, 'profile')) throw new Error('Unexpected species information response.');
+  const profile = data.profile;
+  if (profile !== null && (!profile || profile.source !== 'Wikipedia' || typeof profile.summary !== 'string' || !Number.isSafeInteger(profile.revisionId) || profile.revisionId <= 0
+    || ['title', 'scientificName', 'sourceUrl', 'revisionUrl', 'historyUrl', 'matchUrl', 'license', 'licenseUrl'].some((key) => typeof profile[key] !== 'string')
+    || ['identification', 'habitat', 'behaviour', 'seasonality'].some((key) => profile[key] !== null && (typeof profile[key]?.heading !== 'string' || typeof profile[key]?.text !== 'string')))) throw new Error('Unexpected species information response.');
   return data;
 }

@@ -21,6 +21,7 @@ Bird Wanderer brings species discovery, hotspots, photography logistics, persona
 - Hotspot weather uses Open-Meteo forecasts for the selected eBird location: temperature, wind, humidity, rain, cloud cover, sunrise/sunset and upcoming hourly forecasts. Photography planning tips are labelled general guidance, not photo-derived evidence or predictions of bird activity.
 - Species reference photographs in Explore, Search and species details come from Wikimedia Commons through exact scientific-name matches on Wikidata. Creator, licence and source links are displayed. Details show available camera/exposure EXIF from the same source file, with explicit missing fields and timezone limits. These are recorded reference-photo settings, not recommendations or recent-sighting evidence.
 - **Plan a Shot** opens the existing Field Guide & Technique card: the selected photo's settings, conditional exposure/lens preparation, separately labelled general technique and a hotspot/weather/directions planning path. It does not save a trip or claim an optimal species-wide preset.
+- Species details include a collapsible, credited Wikipedia reference for identification, habitat/range and behaviour, matched through the exact Wikidata species. Unsupported sections stay unavailable; general migration information does not become a local best-season claim.
 
 ## Technology
 
@@ -91,7 +92,7 @@ The frontend and backend currently share one package under `frontend/`. Keeping 
 | 3 — Alerts | Subscriptions, sighting notifications, conservation privacy filters | Planned |
 | 4 — Retention | Quiz and engagement features, remaining required interactions | Planned |
 
-All four phases are required by **20 October 2026**. Password recovery, species enrichment, persistent trip/bookmark records, verified site access logistics, production hosting and complete visual acceptance remain unfinished. Photography guidance currently uses one source-photo example and general rules; environmental matching and multi-photo recommendations are not implemented. Android packaging is deferred for this phase; the final APK is still required. Prototype content and statistics must not be mistaken for live observations.
+All four phases are required by **20 October 2026**. Password recovery, verified local seasonality/difficulty, persistent trip/bookmark records, verified site access logistics, production hosting and complete visual acceptance remain unfinished. Photography guidance currently uses one source-photo example and general rules; environmental matching and multi-photo recommendations are not implemented. Android packaging is deferred for this phase; the final APK is still required. Prototype content and statistics must not be mistaken for live observations.
 
 ## Documentation
 
@@ -102,6 +103,7 @@ All four phases are required by **20 October 2026**. Password recovery, species 
 - [Species photographs and attribution walkthrough](docs/PHOTOS_WALKTHROUGH.md)
 - [External-photo EXIF walkthrough and viva notes](docs/EXIF_WALKTHROUGH.md)
 - [Photography planning walkthrough and viva notes](docs/PHOTO_PLANNING_WALKTHROUGH.md)
+- [Sourced species information walkthrough and viva notes](docs/SPECIES_INFORMATION_WALKTHROUGH.md)
 - [Authentication walkthrough](docs/AUTH_WALKTHROUGH.md)
 - [Stage 1 walkthrough and manual checks](docs/STAGE_1_WALKTHROUGH.md)
 - [Design reference index](docs/design-reference/README.md)

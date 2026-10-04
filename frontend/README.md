@@ -99,6 +99,14 @@ On an external species detail, **Plan a Shot** scrolls to and focuses the existi
 
 Photo-derived tips are withheld during loading/errors, for a different species ID or without supported settings. Missing values are not estimated. The example's shutter, lens and aperture are comparisons, not universal prescriptions. Capture timestamps are not used to infer activity, season or visit timing. Access hours/fees/permissions/entrances remain unverified. See [Photography planning walkthrough](../docs/PHOTO_PLANNING_WALKTHROUGH.md).
 
+### Sourced species information
+
+On a real species detail, open **Identification, Habitat & Behaviour**, or choose the Habitat tile's **Identification & habitat details** link. Its first opening requests `GET /api/discovery/species/:speciesId/info` through the existing signed-in API. The server checks catalogue membership, matches scientific name/species rank on Wikidata and follows its English Wikipedia sitelink. The article must identify that same Wikidata entity and be a normal, non-disambiguation page. No extra key is needed; server internet access to `www.wikidata.org` and `en.wikipedia.org` is required.
+
+Plain-text article excerpts provide supported description, habitat/range, behaviour and explicit migration-section information. Missing article/sections remain unavailable. Revision, contributor history, licence and identity links accompany shortened/reformatted text. Text is attributed to Wikipedia contributors under CC BY-SA 4.0; that does not assign a licence to the application code. Source descriptions can cover different sexes, ages, subspecies and regions, and do not establish local abundance, optimal visit times or difficulty ratings.
+
+Successful/no-match results are cached in memory for 24 hours, limited to 200 names. Same-name loads share work; at most three active and 20 distinct pending lookups are allowed. Failed lookups are not cached. Requests cancel on navigation; HTTP 401 reuses the session reset, while provider errors have their own retry. Closing/reopening the disclosure retains its loaded result. Photos and reports load independently. A server without Node watch needs restarting after the new route is added. See [Species information walkthrough](../docs/SPECIES_INFORMATION_WALKTHROUGH.md).
+
 ## Deployment prerequisites
 
 Build the frontend, set `NODE_ENV=production`, `APP_ORIGIN` to the exact HTTPS origin, and `DATABASE_PATH` to a persistent private disk location, then run `pnpm start`. Configure the host and port for the chosen platform and serve HTTPS through its reverse proxy. The Express server serves the built frontend in production. Hosting, backups and a mail provider are not configured yet.
