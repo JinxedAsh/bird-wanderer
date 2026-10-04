@@ -242,6 +242,8 @@ Newer changes were found in eight existing files: frontend/.env.example, fronten
 
 **Scope:** documentation only. Existing application work in progress is left intact. The detailed walkthroughs remain available as supporting references rather than being deleted or rewritten.
 
+**Repository status verified during handover:** Stage 1 PR #1 has subsequently been merged into main (`27c259c`). The draft/unmerged status in Entry 06 describes the end of that earlier implementation session. This record was introduced in documentation commit `cdae702`, whose push checks passed. The documentation changes are proposed separately from the already merged application increment.
+
 ## 4. How the current application fits together
 
 The interface is what the user sees and interacts with. The backend is the program that receives requests and checks account information. The database is where persistent account information is saved.
