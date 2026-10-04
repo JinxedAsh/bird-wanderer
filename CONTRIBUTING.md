@@ -2,7 +2,7 @@
 
 Use the living project specification and the images in `docs/design-reference` as the requirements. Do not redesign screens or silently replace required functionality with sample behavior.
 
-1. Create a focused branch from the default branch, such as `codex/species-discovery` or `fix/journal-count`.
+1. Create a focused branch from the default branch, such as `species-discovery` or `fix/journal-count`.
 2. Build a complete user flow with input validation, loading, error and empty states. Enforce ownership and privacy in the backend, not only in the interface.
 3. Add meaningful tests for backend behavior and cross-screen data consistency. Keep test accounts and databases separate from personal data.
 4. Run `pnpm lint`, `pnpm test` and `pnpm build` inside `frontend`.
