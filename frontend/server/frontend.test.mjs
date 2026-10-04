@@ -20,7 +20,7 @@ let planningHelpers;
 before(async () => {
   temporaryDirectory = mkdtempSync(join(root, '.stage1-render-'));
   const screens = {};
-  const names = ['GlobalSearchScreen', 'SettingsScreen', 'SpeciesDetailScreen', 'SpeciesPhoto', 'PhotoMetadata', 'PhotoPlanning', 'SpeciesInfoPanel', 'HotspotMap', 'HotspotWeatherPanel', 'HotspotDetailScreen', 'HotspotAccess', 'HotspotsScreen', 'ExploreScreen', 'LocationPicker', 'Header'];
+  const names = ['AuthScreen', 'GlobalSearchScreen', 'SettingsScreen', 'SpeciesDetailScreen', 'SpeciesPhoto', 'PhotoMetadata', 'PhotoPlanning', 'SpeciesInfoPanel', 'HotspotMap', 'HotspotWeatherPanel', 'HotspotDetailScreen', 'HotspotAccess', 'HotspotsScreen', 'ExploreScreen', 'LocationPicker', 'Header'];
   // Compile these existing TSX screens for Node rendering; no browser or new test framework.
   for (const relative of ['lib/useDialogFocus.ts', 'lib/maps.ts', 'lib/auth.ts', 'lib/discovery.ts', 'lib/activity.ts', 'lib/location.ts', ...names.map((name) => `components/${name}.tsx`)]) {
     const output = join(temporaryDirectory, relative.replace(/\.tsx?$/, '.mjs'));
@@ -480,4 +480,31 @@ test('seasonal planning validates regional links and keeps reporting frequency d
   for (const text of ['Find Indian Roller', 'share of complete checklists', 'Historical seasonal values are not imported', 'Planned shot', 'not a measured species difficulty rating', 'Choose a test shutter', 'not an optimal preset', 'Aperture']) assert.ok(html.includes(text), text);
   assert.match(render('PhotoPlanning', { ...props, region: undefined }), /No valid eBird region/);
   assert.doesNotMatch(html, /equivalent ISO is approximately/);
+});
+
+
+test('sign-in reuses local branding, truthful copy and associated accessible form labels', () => {
+  const html = render('AuthScreen', { onLoginSuccess: noop, showToast: noop });
+  assert.match(html, /src="\/bird-wanderer-logo.svg"/);
+  assert.match(html, /EXTERNAL DISCOVERY &amp; FIELD PLANNING/);
+  assert.doesNotMatch(html, /12,480|googleusercontent|ACTIVE SIGHTINGS LOGGED/);
+  assert.match(html, /for="auth-email"/);
+  assert.match(html, /id="auth-email"/);
+  assert.match(html, /for="auth-password"/);
+  assert.match(html, /id="auth-password"/);
+  assert.match(html, /autoComplete="current-password"/i);
+  assert.match(html, /aria-label="Toggle password visibility"/);
+});
+
+
+test('long compact photo credits disclose the complete source text without clipping or dropping rights', () => {
+  const author = 'Photographer contact and rights notice. '.repeat(20);
+  const photo = { author, license: 'CC BY-SA 4.0', licenseUrl: 'https://creativecommons.org/licenses/by-sa/4.0/', sourceUrl: 'https://commons.wikimedia.org/wiki/File:Bird.jpg', credit: 'Creator credit', attribution: 'Required attribution', usageTerms: 'Complete terms', restrictions: 'Source restrictions' };
+  const compact = render('PhotoCredit', { photo });
+  assert.match(compact, /<details><summary/);
+  assert.doesNotMatch(compact, /<details open/);
+  for (const text of [author, photo.licenseUrl, photo.sourceUrl, photo.credit, photo.attribution, photo.usageTerms, photo.restrictions, 'Full photo credit &amp; rights']) assert.ok(compact.includes(text), text);
+  const short = render('PhotoCredit', { photo: { ...photo, author: 'Short author' } });
+  assert.match(short, /Photo: Short author/);
+  assert.doesNotMatch(short, /<details/);
 });

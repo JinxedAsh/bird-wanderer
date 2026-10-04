@@ -102,7 +102,7 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
             disabled={saveDisabled}
             aria-pressed={isBookmarked}
             aria-label="Bookmark species"
-            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
+            className={`w-11 h-11 shrink-0 rounded-full flex items-center justify-center transition-all ${
               isBookmarked
                 ? 'bg-[#ffdcc3] text-[#6e3900]'
                 : 'bg-[#ebeef3] text-[#181c20] hover:bg-[#e0e3e8]'
@@ -119,7 +119,7 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
           <button
             onClick={toggleAudio}
             aria-label="Listen to call"
-            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
+            className={`w-11 h-11 shrink-0 rounded-full flex items-center justify-center transition-all ${
               isPlayingAudio
                 ? 'bg-[#2d5a27] text-white'
                 : 'bg-[#ebeef3] text-[#181c20] hover:bg-[#e0e3e8]'

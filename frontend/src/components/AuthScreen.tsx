@@ -36,16 +36,15 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, showToas
     setError('Password recovery is not connected yet. No reset email has been sent.');
   };
 
-  const logoUrl =
-    'https://lh3.googleusercontent.com/aida/AEtjO1W8yln5EatqNnqKbQzoUitk58-CzWZFsehpZ_GK_zrmrGN3Rf6DRUAAPQOWkobP98hENh3t1gmnVPXejRTXiM2TGKjiQekU3Rg-unebzUWBRENy0VWqkTuIh1Sn-JG2oOC0nXRl1mcsPKuw3fjC_1M72Xv5uLfUz_I-MVJCbPW9iGgR4qgONFxTYDeymWN81E-fZkTP47jwWhru75_7Y-Xh7gyI3W3itKbKoEGU6949uH_m1ajz26fkPFI';
+
 
   return (
     <div className="flex flex-col w-full px-4 py-8 max-w-md mx-auto items-center justify-center min-h-[90vh]">
       {/* Brand & Identity Header */}
       <header className="flex flex-col items-center text-center mt-2 mb-6">
-        <div className="relative flex items-center justify-center w-20 h-20 rounded-full bg-[#ebeef3] mb-4 shadow-xs">
+        <div className="relative flex items-center justify-center w-20 h-20 rounded-2xl bg-[#ebeef3] mb-4 shadow-xs">
           <img
-            src={logoUrl}
+            src="/bird-wanderer-logo.svg"
             alt="Bird Wanderer Logo"
             className="w-16 h-16 rounded-full object-cover"
           />
@@ -76,7 +75,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, showToas
             type="button"
             disabled={isLoading}
             onClick={() => { setMode('signin'); setError(''); }}
-            className={`flex-1 py-2 rounded-lg text-[13px] transition-all font-bold ${
+            className={`flex-1 min-h-11 py-2 rounded-lg text-[13px] transition-all font-bold ${
               mode === 'signin'
                 ? 'bg-white text-[#181c20] shadow-xs'
                 : 'text-[#42493e] hover:text-[#181c20]'
@@ -88,7 +87,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, showToas
             type="button"
             disabled={isLoading}
             onClick={() => { setMode('signup'); setError(''); }}
-            className={`flex-1 py-2 rounded-lg text-[13px] transition-all font-bold ${
+            className={`flex-1 min-h-11 py-2 rounded-lg text-[13px] transition-all font-bold ${
               mode === 'signup'
                 ? 'bg-white text-[#181c20] shadow-xs'
                 : 'text-[#42493e] hover:text-[#181c20]'
@@ -103,7 +102,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, showToas
           {/* Name Field (Sign Up only) */}
           {mode === 'signup' && (
             <div className="flex flex-col gap-1 animate-in fade-in duration-200">
-              <label className="text-[11px] font-bold uppercase text-[#42493e] flex items-center justify-between">
+              <label htmlFor="auth-name" className="text-[11px] font-bold uppercase text-[#42493e] flex items-center justify-between">
                 <span>Observer Name</span>
                 <span className="text-[#3b6934] text-[10px]">Field alias</span>
               </label>
@@ -112,6 +111,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, showToas
                   badge
                 </span>
                 <input
+                  id="auth-name"
                   aria-label="Observer Name"
                   autoComplete="name"
                   minLength={2}
@@ -128,7 +128,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, showToas
 
           {/* Email Field */}
           <div className="flex flex-col gap-1">
-            <label className="text-[11px] font-bold uppercase text-[#42493e] flex items-center justify-between">
+            <label htmlFor="auth-email" className="text-[11px] font-bold uppercase text-[#42493e] flex items-center justify-between">
               <span>Field Email</span>
               <span className="text-[#72796e] text-[10px]">Primary log ID</span>
             </label>
@@ -138,6 +138,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, showToas
               </span>
               <input
                 type="email"
+                id="auth-email"
                 aria-label="Field Email"
                 autoComplete="email"
                 maxLength={254}
@@ -153,7 +154,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, showToas
           {/* Password Field */}
           <div className="flex flex-col gap-1">
             <div className="flex items-center justify-between">
-              <label className="text-[11px] font-bold uppercase text-[#42493e]">Password</label>
+              <label htmlFor="auth-password" className="text-[11px] font-bold uppercase text-[#42493e]">Password</label>
               {mode === 'signin' && (
                 <button
                   type="button"
@@ -169,6 +170,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, showToas
                 key
               </span>
               <input
+                id="auth-password"
                 type={showPassword ? 'text' : 'password'}
                 aria-label="Password"
                 autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
@@ -184,7 +186,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, showToas
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 aria-label="Toggle password visibility"
-                className="absolute right-3 text-[#42493e] hover:text-[#181c20] p-1"
+                className="absolute right-0 flex h-11 w-11 items-center justify-center text-[#42493e] hover:text-[#181c20]"
               >
                 <span className="material-symbols-outlined text-[18px]">
                   {showPassword ? 'visibility_off' : 'visibility'}
@@ -237,7 +239,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, showToas
       <aside className="mt-6 flex items-center justify-center gap-2 py-2 px-4 rounded-full bg-[#f1f4f9] border border-[#e0e3e8]">
         <span className="flex h-2 w-2 rounded-full bg-[#904d00]"></span>
         <p className="text-[10px] font-bold text-[#42493e] tracking-wider uppercase">
-          12,480+ ACTIVE SIGHTINGS LOGGED THIS WEEK
+          EXTERNAL DISCOVERY & FIELD PLANNING
         </p>
       </aside>
     </div>

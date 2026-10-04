@@ -76,7 +76,7 @@ export const HotspotDetailScreen: React.FC<HotspotDetailScreenProps> = ({
             disabled={saveDisabled}
             aria-label="Bookmark this sanctuary"
             aria-pressed={isSaved}
-            className="w-10 h-10 rounded-full bg-white/90 backdrop-blur-md shadow-sm flex items-center justify-center text-[#181c20] hover:bg-white active:scale-95 transition-all"
+            className="w-11 h-11 rounded-full bg-white/90 backdrop-blur-md shadow-sm flex items-center justify-center text-[#181c20] hover:bg-white active:scale-95 transition-all"
           >
             <span
               className={`material-symbols-outlined text-[20px] transition-colors ${

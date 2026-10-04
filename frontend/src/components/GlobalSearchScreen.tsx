@@ -79,7 +79,7 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
     <div className="flex flex-col w-full px-4 pb-28 pt-2">
       {/* Search Bar */}
       <div className="pt-1 pb-2">
-        <div className="relative flex items-center bg-white rounded-xl shadow-xs px-3.5 py-2.5 border border-[#f1f4f9] focus-within:bg-[#f1f4f9]">
+        <div className="relative flex items-center bg-white rounded-xl shadow-xs px-3.5 py-0.5 min-h-12 border border-[#f1f4f9] focus-within:bg-[#f1f4f9]">
           <span className="material-symbols-outlined text-[#72796e] text-[20px] flex-shrink-0">
             search
           </span>
@@ -90,14 +90,14 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
             onKeyDown={(e) => { if (e.key === 'Enter') recordSearch(); }}
             maxLength={100}
             placeholder="Search birds, hotspots, birders..."
-            className="w-full bg-transparent border-0 outline-none px-2.5 text-[14px] text-[#181c20] placeholder:text-[#72796e]"
+            className="w-full min-w-0 bg-transparent border-0 outline-none px-2.5 text-[14px] text-[#181c20] placeholder:text-[#72796e]"
           />
           {query && (
             <button
               type="button"
               aria-label="Clear search"
               onClick={() => setQuery('')}
-              className="w-7 h-7 flex items-center justify-center rounded-full text-[#42493e] hover:bg-[#ebeef3]"
+              className="w-11 h-11 shrink-0 flex items-center justify-center rounded-full text-[#42493e] hover:bg-[#ebeef3]"
             >
               <span className="material-symbols-outlined text-[16px]">close</span>
             </button>
@@ -114,7 +114,7 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
               key={cat}
               type="button"
               onClick={() => setActiveCategory(cat)}
-              className={`px-3.5 py-1.5 rounded-full text-[12px] font-semibold capitalize transition-all whitespace-nowrap ${
+              className={`min-h-11 px-3.5 py-1.5 rounded-full text-[12px] font-semibold capitalize transition-all whitespace-nowrap ${
                 isActive
                   ? 'bg-[#154212] text-white shadow-xs'
                   : 'bg-[#ebeef3] text-[#42493e] hover:bg-[#e0e3e8]'
@@ -144,7 +144,7 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
             <button
               disabled={historyDisabled}
               onClick={() => onRemoveSearch?.()}
-              className="text-[11px] font-semibold text-[#154212] hover:underline"
+              className="min-h-11 min-w-11 px-2 text-[11px] font-semibold text-[#154212] hover:underline"
             >
               Clear All
             </button>
@@ -154,13 +154,13 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
             {recentSearches.map((term) => (
               <div
                 key={term}
-                className="inline-flex items-center gap-1.5 bg-[#f1f4f9] text-[#181c20] px-3 py-1 rounded-full text-[12px] font-medium"
+                className="inline-flex max-w-full items-center gap-1.5 bg-[#f1f4f9] text-[#181c20] px-3 py-1 rounded-full text-[12px] font-medium"
               >
                 <button
                   type="button"
                   disabled={historyDisabled}
                   onClick={() => { setQuery(term); onRecordSearch?.(term); }}
-                  className="cursor-pointer hover:text-[#154212]"
+                  className="min-h-11 min-w-0 text-left break-words cursor-pointer hover:text-[#154212]"
                 >
                   {term}
                 </button>
@@ -169,7 +169,7 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
                   aria-label={`Remove ${term} from recent searches`}
                   disabled={historyDisabled}
                   onClick={() => onRemoveSearch?.(term)}
-                  className="text-[#72796e] hover:text-[#181c20] p-0.5"
+                  className="h-11 w-11 shrink-0 flex items-center justify-center text-[#72796e] hover:text-[#181c20]"
                 >
                   <span className="material-symbols-outlined text-[14px]">close</span>
                 </button>
