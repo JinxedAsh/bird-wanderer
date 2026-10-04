@@ -1,7 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { BirdSpecies, ScreenType } from '../types';
+import type { SpeciesLocations } from '../lib/discovery';
 
 interface SpeciesDetailScreenProps {
+  locations?: SpeciesLocations;
+  locationsError?: string;
+  onRetryLocations?: () => void;
+  onSelectHotspotById?: (id: string) => void;
   species: BirdSpecies;
   onNavigate: (screen: ScreenType) => void;
   onQuickLog: (species: BirdSpecies) => void;
@@ -9,6 +14,10 @@ interface SpeciesDetailScreenProps {
 }
 
 export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
+  locations,
+  locationsError,
+  onRetryLocations,
+  onSelectHotspotById,
   species,
   onNavigate,
   onQuickLog,
@@ -447,11 +456,19 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
       </>}
       {species.source && (
         <section id="sightings-sheet-anchor" className="mx-4 rounded-xl bg-white p-4 text-[13px] text-[#42493e]">
-          <h3 className="font-bold text-[#181c20]">Recent eBird report</h3>
-          <p className="mt-2">Latest regional report per species within 14 days; this is not a total sightings count. Interactive maps are not connected yet.</p>
-          {species.recentObservations?.length ? species.recentObservations.map((obs) => (
-            <p key={obs.hotspotId} className="mt-2">{obs.location} - {obs.observedAt} (observation local time)</p>
-          )) : <p className="mt-2">No recent regional report in this response. This does not establish that the species is absent.</p>}
+          <h3 className="font-bold text-[#181c20]">Recent Sightings &amp; Hotspots</h3>
+          <p className="mt-2">Latest report at each matching hotspot in {species.region}, within 14 days. Select a location to explore it. Reports do not guarantee a sighting; interactive maps are not connected yet.</p>
+          {!locations && !locationsError && <p role="status" className="mt-2">Loading locations for {species.name}...</p>}
+          {locationsError && <div role="alert" className="mt-2"><p>{locationsError}</p><button type="button" onClick={onRetryLocations} className="mt-2 font-semibold text-[#154212] underline">Try again</button></div>}
+          {locations && <p className="mt-2 text-[11px]">Retrieved {new Date(locations.fetchedAt).toLocaleString()}{locations.cached ? ' (cached)' : ''}. Observation times below are local to the location.</p>}
+          {locations?.locations.length === 0 && <p className="mt-2">No recent reports at hotspots in the loaded region. This does not establish that the species is absent.</p>}
+          {locations?.locations.map((location) => (
+            <button type="button" key={location.hotspotId} aria-label={`Open hotspot ${location.name}`} onClick={() => onSelectHotspotById?.(location.hotspotId)} className="mt-2 w-full rounded-xl bg-[#f1f4f9] p-3 text-left hover:bg-[#ebeef3]">
+              <span className="block font-semibold text-[#181c20]">{location.name}</span>
+              <span className="block text-[12px]">{location.coordinates} - {location.observedAt}</span>
+              <span className="block text-[12px]">{location.count === null ? 'Individual count unavailable' : `${location.count} individuals reported`}</span>
+            </button>
+          ))}
           <a href={species.sourceUrl} target="_blank" rel="noreferrer" className="mt-3 inline-block font-semibold text-[#154212] underline">View species on eBird</a>
         </section>
       )}

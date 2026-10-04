@@ -104,3 +104,104 @@ test('discovery API requires a valid session and reports setup errors without br
     db.close();
   }
 });
+
+function detailUpstream(calls, detailOverride) {
+  return async (url, options) => {
+    calls.push(String(url));
+    if (detailOverride) {
+      const override = detailOverride(url);
+      if (override !== undefined) return Response.json(override);
+    }
+    if (url.pathname.includes('/product/spplist/')) return Response.json(['comkin1', 'indrol2', 'unknown-taxon', 'indrol2']);
+    if (url.pathname.includes('/recent/indrol2')) return Response.json([
+      ...observations,
+      { ...observations[0], locId: 'L456', locName: 'Another Wetland', howMany: undefined },
+      { ...observations[0], locId: 'L999', locName: 'Unknown location' },
+      { ...observations[0], locationPrivate: true, locName: 'Private report' },
+    ]);
+    if (url.pathname.includes('/data/obs/L123/recent')) return Response.json([{ ...observations[0], speciesCode: 'comkin1', comName: 'Common Kingfisher', sciName: 'Alcedo atthis', howMany: 0 }]);
+    if (url.pathname.includes('/ref/hotspot/')) return Response.json([...locations, { ...locations[0], locId: 'L456', locName: 'Another Wetland' }]);
+    return upstream([])(url, options);
+  };
+}
+
+test('species-specific discovery links multiple known hotspots and excludes unknown/private locations', async () => {
+  const calls = [];
+  const service = createDiscoveryService({ apiKey: 'test-key', fetchImpl: detailUpstream(calls) });
+  const result = await service.speciesLocations('indrol2');
+  assert.deepEqual(result.locations.map((location) => location.hotspotId), ['L123', 'L456']);
+  assert.equal(result.locations[1].count, null);
+  assert.equal(JSON.stringify(result).includes('Private report'), false);
+  const url = new URL(calls.find((call) => call.includes('/recent/indrol2')));
+  assert.equal(url.searchParams.get('hotspot'), 'true');
+  assert.equal(url.searchParams.get('includeProvisional'), 'false');
+});
+
+test('hotspot details use location-specific reports and join the all-time species list by stable IDs', async () => {
+  const service = createDiscoveryService({ apiKey: 'test-key', fetchImpl: detailUpstream([]) });
+  const result = await service.hotspotDetails('L123');
+  assert.equal(result.hotspotId, 'L123');
+  assert.equal(result.recentSightings[0].speciesId, 'comkin1');
+  assert.equal(result.recentSightings[0].count, 0);
+  assert.deepEqual(result.speciesList.map((bird) => bird.speciesId), ['comkin1', 'indrol2']);
+  assert.equal(result.unmatchedTaxa, 1);
+  assert.ok(result.speciesList.every((bird) => bird.status === 'Recorded'));
+});
+
+test('detail IDs are validated against the configured catalogue before querying provider details', async () => {
+  const calls = [];
+  const service = createDiscoveryService({ apiKey: 'test-key', fetchImpl: detailUpstream(calls) });
+  await assert.rejects(service.speciesLocations('../secret'), { status: 400 });
+  await assert.rejects(service.hotspotDetails('L123?other=1'), { status: 400 });
+  assert.equal(calls.length, 0);
+  await assert.rejects(service.speciesLocations('unknown'), { status: 404 });
+  await assert.rejects(service.hotspotDetails('L999'), { status: 404 });
+  assert.equal(calls.length, 3);
+});
+
+test('detail caches share loads, expire, and retry failures without mixing entities', async () => {
+  const calls = [];
+  let time = 1000;
+  const service = createDiscoveryService({ apiKey: 'test-key', fetchImpl: detailUpstream(calls), now: () => time, ttl: 100 });
+  const [one, two] = await Promise.all([service.speciesLocations('indrol2'), service.speciesLocations('indrol2')]);
+  assert.equal(one.fetchedAt, two.fetchedAt);
+  assert.equal(calls.filter((url) => url.includes('/recent/indrol2')).length, 1);
+  assert.equal((await service.speciesLocations('indrol2')).cached, true);
+  await service.hotspotDetails('L123');
+  assert.equal((await service.hotspotDetails('L123')).hotspotId, 'L123');
+  time += 101;
+  assert.equal((await service.speciesLocations('indrol2')).cached, false);
+  assert.equal(calls.filter((url) => url.includes('/recent/indrol2')).length, 2);
+  let invalid = true;
+  const retry = createDiscoveryService({ apiKey: 'test-key', fetchImpl: detailUpstream([], (url) => url.pathname.includes('/recent/indrol2') && invalid ? [{ ...observations[0], speciesCode: 'wrong' }] : undefined) });
+  await assert.rejects(retry.speciesLocations('indrol2'), { status: 502 });
+  invalid = false;
+  assert.equal((await retry.speciesLocations('indrol2')).locations.length, 2);
+  const malformed = createDiscoveryService({ apiKey: 'test-key', fetchImpl: detailUpstream([], (url) => url.pathname.includes('/product/spplist/') ? [null] : undefined) });
+  await assert.rejects(malformed.hotspotDetails('L123'), { status: 502 });
+  const wrongLocation = createDiscoveryService({ apiKey: 'test-key', fetchImpl: detailUpstream([], (url) => url.pathname.includes('/data/obs/L123/') ? [{ ...observations[0], locId: 'L456' }] : undefined) });
+  await assert.rejects(wrongLocation.hotspotDetails('L123'), { status: 502 });
+});
+
+test('detail HTTP routes keep session protection and expose ID-safe species/hotspot responses', async () => {
+  const { app, db } = createApp({ discovery: createDiscoveryService({ apiKey: 'test-key', fetchImpl: detailUpstream([]) }) });
+  const server = app.listen(0, '127.0.0.1');
+  await new Promise((resolve) => server.once('listening', resolve));
+  const base = `http://127.0.0.1:${server.address().port}/api`;
+  try {
+    assert.equal((await fetch(`${base}/discovery/hotspots/L123`)).status, 401);
+    assert.equal((await fetch(`${base}/discovery/species/indrol2/locations`)).status, 401);
+    const registration = await fetch(`${base}/auth/register`, { method: 'POST', headers: { Origin: 'http://localhost:3000', 'Content-Type': 'application/json' }, body: JSON.stringify({ name: 'Test Observer', email: 'journey@example.test', password: 'test-password-12345' }) });
+    const headers = { Cookie: registration.headers.get('set-cookie').split(';')[0] };
+    const species = await fetch(`${base}/discovery/species/indrol2/locations`, { headers });
+    assert.equal(species.status, 200);
+    assert.equal((await species.json()).speciesId, 'indrol2');
+    const hotspot = await fetch(`${base}/discovery/hotspots/L123`, { headers });
+    assert.equal(hotspot.status, 200);
+    assert.equal((await hotspot.json()).recentSightings[0].speciesId, 'comkin1');
+    assert.equal((await fetch(`${base}/discovery/hotspots/L999`, { headers })).status, 404);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+    db.close();
+  }
+});

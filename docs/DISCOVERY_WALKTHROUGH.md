@@ -26,7 +26,7 @@ The backend remains one Express application with the existing SQLite authenticat
 - A hotspot's species total is the provider's all-time total. It does not mean species active today. Missing values are distinct from genuine zero values.
 - Observation timestamps are displayed as supplied, in observation-local time; they are not converted into invented relative times.
 - Only hotspot observations are requested, and provisional observations are excluded. No private account/checklist data is queried.
-- Regional results can leave a hotspot with no displayed reports even when it has other recent activity. A complete hotspot species inventory is a future step.
+- Regional catalogue results can leave a hotspot with no displayed reports even when it has other recent activity. Detail pages now request that hotspot separately and load its all-time species list; see the journey increment below.
 - eBird does not supply this integration's photos, EXIF, conservation status, habitat, weather, entry fees, opening hours or camera advice. External detail screens do not show prototype evidence as real information.
 - Community, journal, life-list and quiz prototypes are preserved separately. People/posts in global search are explicitly labelled demonstration data.
 
@@ -63,3 +63,25 @@ Maps/directions, weather and photography logistics, open-photo metadata, persist
 - **Why keep provider IDs?** Names can change or be ambiguous. Stable IDs keep navigation and bookmarks associated with the right record.
 - **How does caching work?** A successful catalogue and its retrieval time stay in server memory for 15 minutes. Concurrent requests reuse the same pending operation.
 - **Why show unavailable instead of zero?** Zero is an actual measured value. Missing data cannot honestly be presented as zero or as a made-up recommendation.
+
+## 4 October 2026 - Species-to-hotspot journey increment
+
+The first increment above connected the catalogue. This increment completes internal links and fetches detail data on demand:
+
+- `GET /api/discovery/species/:speciesId/locations` requests recent reports of that species across the configured region. It joins returned location IDs to known regional hotspots. The species page lists selectable locations with coordinates, observation-local timestamps and reported individual counts.
+- `GET /api/discovery/hotspots/:hotspotId` fetches that hotspot's latest reports per species and its all-time recorded taxon codes. It joins those codes to the worldwide species catalogue and returns stable species IDs for navigation. Taxa outside the catalogue are reported as unmatched, rather than assigned another species or an invented name.
+- Both routes use the existing session protection. IDs are checked for valid syntax and catalogue membership before detail requests; an arbitrary or private location ID cannot be queried through these routes. Reports explicitly marked private are filtered out of catalogue/detail responses.
+- App.tsx loads details when their screen opens. AbortController cancels obsolete requests on navigation, logout or selection changes. Response IDs are checked before accepting data, and each displayed response is matched to the selected record. Retry, loading and empty states do not reuse regional summaries as hotspot-specific evidence.
+- Species location cards open hotspots by location ID. Hotspot recent-report and all-time species rows open species by species code, with keyboard controls. Prototype name-based navigation remains available for existing sample screens.
+- Navigation history now stores the selected record with each detail screen. The app's Back button restores the original species/hotspot, even after visiting a different species. This remains in-app history; URLs/deep links and browser Back support are separate work.
+- Detail results use the same 15-minute TTL, separate from the catalogue cache. Concurrent requests share loads, failures remain retryable, and detail cache storage is bounded to 100 entries. Bookmarks continue to use the shared hotspot state and remain temporary.
+
+**Verification:** TypeScript checking, all 26 tests and the production build passed. New tests cover multiple species locations, private/unknown location filtering, hotspot-specific rather than regional reports, all-time taxonomy joins, unknown taxa, invalid/out-of-region IDs, cache sharing/expiry, retry after failure, session-protected HTTP endpoints, and loading/error/empty rendering.
+
+**Live evidence:** Lesser Whistling-Duck (`lewduc1`) returned one matching hotspot, Kanjhawala wetlands. Its detail response returned 69 species with recent reports and 164 matched all-time species, with no unmatched taxa in that response. Every displayed recent species ID existed in the catalogue; the detail cache also passed a live check. Common Kingfisher returned no recent hotspot matches, and a separate Okhla location returned no recent reports but 92 all-time species. These results illustrate why an empty recent response must not be treated as species absence or as an empty all-time list. Counts may change with provider updates.
+
+**Manual acceptance:** search Lesser Whistling-Duck, open its location, open a species from Recent Sightings or the all-time species accordion, then use the app's Back button twice. Confirm the original hotspot and original species return. Also try an empty species result, keyboard navigation, rapidly switching selections and an isolated provider failure/retry. Physical-phone clicks, back navigation and exact visual matching remain unverified.
+
+**Viva concepts:** a stable ID joins records reliably; names are display labels. Recent reports and all-time records answer different questions. Request cancellation prevents old responses overwriting the current selection. History stores the selected entity so returning to a screen restores its context. A bounded cache reduces repeat provider requests without indefinitely growing server memory.
+
+Maps/directions, weather, photo metadata, persistent bookmarks and Android packaging remain separate increments.

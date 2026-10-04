@@ -5,7 +5,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { auth, type AuthUser } from './lib/auth';
-import { loadDiscovery, type DiscoveryCatalogue } from './lib/discovery';
+import { loadDiscovery, loadSpeciesLocations, loadHotspotDetails, type DiscoveryCatalogue, type SpeciesLocations, type HotspotDetails } from './lib/discovery';
 import {
   ScreenType,
   BirdSpecies,
@@ -42,12 +42,18 @@ import { NotificationsScreen } from './components/NotificationsScreen';
 import { SettingsScreen } from './components/SettingsScreen';
 import { AuthScreen } from './components/AuthScreen';
 
+interface NavigationEntry {
+  screen: ScreenType;
+  species?: BirdSpecies;
+  hotspot?: Hotspot;
+}
+
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState<ScreenType>('auth');
   const [sessionUser, setSessionUser] = useState<AuthUser | null>(null);
   const [checkingSession, setCheckingSession] = useState(true);
   const [sessionError, setSessionError] = useState('');
-  const [navigationHistory, setNavigationHistory] = useState<ScreenType[]>(['explore']);
+  const [navigationHistory, setNavigationHistory] = useState<NavigationEntry[]>([{ screen: 'explore' }]);
 
   // Data states
   const [userProfile, setUserProfile] = useState<UserProfile>(INITIAL_USER_PROFILE);
@@ -85,7 +91,7 @@ export default function App() {
     setNotifications(APP_NOTIFICATIONS);
     setSpeciesList(SPECIES_DATABASE);
     setHotspotsList(HOTSPOTS_DATA);
-    setNavigationHistory(['explore']);
+    setNavigationHistory([{ screen: 'explore' }]);
     setCurrentScreen('explore');
   };
 
@@ -104,6 +110,35 @@ export default function App() {
   // Selected item states
   const [selectedSpecies, setSelectedSpecies] = useState<BirdSpecies>(SPECIES_DATABASE[1]); // Common Kingfisher by default
   const [selectedHotspot, setSelectedHotspot] = useState<Hotspot>(HOTSPOTS_DATA[1]); // Okhla Sanctuary
+  const [speciesLocations, setSpeciesLocations] = useState<{ id: string; data?: SpeciesLocations; error?: string }>({ id: '' });
+  const [hotspotDetails, setHotspotDetails] = useState<{ id: string; data?: HotspotDetails; error?: string }>({ id: '' });
+  const [detailAttempt, setDetailAttempt] = useState(0);
+
+  useEffect(() => {
+    if (!sessionUser || currentScreen !== 'species-detail' || !selectedSpecies.source) return;
+    const id = selectedSpecies.id;
+    const controller = new AbortController();
+    setSpeciesLocations({ id });
+    loadSpeciesLocations(id, controller.signal).then((data) => {
+      if (!controller.signal.aborted) setSpeciesLocations({ id, data });
+    }).catch((error) => {
+      if (!controller.signal.aborted) setSpeciesLocations({ id, error: error.message });
+    });
+    return () => controller.abort();
+  }, [sessionUser?.id, currentScreen, selectedSpecies.id, selectedSpecies.source, detailAttempt]);
+
+  useEffect(() => {
+    if (!sessionUser || currentScreen !== 'hotspot-detail' || !selectedHotspot.source) return;
+    const id = selectedHotspot.id;
+    const controller = new AbortController();
+    setHotspotDetails({ id });
+    loadHotspotDetails(id, controller.signal).then((data) => {
+      if (!controller.signal.aborted) setHotspotDetails({ id, data });
+    }).catch((error) => {
+      if (!controller.signal.aborted) setHotspotDetails({ id, error: error.message });
+    });
+    return () => controller.abort();
+  }, [sessionUser?.id, currentScreen, selectedHotspot.id, selectedHotspot.source, detailAttempt]);
 
   // Global Toast State
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -122,10 +157,14 @@ export default function App() {
     }, 2600);
   };
 
-  const navigateTo = (screen: ScreenType) => {
+  const navigateTo = (screen: ScreenType, selection?: { species?: BirdSpecies; hotspot?: Hotspot }) => {
     if (!sessionUser && screen !== 'auth') return;
     if (screen === currentScreen) return;
-    setNavigationHistory((prev) => [...prev, screen]);
+    setNavigationHistory((prev) => [...prev, {
+      screen,
+      species: screen === 'species-detail' ? selection?.species || selectedSpecies : undefined,
+      hotspot: screen === 'hotspot-detail' ? selection?.hotspot || selectedHotspot : undefined,
+    }]);
     setCurrentScreen(screen);
     window.scrollTo({ top: 0, behavior: 'instant' });
   };
@@ -134,9 +173,11 @@ export default function App() {
     if (navigationHistory.length > 1) {
       const nextHistory = [...navigationHistory];
       nextHistory.pop(); // Remove current screen
-      const prevScreen = nextHistory[nextHistory.length - 1];
+      const previous = nextHistory[nextHistory.length - 1];
       setNavigationHistory(nextHistory);
-      setCurrentScreen(prevScreen);
+      if (previous.species) setSelectedSpecies(previous.species);
+      if (previous.hotspot) setSelectedHotspot(previous.hotspot);
+      setCurrentScreen(previous.screen);
     } else {
       setCurrentScreen('explore');
     }
@@ -146,32 +187,38 @@ export default function App() {
   // Quick navigation handlers
   const handleSelectSpecies = (species: BirdSpecies) => {
     setSelectedSpecies(species);
-    navigateTo('species-detail');
+    navigateTo('species-detail', { species });
   };
 
   const handleSelectSpeciesByName = (name: string) => {
     const found = discovery?.species.find((s) => s.name.toLowerCase() === name.toLowerCase()) || speciesList.find((s) => s.name.toLowerCase().includes(name.toLowerCase()));
     if (found) {
       setSelectedSpecies(found);
-      navigateTo('species-detail');
+      navigateTo('species-detail', { species: found });
     } else {
       showToast('This species is not available in the sample catalogue yet.');
     }
   };
 
   const handleSelectSpeciesById = (speciesId: string) => {
-    const found = speciesList.find((s) => s.id === speciesId);
+    const found = discovery?.species.find((s) => s.id === speciesId) || speciesList.find((s) => s.id === speciesId);
     if (found) {
       setSelectedSpecies(found);
-      navigateTo('species-detail');
+      navigateTo('species-detail', { species: found });
     } else {
-      showToast('This species is not available in the sample catalogue yet.');
+      showToast('This species is not available in the loaded catalogue.');
     }
   };
 
   const handleSelectHotspot = (hotspot: Hotspot) => {
     setSelectedHotspot(hotspot);
-    navigateTo('hotspot-detail');
+    navigateTo('hotspot-detail', { hotspot });
+  };
+
+  const handleSelectHotspotById = (id: string) => {
+    const hotspot = discovery?.hotspots.find((h) => h.id === id);
+    if (hotspot) handleSelectHotspot(hotspot);
+    else showToast('This hotspot is not available in the loaded region.');
   };
 
   const handleQuickLog = (species: BirdSpecies) => {
@@ -309,7 +356,7 @@ export default function App() {
       setPosts(COMMUNITY_POSTS);
       setJournalEntries(JOURNAL_ENTRIES);
       setNotifications(APP_NOTIFICATIONS);
-      setNavigationHistory(['auth']);
+      setNavigationHistory([{ screen: 'auth' }]);
       setCurrentScreen('auth');
       setToastMessage(null);
     } catch (error) {
@@ -422,6 +469,10 @@ export default function App() {
               onNavigate={navigateTo}
               onQuickLog={handleQuickLog}
               showToast={showToast}
+              locations={speciesLocations.id === selectedSpecies.id ? speciesLocations.data : undefined}
+              locationsError={speciesLocations.id === selectedSpecies.id ? speciesLocations.error : undefined}
+              onRetryLocations={() => setDetailAttempt((prev) => prev + 1)}
+              onSelectHotspotById={handleSelectHotspotById}
             />
           )}
 
@@ -443,6 +494,10 @@ export default function App() {
               onNavigate={navigateTo}
               onSelectSpeciesByName={handleSelectSpeciesByName}
               showToast={showToast}
+              details={hotspotDetails.id === selectedHotspot.id ? hotspotDetails.data : undefined}
+              detailsError={hotspotDetails.id === selectedHotspot.id ? hotspotDetails.error : undefined}
+              onRetryDetails={() => setDetailAttempt((prev) => prev + 1)}
+              onSelectSpeciesById={handleSelectSpeciesById}
             />
           )}
 

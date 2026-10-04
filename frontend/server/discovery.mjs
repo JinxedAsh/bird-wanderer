@@ -13,6 +13,31 @@ export function createDiscoveryService({ apiKey = '', region = 'IN-DL', fetchImp
   if (!/^[A-Z]{2}(?:-[A-Z0-9]{1,8}){0,2}$/.test(region)) throw new Error('EBIRD_REGION must be an eBird region code, for example IN-DL.');
   let cached;
   let pending;
+  const detailCache = new Map();
+  const detailPending = new Map();
+  // Detail pages use the same short cache, bounded to avoid retaining every viewed
+  // species indefinitely. Failed loads are never cached and can be retried.
+  async function detail(key, loadDetail) {
+    const entry = detailCache.get(key);
+    if (entry && now() - entry.time < ttl) return { ...entry.data, cached: true };
+    if (!detailPending.has(key)) {
+      detailPending.set(key, loadDetail().then((data) => {
+        detailCache.delete(key);
+        if (detailCache.size >= 100) detailCache.delete(detailCache.keys().next().value);
+        detailCache.set(key, { data, time: now() });
+        return data;
+      }).finally(() => detailPending.delete(key)));
+    }
+    return { ...await detailPending.get(key), cached: false };
+  }
+  function checkReports(reports) {
+    for (const obs of reports) {
+      if (!obs || typeof obs.speciesCode !== 'string' || !/^L\d+$/.test(obs.locId) || typeof obs.locName !== 'string' || typeof obs.obsDt !== 'string' || typeof obs.comName !== 'string' || typeof obs.sciName !== 'string') {
+        throw new DiscoveryError(502, 'eBird returned unsupported observation records.');
+      }
+    }
+    return reports.filter((obs) => obs.locationPrivate !== true);
+  }
   async function request(path, params) {
     if (!apiKey.trim()) throw new DiscoveryError(503, 'External discovery is not configured. Add an eBird API key on the server.');
     const url = new URL(`https://api.ebird.org/v2/${path}`);
@@ -34,17 +59,15 @@ export function createDiscoveryService({ apiKey = '', region = 'IN-DL', fetchImp
     return data;
   }
   async function load() {
-    const [taxonomy, locations, observations] = await Promise.all([
+    const [taxonomy, locations, rawObservations] = await Promise.all([
       request('ref/taxonomy/ebird', { fmt: 'json', cat: 'species', locale: 'en' }),
       request(`ref/hotspot/${region}`, { fmt: 'json' }),
       request(`data/obs/${region}/recent`, { back: '14', hotspot: 'true', includeProvisional: 'false', maxResults: '10000' }),
     ]);
+    const observations = checkReports(rawObservations);
     const reportsBySpecies = new Map();
     const reportsByHotspot = new Map();
     for (const obs of observations) {
-      if (!obs || typeof obs.speciesCode !== 'string' || !/^L\d+$/.test(obs.locId) || typeof obs.locName !== 'string' || typeof obs.obsDt !== 'string' || typeof obs.comName !== 'string' || typeof obs.sciName !== 'string') {
-        throw new DiscoveryError(502, 'eBird returned unsupported observation records.');
-      }
       if (!reportsBySpecies.has(obs.speciesCode)) reportsBySpecies.set(obs.speciesCode, []);
       if (!reportsByHotspot.has(obs.locId)) reportsByHotspot.set(obs.locId, []);
       reportsBySpecies.get(obs.speciesCode).push(obs);
@@ -69,29 +92,73 @@ export function createDiscoveryService({ apiKey = '', region = 'IN-DL', fetchImp
       temp: unavailable, weatherCondition: unavailable, wind: unavailable, trailDifficulty: unavailable,
       recommendedGear: unavailable, openingHours: unavailable, entryFee: unavailable, cameraPass: unavailable, transitTip: unavailable,
       recentSightings: (reportsByHotspot.get(row.locId) || []).map((obs) => ({
+        speciesId: obs.speciesCode,
         species: obs.comName, scientific: obs.sciName, image: placeholder, count: Number.isFinite(obs.howMany) ? obs.howMany : null, timeAgo: obs.obsDt,
       })), photos: [], speciesList: [],
     }));
     if ((taxonomy.length && !species.length) || (locations.length && !hotspots.length)) throw new DiscoveryError(502, 'eBird returned unsupported discovery records.');
     return { species, hotspots, region, source: 'eBird', fetchedAt: new Date(now()).toISOString(), observationDays: 14 };
   }
-  return {
+  const service = {
     async catalogue() {
       if (cached && now() - cached.time < ttl) return { ...cached.data, cached: true };
       if (!pending) pending = load().then((data) => { cached = { data, time: now() }; return data; }).finally(() => { pending = undefined; });
       return { ...await pending, cached: false };
     },
+    async speciesLocations(speciesId) {
+      if (!/^[a-z0-9]{3,16}$/.test(speciesId)) throw new DiscoveryError(400, 'Invalid species ID.');
+      const catalogue = await service.catalogue();
+      if (!catalogue.species.some((bird) => bird.id === speciesId)) throw new DiscoveryError(404, 'Species not found in the eBird catalogue.');
+      return detail(`species:${speciesId}`, async () => {
+        const reports = checkReports(await request(`data/obs/${region}/recent/${speciesId}`, { back: '14', hotspot: 'true', includeProvisional: 'false', maxResults: '10000' }));
+        const knownLocations = new Map(catalogue.hotspots.map((hotspot) => [hotspot.id, hotspot]));
+        if (reports.some((obs) => obs.speciesCode !== speciesId)) throw new DiscoveryError(502, 'eBird returned reports for another species.');
+        const locations = reports.filter((obs) => knownLocations.has(obs.locId)).map((obs) => {
+          const hotspot = knownLocations.get(obs.locId);
+          return { hotspotId: hotspot.id, name: hotspot.name, coordinates: hotspot.coordinates, observedAt: obs.obsDt, count: Number.isFinite(obs.howMany) ? obs.howMany : null };
+        });
+        return { speciesId, locations, region, observationDays: 14, fetchedAt: new Date(now()).toISOString() };
+      });
+    },
+    async hotspotDetails(hotspotId) {
+      if (!/^L\d+$/.test(hotspotId)) throw new DiscoveryError(400, 'Invalid hotspot ID.');
+      const catalogue = await service.catalogue();
+      if (!catalogue.hotspots.some((hotspot) => hotspot.id === hotspotId)) throw new DiscoveryError(404, 'Hotspot not found in the configured region.');
+      return detail(`hotspot:${hotspotId}`, async () => {
+        const [rawReports, codes] = await Promise.all([
+          request(`data/obs/${hotspotId}/recent`, { back: '14', includeProvisional: 'false', maxResults: '10000' }),
+          request(`product/spplist/${hotspotId}`, {}),
+        ]);
+        const reports = checkReports(rawReports);
+        if (reports.some((obs) => obs.locId !== hotspotId) || codes.some((code) => typeof code !== 'string')) throw new DiscoveryError(502, 'eBird returned unsupported hotspot detail records.');
+        const knownSpecies = new Map(catalogue.species.map((bird) => [bird.id, bird]));
+        const speciesCodes = [...new Set(codes)];
+        const speciesList = speciesCodes.filter((code) => knownSpecies.has(code)).map((code) => {
+          const bird = knownSpecies.get(code);
+          return { speciesId: code, name: bird.name, scientific: bird.scientificName, status: 'Recorded', statusColor: 'bg-[#f1f4f9] text-[#154212]' };
+        });
+        return {
+          hotspotId, observationDays: 14, fetchedAt: new Date(now()).toISOString(), speciesList,
+          unmatchedTaxa: speciesCodes.length - speciesList.length,
+          recentSightings: reports.filter((obs) => knownSpecies.has(obs.speciesCode)).map((obs) => ({ speciesId: obs.speciesCode, species: obs.comName, scientific: obs.sciName, image: placeholder, count: Number.isFinite(obs.howMany) ? obs.howMany : null, timeAgo: obs.obsDt })),
+        };
+      });
+    },
   };
+  return service;
 }
 
 export function discoveryRouter(service) {
   const router = Router();
-  router.get('/catalogue', async (_req, res, next) => {
-    try { res.json(await service.catalogue()); }
+  const send = (load) => async (req, res, next) => {
+    try { res.json(await load(req)); }
     catch (error) {
       if (error instanceof DiscoveryError) return res.status(error.status).json({ error: error.message });
       next(error);
     }
-  });
+  };
+  router.get('/catalogue', send(() => service.catalogue()));
+  router.get('/species/:speciesId/locations', send((req) => service.speciesLocations(req.params.speciesId)));
+  router.get('/hotspots/:hotspotId', send((req) => service.hotspotDetails(req.params.hotspotId)));
   return router;
 }
