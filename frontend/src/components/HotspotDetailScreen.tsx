@@ -3,6 +3,7 @@ import { Hotspot, ScreenType, BirdSpecies } from '../types';
 import type { HotspotDetails, HotspotWeather } from '../lib/discovery';
 import { hotspotDirectionsUrl } from '../lib/maps';
 import { HotspotMap } from './HotspotMap';
+import { HotspotAccess } from './HotspotAccess';
 import { HotspotWeatherPanel } from './HotspotWeatherPanel';
 
 interface HotspotDetailScreenProps {
@@ -322,7 +323,7 @@ export const HotspotDetailScreen: React.FC<HotspotDetailScreenProps> = ({
 
           {openAccordion === 'visit' && (
             <div className="px-3.5 pb-3.5 pt-1 space-y-2">
-              <div className="p-3 rounded-xl bg-[#f1f4f9] text-[#181c20] text-[13px] space-y-1.5">
+              {hotspot.source ? <HotspotAccess access={hotspot.access} /> : <div className="p-3 rounded-xl bg-[#f1f4f9] text-[#181c20] text-[13px] space-y-1.5">
                 <div className="flex justify-between items-center py-0.5">
                   <span className="text-[#42493e]">Gates Opening Hours</span>
                   <span className="font-bold text-[#154212]">{hotspot.openingHours}</span>
@@ -338,7 +339,7 @@ export const HotspotDetailScreen: React.FC<HotspotDetailScreenProps> = ({
                 <p className="mt-2 text-[#42493e] text-[11px] leading-relaxed pt-1 border-t border-[#e0e3e8]">
                   {hotspot.transitTip}
                 </p>
-              </div>
+              </div>}
             </div>
           )}
         </div>

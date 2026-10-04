@@ -49,7 +49,7 @@ Bird Wanderer helps birdwatchers and wildlife photographers discover species and
 | Species information | Credited identification, habitat and behaviour excerpts load on demand with exact taxonomy/article identity checks. Missing sections remain unavailable; local seasonal timing and difficulty are unverified. See Entry 20. |
 | Species photographs and planning | Credited Commons photos and same-file camera EXIF are connected. Plan a Shot opens the existing guide card with the selected photo's settings, conditional preparation, general technique and a hotspot/weather/directions path. Guidance uses one photo; verified environmental matching and multi-photo recommendations remain unfinished. |
 | Nearby discovery and Explore weather | Optional one-time GPS/manual point enables 50-km filtering and nearest-first straight-line hotspot distances within the configured region. Explore uses the rounded selected point for attributed forecasts; no account location is persisted. See Entry 22. |
-| Maps and logistics | Interactive hotspot maps, coordinate-based directions and hotspot forecasts are implemented. Desktop browser checks passed pins/filtering/detail navigation, weather, coordinate directions and a 390-pixel layout. Physical-phone/outage acceptance remains pending. General photography planning tips are labelled as heuristics; missing provider metadata stays unavailable and verified access information remains incomplete. |
+| Maps and logistics | Interactive hotspot maps, coordinate-based directions and hotspot forecasts are implemented. Desktop browser checks passed pins/filtering/detail navigation, weather, coordinate directions and a 390-pixel layout. Physical-phone/outage acceptance remains pending. General photography planning tips are labelled as heuristics; missing provider metadata stays unavailable and reviewed access snapshots cover two venues while broader access coverage remains incomplete (Entry 23). |
 | Journal, profiles and social activity | Many interactions work temporarily within the running app. Most changes are not stored for later use. |
 | Alerts and quizzes | Demonstration screens exist. Automated alerts, complete quiz progress and challenges are not delivered. |
 | Android delivery | The final APK remains required. The user deferred packaging/deployment for this Phase 1 increment; mobile web and phone-browser acceptance are the current target. No Android package has been produced or device-certified. |
@@ -518,6 +518,26 @@ The header logo now uses a bundled SVG following the supplied green bird emblem,
 
 **Delivery:** implementation commit `d583532`, published on `codex/nearby-weather` in [PR #13](https://github.com/JinxedAsh/bird-wanderer/pull/13). The configured-key scan found zero leaks across 114 files; private context/reviews, secrets, databases and build output remain excluded. The PR records final check/merge status; automatic merge follows passing final-commit checks under standing authorization. The [Nearby/weather walkthrough](NEARBY_WEATHER_WALKTHROUGH.md) contains the flow, modules, limits, manual checks and five Viva questions. Next: verified access logistics and remaining Phase 1 demonstration/design acceptance.
 
+### Entry 23 — Reviewed official-source hotspot access
+
+**Date/group:** 4 October 2026 IST; Phase 1 access and photography logistics.
+
+**Status:** implemented; automated and desktop-browser checks passed. Publication evidence follows below.
+
+**Requirement and result:** maps previously offered only hotspot coordinates. The existing Plan Visit & Entry Gates disclosure now presents dated, field-specific official evidence for Lodhi Gardens and two reviewed Sunder Nursery records. This covers two venues, not every hotspot. Missing facts remain unavailable, and directions remain hotspot points rather than confirmed entrances.
+
+**Sources and scope:** NDMC supplies Lodhi seasonal hours; Delhi Tourism supplies its road approach. Tomb-specific free-entry information was not extrapolated to the entire park. Sunder's operator supplies hours, ticket categories, photography scope and transit approach; conflicting last-entry times are displayed with a request to confirm the applicable season. Standard camera-pass pricing, tripod/drone permission, exact gates and current closures remain unverified. All linked official pages were checked on 4 October. The [Access walkthrough](HOTSPOT_ACCESS_WALKTHROUGH.md) lists the sources and coverage.
+
+**How it works:** the discovery service attaches a reviewed snapshot only when provider, exact ID, approved name and coordinate bounds match. Unknown sites receive no snapshot. Four nullable facts carry their own sources and a review date. After more than 90 days the UI withholds historical text while retaining links; the API still returns the flagged historical snapshot. Existing sample rendering, weather, maps and saves are preserved. No endpoint, key, dependency or database migration was added.
+
+**Files:** frontend/server/access.mjs; access.test.mjs; discovery.mjs; frontend.test.mjs; frontend/src/types.ts; frontend/src/components/HotspotAccess.tsx; HotspotDetailScreen.tsx; frontend/package.json; README.md; frontend/README.md; docs/HOTSPOT_ACCESS_WALKTHROUGH.md; this record.
+
+**Checks:** all 75 tests, TypeScript and production build passed. New checks cover identity/coordinate rejection, both Sunder IDs, unknown sites, expiry, integration, safe rendering and overdue withholding. Live eBird IDs/names/coordinates confirmed L2265071, L2900901 and L77838756. Official-page review does not constitute on-site verification.
+
+**Browser acceptance:** Test chat directly checked Lodhi, both Nursery records and unmatched Yamuna Phase I. Source links, review date, unavailable fields, operator conflict, entrance caveats, keyboard collapse/reopen, navigation and 390-pixel wrapping passed. Nearby/maps/weather and existing saved-state regression passed; no console warnings/errors were reported. Prior saves were preserved and the viewport restored. Expiry/identity guards were tested automatically, not by changing the browser clock. Physical-phone/on-site/outage checks remain pending.
+
+**Remaining:** broader access coverage, current operator/on-site confirmation, local seasonal/difficulty evidence, stronger environmental recommendations and design/physical-phone/failure acceptance. APK remains deferred for this checkpoint.
+
 ## 4. How the current application fits together
 
 The interface is what the user sees and interacts with. The backend is the program that receives requests and checks account information. The database is where persistent account information is saved.
@@ -553,7 +573,7 @@ Manual checks still include design comparison for all screens, mobile layout/tou
 
 | Phase | Remaining implementation and acceptance |
 | --- | --- |
-| Phase 1 — core | Verify local seasonal timing/difficulty, stronger source/environment-supported logistics, wider geographic coverage if required, verified access information and design/manual/device acceptance. Discovery: Entries 12–13; maps/directions: Entry 14; weather: Entry 16; photos/EXIF: Entries 17–18; initial source-aware planning: Entry 19; sourced species information: Entry 20; persistent personal discovery activity: Entry 21; location/Explore weather: Entry 22. APK delivery is deferred for this phase, not cancelled. |
+| Phase 1 — core | Verify local seasonal timing/difficulty, stronger source/environment-supported logistics, wider geographic/access coverage if required and design/manual/device acceptance. Discovery: Entries 12–13; maps/directions: Entry 14; weather: Entry 16; photos/EXIF: Entries 17–18; initial source-aware planning: Entry 19; sourced species information: Entry 20; persistent personal discovery activity: Entry 21; location/Explore weather: Entry 22; initial reviewed access: Entry 23. APK delivery is deferred for this phase, not cancelled. |
 | Phase 2 — community | Persistent profiles and sightings; validated photograph upload/storage; EXIF extraction; journal/life-list relationships and reconciled statistics; real feed/follows/likes/comments/reporting; server ownership/visibility checks. |
 | Phase 3 — alerts | Subscriptions/preferences; qualifying-sighting matching; automated delivery; protected-species coordinate handling and privacy checks. Privacy must also be applied earlier wherever location data becomes accessible. |
 | Phase 4 — retention | Complete identification quiz sessions, persistent progress and photography challenges without disrupting discovery. |
@@ -584,6 +604,7 @@ These paths help the developer find implementation details; teammates can unders
 | Group | Important files |
 | --- | --- |
 | External discovery | frontend/server/discovery.mjs; frontend/server/discovery.test.mjs; frontend/src/lib/discovery.ts; docs/DISCOVERY_WALKTHROUGH.md |
+| Reviewed access | frontend/server/access.mjs; frontend/server/access.test.mjs; frontend/src/components/HotspotAccess.tsx; docs/HOTSPOT_ACCESS_WALKTHROUGH.md |
 | Maps and directions | frontend/src/components/HotspotMap.tsx; frontend/src/lib/maps.ts; HotspotsScreen.tsx; HotspotDetailScreen.tsx; frontend/src/index.css |
 | Location and nearby discovery | frontend/src/lib/location.ts; frontend/src/components/LocationPicker.tsx; frontend/src/App.tsx; frontend/src/components/ExploreScreen.tsx; frontend/src/components/HotspotsScreen.tsx; docs/NEARBY_WEATHER_WALKTHROUGH.md |
 | Weather and planning | frontend/server/weather.mjs; frontend/server/weather.test.mjs; frontend/src/components/HotspotWeatherPanel.tsx; docs/WEATHER_WALKTHROUGH.md |

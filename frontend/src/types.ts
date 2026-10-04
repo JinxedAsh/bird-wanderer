@@ -85,7 +85,14 @@ export interface CommunityPost {
   };
 }
 
+export interface AccessFact { text: string; sources: Array<{ label: string; url: string }> }
+export interface AccessInformation {
+  checkedAt: string; reviewOverdue: boolean;
+  openingHours: AccessFact | null; entryFee: AccessFact | null; cameraPass: AccessFact | null; approach: AccessFact | null;
+}
+
 export interface Hotspot {
+  access?: AccessInformation | null;
   source?: 'eBird';
   sourceUrl?: string;
   latitude?: number;
