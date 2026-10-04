@@ -45,11 +45,11 @@ Bird Wanderer helps birdwatchers and wildlife photographers discover species and
 | Interface | Fifteen screen components exist. Frontend corrections and accessibility improvements have been implemented. Exact visual acceptance remains pending. |
 | Accounts | Real registration, login, session restoration and logout are implemented. Accounts and sessions survive a server restart. |
 | Discovery | eBird taxonomy, regional hotspots and latest regional reports are connected; search and existing detail screens use source IDs. Live API checks passed. Species-to-hotspot links, hotspot-specific recent reports and catalogue-matched all-time species lists are connected. Manual device acceptance remains pending. |
-| Species photographs | Explore, Search and species details load credited Wikimedia Commons reference photos through exact scientific-name/species-rank matches on Wikidata. Live metadata and scoped browser checks passed. Coverage is not universal; EXIF extraction remains pending. |
+| Species photographs | Explore, Search and species details load credited Commons reference photos through exact scientific-name/species-rank matches. Details extract supported camera EXIF from the same source file, with missing fields and timezone limits disclosed. Coverage is not universal; photo-derived recommendations remain pending. |
 | Maps and logistics | Interactive hotspot maps, coordinate-based directions and hotspot forecasts are implemented. Desktop browser checks passed pins/filtering/detail navigation, weather, coordinate directions and a 390-pixel layout. Physical-phone/outage acceptance remains pending. General photography planning tips are labelled as heuristics; open-photo metadata and verified access information remain incomplete. |
 | Journal, profiles and social activity | Many interactions work temporarily within the running app. Most changes are not stored for later use. |
 | Alerts and quizzes | Demonstration screens exist. Automated alerts, complete quiz progress and challenges are not delivered. |
-| Android delivery | The requirement is recorded. No Android package has been produced or device-certified. |
+| Android delivery | The final APK remains required. The user deferred packaging/deployment for this Phase 1 increment; mobile web and phone-browser acceptance are the current target. No Android package has been produced or device-certified. |
 | Hosting | Local development and configurable same-network phone preview are supported. There is no public production website URL recorded. |
 
 Phase 1 is **not complete**. Track acceptance criteria and demonstrated behavior rather than an estimated completion percentage.
@@ -403,6 +403,35 @@ The header logo now uses a bundled SVG following the supplied green bird emblem,
 
 **Delivery:** implementation commit `837b7cd`, published on `codex/species-photographs` in [PR #8](https://github.com/JinxedAsh/bird-wanderer/pull/8). Local checks and the configured-key scan passed; the PR records final GitHub check/merge status. Automatic merge follows passing checks under the developer's standing authorization. Private review/context files, environment secrets, databases and browser screenshots were excluded. The [Photos walkthrough](PHOTOS_WALKTHROUGH.md) contains setup, source policy, manual checks and Viva Notes. Next: extract genuine metadata from eligible external photos, explicitly handling absent EXIF.
 
+### Entry 18 — External reference-photo EXIF extraction
+
+- **Date:** 4 October 2026, India Standard Time.
+- **Group:** external-photo evidence and photography logistics.
+- **Phase:** Phase 1, remaining itinerary item 2.
+- **Status:** implemented; automated and live-provider checks passed; browser evidence below.
+
+**Scope decision:** the developer explicitly deferred APK packaging/deployment for this phase to focus the remaining allowance on the Core MVP. Mobile web and phone-browser checks remain relevant, and the final Android deliverable is still required. No claim of Android completion is made.
+
+**Requirement:** extract genuine camera metadata from externally sourced photographs instead of leaving the species photo metadata badge disconnected. User uploads and their binary processing are later-phase work; photography recommendations are the next separate increment.
+
+**What changed:** the existing signed-in photo response now includes normalized EXIF from its exact selected Commons file. Species details display Reference Photo EXIF: camera make/model, lens, shutter, aperture, ISO, focal length and original capture time. Each missing field is unavailable; no supported fields produces an explicit absent/stripped/unreadable state. The hero badge follows loading/available/unavailable state. Existing photo credit, navigation, image retry, audio controls and discovery remain. Loading image alternative text now distinguishes loading from a failed photo.
+
+**How it works:** the existing Commons image-information request adds decoded file `metadata` with its latest version. `normalizeExif` extracts a strict whitelist, converts exposure rationals to numbers and validates strings, finite positive values, duplicate/ambiguous entries, calendar dates and offsets. Formatted description-page `extmetadata` is used only for credit, never camera settings. GPS, owners, serials and comments are not returned. No full-size image is downloaded, no parser dependency/database table is added and no extra provider round trip is required. This is provider-decoded EXIF normalization, not local JPEG-byte parsing.
+
+**Meaning of the evidence:** EXIF records can be edited. Settings describe one reference photo, not verified field conditions or recommended camera settings. Camera time remains as recorded, and an absent explicit offset means timezone unknown. Upload/editing/digitization dates do not substitute for capture time. The app does not calculate a best birding time or species-wide exposure recommendation from this single sample.
+
+**Files changed:** new `frontend/server/exif.mjs`, `frontend/server/exif.test.mjs`, `frontend/src/components/PhotoMetadata.tsx` and `docs/EXIF_WALKTHROUGH.md`; updated `server/photos.mjs`, `server/photos.test.mjs`, `server/frontend.test.mjs`, `src/lib/discovery.ts`, `SpeciesPhoto.tsx`, `SpeciesDetailScreen.tsx`, `frontend/package.json`, both READMEs, `PHOTOS_WALKTHROUGH.md` and this record.
+
+**Automated checks:** TypeScript, all **49 tests** and production build passed. New coverage verifies rational conversion, partial/missing EXIF, malformed numbers, leap dates/calendar/offsets, ambiguous ISO, duplicate tags, sensitive-field omission, same-file provenance rather than description claims, client response validation, decimal exposure accuracy and escaped rendering. Existing authentication, discovery, map, weather and proxy tests remain passing.
+
+**Live source snapshots:** Indian Roller returned NIKON D300, 1/500 s, f/8, ISO 400, 390 mm and camera time 2011-10-11 09:27:38; Common Kingfisher returned Canon EOS-1Ds Mark III, 1/400 s, f/9, ISO 200, 400 mm and 2014-10-25 11:02:12; Lesser Whistling-Duck returned NIKON D7000, 1/400 s, f/2.8, ISO 640, 145 mm and 2012-03-27 17:54:50. All three lacked an explicit timezone offset. Their existing photos/creator/licence provenance from Entry 17 was preserved. These are recorded provider responses, not permanent values or proof of image authenticity.
+
+**Browser verification:** Test chat reloaded the current app and confirmed the exact Roller and Kingfisher fields above, both labelled camera clock/timezone unknown. Loading/available badges behaved correctly on Roller-to-Kingfisher switching, with the photo, credits and EXIF staying together. Source, creator/licence and the not-independently-verified-or-recommended disclaimer remained visible. Explore, Search and detail photos rendered; the EXIF panel wrapped/scrolled at 390 pixels; Lodhi Gardens weather loaded after species navigation. No stale-server error occurred. The test made no source, server, settings or account changes and restored the viewport. None of the three inspected photos naturally had missing/partial EXIF, so those states remain automated-only coverage rather than a browser-confirmed pass.
+
+**Remaining limits:** no guarantee of EXIF for every photo; malformed/unsupported metadata is conservatively unavailable. Genuine browser provider-outage/retry, independent EXIF authenticity, physical phone and complete design acceptance remain pending. Neither a reference photograph nor its clock provides live sighting/GPS evidence. Later-phase prototype field-shot badges remain outside this increment.
+
+**Delivery:** prepared on `codex/external-photo-exif`; publication evidence will follow. The [EXIF walkthrough](EXIF_WALKTHROUGH.md) explains supported fields, privacy/timezone rules, acceptance checks and Viva Notes. Next: evidence-based photography logistics, keeping source-photo examples distinct from general guidance.
+
 ## 4. How the current application fits together
 
 The interface is what the user sees and interacts with. The backend is the program that receives requests and checks account information. The database is where persistent account information is saved.
@@ -438,7 +467,7 @@ Manual checks still include design comparison for all screens, mobile layout/tou
 
 | Phase | Remaining implementation and acceptance |
 | --- | --- |
-| Phase 1 — core | Complete species enrichment, external-photo EXIF and evidence-based photography logistics, persistent saves/search history, GPS/Explore weather, verified access information and design/manual/device acceptance. Discovery is connected in Entries 12–13, maps/directions in Entry 14, forecasts/general tips in Entry 16 and reference photos in Entry 17. |
+| Phase 1 — core | Complete species enrichment, evidence-based photography logistics, persistent saves/search history, GPS/Explore weather, verified access information and design/manual/device acceptance. Discovery is connected in Entries 12–13, maps/directions in Entry 14, forecasts/general tips in Entry 16, photos in Entry 17 and supported external-photo EXIF in Entry 18. APK delivery is deferred for this phase, not cancelled. |
 | Phase 2 — community | Persistent profiles and sightings; validated photograph upload/storage; EXIF extraction; journal/life-list relationships and reconciled statistics; real feed/follows/likes/comments/reporting; server ownership/visibility checks. |
 | Phase 3 — alerts | Subscriptions/preferences; qualifying-sighting matching; automated delivery; protected-species coordinate handling and privacy checks. Privacy must also be applied earlier wherever location data becomes accessible. |
 | Phase 4 — retention | Complete identification quiz sessions, persistent progress and photography challenges without disrupting discovery. |
@@ -472,6 +501,7 @@ These paths help the developer find implementation details; teammates can unders
 | Maps and directions | frontend/src/components/HotspotMap.tsx; frontend/src/lib/maps.ts; HotspotsScreen.tsx; HotspotDetailScreen.tsx; frontend/src/index.css |
 | Weather and planning | frontend/server/weather.mjs; frontend/server/weather.test.mjs; frontend/src/components/HotspotWeatherPanel.tsx; docs/WEATHER_WALKTHROUGH.md |
 | Species photographs | frontend/server/photos.mjs; frontend/server/photos.test.mjs; frontend/src/components/SpeciesPhoto.tsx; docs/PHOTOS_WALKTHROUGH.md |
+| External-photo EXIF | frontend/server/exif.mjs; frontend/server/exif.test.mjs; frontend/src/components/PhotoMetadata.tsx; docs/EXIF_WALKTHROUGH.md |
 | Accounts | frontend/src/components/AuthScreen.tsx; frontend/src/lib/auth.ts; frontend/server/auth.mjs; frontend/server/index.mjs; frontend/server/auth.test.mjs |
 | Shared frontend state | frontend/src/App.tsx; frontend/src/types.ts; frontend/src/data/mockData.ts |
 | Stage 1 components | BottomNav.tsx, CommunityScreen.tsx, ExploreScreen.tsx, GlobalSearchScreen.tsx, Header.tsx, HotspotDetailScreen.tsx, HotspotsScreen.tsx, LifeListScreen.tsx, LogObservationScreen.tsx, ProfileScreen.tsx, SettingsScreen.tsx, SpeciesDetailScreen.tsx, all under frontend/src/components |

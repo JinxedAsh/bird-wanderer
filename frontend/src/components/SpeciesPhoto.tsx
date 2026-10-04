@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import type { BirdSpecies } from '../types';
 import { loadSpeciesPhoto, type SpeciesPhoto as Photo } from '../lib/discovery';
 import { SessionExpiredError } from '../lib/auth';
+import { PhotoMetadata } from './PhotoMetadata';
 
 interface SpeciesPhotoProps {
   species: BirdSpecies;
@@ -60,10 +61,12 @@ export const SpeciesPhoto: React.FC<SpeciesPhotoProps> = ({ species, frameClassN
   return (
     <figure className={hero ? '' : 'contents'}>
       <div ref={frame} className={frameClassName}>
-        <img src={src} alt={species.source && (!photo || broken) ? `Photo unavailable: ${species.name}` : species.name} loading={hero ? 'eager' : 'lazy'} decoding="async" onError={() => setBroken(true)} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" />
+        <img src={src} alt={species.source && (!photo || broken) ? `${!loaded && !broken ? 'Loading photo' : 'Photo unavailable'}: ${species.name}` : species.name} loading={hero ? 'eager' : 'lazy'} decoding="async" onError={() => setBroken(true)} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" />
         {children}
+        {hero && species.source && <div className="absolute bottom-3 left-3 right-3 w-fit max-w-[calc(100%-1.5rem)] flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/75 backdrop-blur-md text-white text-[11px] font-medium shadow-sm"><span className="w-2 h-2 shrink-0 rounded-full bg-[#fe932c]"></span><span>{photo?.exif?.status === 'available' ? 'Source EXIF available' : photo ? 'Source EXIF unavailable' : loaded ? 'Photo metadata unavailable' : 'Loading photo metadata...'}</span></div>}
       </div>
       {photo && <PhotoCredit photo={photo} full={hero} />}
+      {hero && photo?.exif && <PhotoMetadata exif={photo.exif} />}
       {hero && species.source && !photo && <p role={error ? 'alert' : 'status'} className="mt-1 text-[12px] text-[#42493e]">{error || (loaded ? 'No matching photograph with supported licence and attribution is available.' : 'Loading species photograph...')}</p>}
       {broken && species.source && <p role="status" className="col-span-3 row-start-3 text-[11px] text-[#42493e]">Photo could not load. Reference and credit remain available.</p>}
       {hero && (error || broken) && <button type="button" onClick={() => { setBroken(false); setAttempt((prev) => prev + 1); }} className="mt-1 text-[12px] font-semibold text-[#154212] underline">Retry photo</button>}
