@@ -401,7 +401,7 @@ The header logo now uses a bundled SVG following the supplied green bird emblem,
 
 **Acceptance limits:** initial uncached cards briefly showed a placeholder before loading, whose loading wording could be clearer. No genuine provider outage occurred in browser testing, so forced failure/retry UI remains a manual check despite automated failure coverage. Physical Android testing, exhaustive races, all-species coverage and exact design acceptance remain pending. Photos do not complete Phase 1 logistics or Android packaging.
 
-**Delivery:** prepared on `codex/species-photographs`; commit/PR evidence will be added after publication. The [Photos walkthrough](PHOTOS_WALKTHROUGH.md) contains setup, source policy, manual checks and Viva Notes. Next: extract genuine metadata from eligible external photos, explicitly handling absent EXIF.
+**Delivery:** implementation commit `837b7cd`, published on `codex/species-photographs` in [PR #8](https://github.com/JinxedAsh/bird-wanderer/pull/8). Local checks and the configured-key scan passed; the PR records final GitHub check/merge status. Automatic merge follows passing checks under the developer's standing authorization. Private review/context files, environment secrets, databases and browser screenshots were excluded. The [Photos walkthrough](PHOTOS_WALKTHROUGH.md) contains setup, source policy, manual checks and Viva Notes. Next: extract genuine metadata from eligible external photos, explicitly handling absent EXIF.
 
 ## 4. How the current application fits together
 
