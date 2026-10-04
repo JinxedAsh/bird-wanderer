@@ -25,6 +25,7 @@ Bird Wanderer brings species discovery, hotspots, photography logistics, persona
 - Per-account eBird bird/hotspot bookmarks and the latest ten real searches persist in SQLite. Search has a Saved birds only control; Hotspots retains its existing Saved filter. New saves require a valid provider record, while viewing/removing saved references and history do not call eBird.
 - Optional one-time device/manual location adds nearest-first straight-line distances and 50-km discovery within the configured eBird region. Explore shows an attributed Open-Meteo forecast for the rounded selected point. Clear location restores regional browsing; location is not saved to the account.
 
+- The existing photography guide adds regional eBird seasonal-chart references, shot-motion preparation and a transparent same-light/aperture shutter-to-ISO comparison from current photo EXIF. Seasonal statistics are not imported, and species difficulty/environment matching remain unverified. See [Planning extension](docs/SEASONAL_PLANNING_WALKTHROUGH.md).
 - Official-source access snapshots cover Lodhi Gardens and both reviewed Sunder Nursery eBird records in the existing visit disclosure, with field-specific links, review date, conflicts and unavailable permissions. Other sites remain unverified; overdue values are withheld after 90 days. See [Access walkthrough](docs/HOTSPOT_ACCESS_WALKTHROUGH.md).
 
 ## Technology
