@@ -56,7 +56,7 @@ Create an account through the login screen. There are no preconfigured credentia
 
 For optional overrides, copy `frontend/.env.example` to `frontend/.env`. Never commit credentials or local databases.
 
-On Windows, after installing dependencies, `./Start-Dev.ps1` from the repository root can start the application using Node on PATH or the available Codex runtime.
+On Windows, after installing dependencies, `./Start-Dev.ps1` from the repository root can start the application using Node on PATH or the available local runtime.
 
 ## Verification
 

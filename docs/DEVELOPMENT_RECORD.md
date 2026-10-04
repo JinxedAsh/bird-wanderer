@@ -189,7 +189,7 @@ The existing stack, screens and working authentication were preserved. No later-
 
 **Verification:** `pnpm lint`, all **eleven** tests and `pnpm build` passed. The suite contained five authentication groups, four frontend-rendering regressions and two HTTP proxy tests. GitHub Actions passed for the final Stage 1 commit and pull request. The search, community and hotspot reference images were inspected, but the running interface was not visually certified.
 
-**Delivery evidence:** branch `codex/stage-1-frontend`; implementation commit `ad347e3`; Android-requirement documentation commit `21f7631`; [draft PR #1](https://github.com/JinxedAsh/bird-wanderer/pull/1). At the end of Stage 1, the branch was pushed and the working tree was clean. PR #1 was left unmerged pending manual acceptance.
+**Delivery evidence:** branch `stage-1-frontend`; implementation commit `ad347e3`; Android-requirement documentation commit `21f7631`; [draft PR #1](https://github.com/JinxedAsh/bird-wanderer/pull/1). At the end of Stage 1, the branch was pushed and the working tree was clean. PR #1 was left unmerged pending manual acceptance.
 
 **Boundaries:** these fixes do not make journal/profile/social changes persistent, reconcile all statistics, implement real uploads or enforce conservation privacy. They also do not deliver complete alerts, messaging or quizzes.
 
@@ -281,7 +281,7 @@ Newer changes were found in eight existing files: frontend/.env.example, fronten
 
 **Limits:** latest regional reports are not complete hotspot history or sightings totals. Habitat/species enrichment, complete hotspot species inventory, maps, weather, photo metadata, persistent bookmarks and Android delivery still require later increments. Browser clicks, design fidelity and physical-phone behavior require manual testing. The cache is not a persistent offline fallback.
 
-**Delivery:** implementation commit `ddb8b83`, published on `codex/external-discovery` in [PR #3](https://github.com/JinxedAsh/bird-wanderer/pull/3). The PR records the GitHub check and merge results; merging follows passing checks. Details and the manual checklist are in [Discovery walkthrough](DISCOVERY_WALKTHROUGH.md).
+**Delivery:** implementation commit `ddb8b83`, published on `external-discovery` in [PR #3](https://github.com/JinxedAsh/bird-wanderer/pull/3). The PR records the GitHub check and merge results; merging follows passing checks. Details and the manual checklist are in [Discovery walkthrough](DISCOVERY_WALKTHROUGH.md).
 
 ### Entry 13 - Species and hotspot discovery journey
 
@@ -301,7 +301,7 @@ Newer changes were found in eight existing files: frontend/.env.example, fronten
 
 **Limits:** reports are the latest per location/species in a 14-day window, not a full observation history or a sighting guarantee. The all-time list may contain unmatched non-species taxa. In-app Back is implemented; browser URLs/deep links are not. Physical-phone interaction and visual/back-navigation acceptance are still manual. Maps, photography logistics, photo metadata, persistence and Android delivery remain separate work.
 
-**Delivery:** implementation commit `1c3a4a9`, published on `codex/discovery-journey` in [PR #4](https://github.com/JinxedAsh/bird-wanderer/pull/4). The PR records check/merge results; merging follows passing checks. The [Discovery walkthrough](DISCOVERY_WALKTHROUGH.md) includes the current flow and manual checklist.
+**Delivery:** implementation commit `1c3a4a9`, published on `discovery-journey` in [PR #4](https://github.com/JinxedAsh/bird-wanderer/pull/4). The PR records check/merge results; merging follows passing checks. The [Discovery walkthrough](DISCOVERY_WALKTHROUGH.md) includes the current flow and manual checklist.
 
 ### Entry 14 - Interactive hotspot maps and directions
 
@@ -324,7 +324,7 @@ Newer changes were found in eight existing files: frontend/.env.example, fronten
 
 **Manual checks and limits:** browser interaction verification was unavailable for this increment. Map tile loading, pan/zoom, touch, keyboard selection, pin popups, layout and opening Google Maps on a phone still need manual checks. Directions target the hotspot point, not a confirmed entry gate. GPS/distance sorting, weather, photo metadata, persistent bookmarks and Android packaging are separate work. This web build is not an APK.
 
-**Delivery:** implementation commit `855dc55`, published on `codex/hotspot-maps` in [PR #5](https://github.com/JinxedAsh/bird-wanderer/pull/5). The PR records check/merge results; merging follows passing checks. See the [Discovery walkthrough](DISCOVERY_WALKTHROUGH.md) for manual checks and viva explanations.
+**Delivery:** implementation commit `855dc55`, published on `hotspot-maps` in [PR #5](https://github.com/JinxedAsh/bird-wanderer/pull/5). The PR records check/merge results; merging follows passing checks. See the [Discovery walkthrough](DISCOVERY_WALKTHROUGH.md) for manual checks and viva explanations.
 
 ### Entry 15 - Browser acceptance evidence and session/header fixes
 
@@ -348,7 +348,7 @@ The header logo now uses a bundled SVG following the supplied green bird emblem,
 
 **Browser follow-up during Entry 16:** the local logo displayed, authentication regressions passed, and logging out in a second tab followed by opening a hotspot in the original tab returned to login without refresh. Pure window-focus recovery was not confirmed: closing a browser tab/sending keyboard input did not establish a genuine window-focus event through the testing tool. This remains an acceptance limit, not a demonstrated focus-listener pass. Provider-outage behavior is covered by client tests but was not checked in the browser.
 
-**Delivery:** implementation commit `29312fc`, published on `codex/session-and-brand-fixes` in [PR #6](https://github.com/JinxedAsh/bird-wanderer/pull/6). The PR records check/merge results; merging follows passing checks. Next increment: weather and sourced trip-planning information. No test-account credentials or browser screenshots are included in the repository.
+**Delivery:** implementation commit `29312fc`, published on `session-and-brand-fixes` in [PR #6](https://github.com/JinxedAsh/bird-wanderer/pull/6). The PR records check/merge results; merging follows passing checks. Next increment: weather and sourced trip-planning information. No test-account credentials or browser screenshots are included in the repository.
 
 ### Entry 16 - Hotspot forecasts and photography planning
 
@@ -375,7 +375,7 @@ The header logo now uses a bundled SVG following the supplied green bird emblem,
 
 **Acceptance limits:** pure focus-based session recovery was not confirmed because the tool could not establish a genuine window-focus event. Provider-outage/retry UI, physical-phone gestures, independent weather accuracy, verified entrances and complete design fidelity remain unverified. Rendered phone-width layout is not physical Android certification.
 
-**Delivery:** implementation commit `f2f69fe`, published on `codex/hotspot-weather` in [PR #7](https://github.com/JinxedAsh/bird-wanderer/pull/7). The PR records check/merge results; merging follows passing checks. The [Weather walkthrough](WEATHER_WALKTHROUGH.md) gives the flow, acceptance checklist and viva notes. Next Phase 1 increment: source-attributed species photographs and open-photo metadata; remaining site-access data requires verifiable sources.
+**Delivery:** implementation commit `f2f69fe`, published on `hotspot-weather` in [PR #7](https://github.com/JinxedAsh/bird-wanderer/pull/7). The PR records check/merge results; merging follows passing checks. The [Weather walkthrough](WEATHER_WALKTHROUGH.md) gives the flow, acceptance checklist and viva notes. Next Phase 1 increment: source-attributed species photographs and open-photo metadata; remaining site-access data requires verifiable sources.
 
 ### Entry 17 — Real species reference photographs and attribution
 
@@ -404,7 +404,7 @@ The header logo now uses a bundled SVG following the supplied green bird emblem,
 
 **Acceptance limits:** initial uncached cards briefly showed a placeholder before loading, whose loading wording could be clearer. No genuine provider outage occurred in browser testing, so forced failure/retry UI remains a manual check despite automated failure coverage. Physical Android testing, exhaustive races, all-species coverage and exact design acceptance remain pending. Photos do not complete Phase 1 logistics or Android packaging.
 
-**Delivery:** implementation commit `837b7cd`, published on `codex/species-photographs` in [PR #8](https://github.com/JinxedAsh/bird-wanderer/pull/8). Local checks and the configured-key scan passed; the PR records final GitHub check/merge status. Automatic merge follows passing checks under the developer's standing authorization. Private review/context files, environment secrets, databases and browser screenshots were excluded. The [Photos walkthrough](PHOTOS_WALKTHROUGH.md) contains setup, source policy, manual checks and Viva Notes. Next: extract genuine metadata from eligible external photos, explicitly handling absent EXIF.
+**Delivery:** implementation commit `837b7cd`, published on `species-photographs` in [PR #8](https://github.com/JinxedAsh/bird-wanderer/pull/8). Local checks and the configured-key scan passed; the PR records final GitHub check/merge status. Automatic merge follows passing checks under the developer's standing authorization. Private review/context files, environment secrets, databases and browser screenshots were excluded. The [Photos walkthrough](PHOTOS_WALKTHROUGH.md) contains setup, source policy, manual checks and Viva Notes. Next: extract genuine metadata from eligible external photos, explicitly handling absent EXIF.
 
 ### Entry 18 — External reference-photo EXIF extraction
 
@@ -433,7 +433,7 @@ The header logo now uses a bundled SVG following the supplied green bird emblem,
 
 **Remaining limits:** no guarantee of EXIF for every photo; malformed/unsupported metadata is conservatively unavailable. Genuine browser provider-outage/retry, independent EXIF authenticity, physical phone and complete design acceptance remain pending. Neither a reference photograph nor its clock provides live sighting/GPS evidence. Later-phase prototype field-shot badges remain outside this increment.
 
-**Delivery:** implementation commit `151d79e`, published on `codex/external-photo-exif` in [PR #9](https://github.com/JinxedAsh/bird-wanderer/pull/9). Local checks and the configured-key scan passed; the PR records final GitHub check/merge status, with automatic merge following passing checks under standing authorization. Private context/reviews, environment secrets and databases remain excluded. The [EXIF walkthrough](EXIF_WALKTHROUGH.md) explains supported fields, privacy/timezone rules, acceptance checks and Viva Notes. Next: evidence-based photography logistics, keeping source-photo examples distinct from general guidance.
+**Delivery:** implementation commit `151d79e`, published on `external-photo-exif` in [PR #9](https://github.com/JinxedAsh/bird-wanderer/pull/9). Local checks and the configured-key scan passed; the PR records final GitHub check/merge status, with automatic merge following passing checks under standing authorization. Private context/reviews, environment secrets and databases remain excluded. The [EXIF walkthrough](EXIF_WALKTHROUGH.md) explains supported fields, privacy/timezone rules, acceptance checks and Viva Notes. Next: evidence-based photography logistics, keeping source-photo examples distinct from general guidance.
 
 ### Entry 19 — Source-aware photography planning and a usable Plan a Shot action
 
@@ -458,7 +458,7 @@ The header logo now uses a bundled SVG following the supplied green bird emblem,
 
 **Limitations:** no multi-photo statistics or verified matching of environmental conditions; no sourced best-time/season/difficulty inference; no saved itinerary. Fully absent EXIF/provider outages, physical-phone behavior and full design acceptance still need manual verification; one missing-lens case passed in the browser. Source-photo settings remain unverified records, and reports are not sighting guarantees. APK packaging remains deferred for this phase.
 
-**Delivery:** implementation commit `dc5f7ea`, published on `codex/photo-planning` in [PR #10](https://github.com/JinxedAsh/bird-wanderer/pull/10). Local checks and the configured-key scan passed; the PR records final GitHub check/merge status. Automatic merge follows passing final-commit checks under standing authorization. Private context/reviews, secrets and databases remain excluded. The [Photography planning walkthrough](PHOTO_PLANNING_WALKTHROUGH.md) contains the rules, source boundaries, manual checks and Viva Notes. Next: sourced detailed species enrichment, retaining the current discovery and planning flow.
+**Delivery:** implementation commit `dc5f7ea`, published on `photo-planning` in [PR #10](https://github.com/JinxedAsh/bird-wanderer/pull/10). Local checks and the configured-key scan passed; the PR records final GitHub check/merge status. Automatic merge follows passing final-commit checks under standing authorization. Private context/reviews, secrets and databases remain excluded. The [Photography planning walkthrough](PHOTO_PLANNING_WALKTHROUGH.md) contains the rules, source boundaries, manual checks and Viva Notes. Next: sourced detailed species enrichment, retaining the current discovery and planning flow.
 
 ### Entry 20 — Credited species identification, habitat and behaviour
 
@@ -476,7 +476,7 @@ The header logo now uses a bundled SVG following the supplied green bird emblem,
 
 **Browser verification:** Test chat checked all three species, correct source links, Habitat focus, Enter/Space disclosure operation, retained reopening data, correct replacement after species switching, 390-pixel wrapping, honest timing/difficulty labels, photo/EXIF/planning and a reported Lodhi Gardens hotspot with weather. No confirmed failures. Genuine outages, missing-article browser cases, exact network counts and physical-phone behavior were not tested; relevant error/no-match logic has automated coverage. Full design acceptance remains pending.
 
-**Delivery:** implementation commit `b4f9e07`, published on `codex/species-information` in [PR #11](https://github.com/JinxedAsh/bird-wanderer/pull/11). Local checks and the configured-key scan passed (zero leaks across 107 files); the PR records final GitHub check/merge status. Automatic merge follows passing final-commit checks under standing authorization. Private reviews/context, secrets and databases remain excluded. The [Species information walkthrough](SPECIES_INFORMATION_WALKTHROUGH.md) explains the implementation, source limits, manual checks and Viva Notes. Next: persistent saves/search history, followed by GPS/Explore weather and remaining Phase 1 acceptance. Android packaging remains deferred for this checkpoint.
+**Delivery:** implementation commit `b4f9e07`, published on `species-information` in [PR #11](https://github.com/JinxedAsh/bird-wanderer/pull/11). Local checks and the configured-key scan passed (zero leaks across 107 files); the PR records final GitHub check/merge status. Automatic merge follows passing final-commit checks under standing authorization. Private reviews/context, secrets and databases remain excluded. The [Species information walkthrough](SPECIES_INFORMATION_WALKTHROUGH.md) explains the implementation, source limits, manual checks and Viva Notes. Next: persistent saves/search history, followed by GPS/Explore weather and remaining Phase 1 acceptance. Android packaging remains deferred for this checkpoint.
 
 ### Entry 21 — Persistent eBird bookmarks and real search history
 
@@ -496,7 +496,7 @@ The header logo now uses a bundled SVG following the supplied green bird emblem,
 
 **Limits:** this stores source references, not a complete offline catalogue or saved trips. Hotspots outside the configured region and removed taxa remain stored but are not listed without matching loaded provider records. Cross-tab realtime synchronization is not implemented; refresh reloads activity. Prototype community bookmarks and journal/life-list statistics remain separate, and a saved target does not mean a logged sighting. Physical-phone/design and genuine outage presentation still need manual acceptance.
 
-**Delivery:** implementation commit `1d1734f`, published on `codex/discovery-saves` in [PR #12](https://github.com/JinxedAsh/bird-wanderer/pull/12). The configured-key scan found zero leaks across 111 files; private reviews/context, secrets, databases and build output remain excluded. The PR records final GitHub checks/merge status; automatic merge follows passing final-commit checks under standing authorization. The [Discovery activity walkthrough](DISCOVERY_ACTIVITY_WALKTHROUGH.md) contains the implementation, checks, limits and five Viva questions. Next: GPS/Explore weather and remaining Phase 1 access/design/acceptance work; Android packaging remains deferred for this checkpoint.
+**Delivery:** implementation commit `1d1734f`, published on `discovery-saves` in [PR #12](https://github.com/JinxedAsh/bird-wanderer/pull/12). The configured-key scan found zero leaks across 111 files; private reviews/context, secrets, databases and build output remain excluded. The PR records final GitHub checks/merge status; automatic merge follows passing final-commit checks under standing authorization. The [Discovery activity walkthrough](DISCOVERY_ACTIVITY_WALKTHROUGH.md) contains the implementation, checks, limits and five Viva questions. Next: GPS/Explore weather and remaining Phase 1 access/design/acceptance work; Android packaging remains deferred for this checkpoint.
 
 ### Entry 22 — Optional nearby discovery and selected-point Explore weather
 
@@ -516,7 +516,7 @@ The header logo now uses a bundled SVG following the supplied green bird emblem,
 
 **Limits and next work:** geographic coverage is the configured eBird region, not automatic worldwide GPS discovery. Nearby uses a 50-km straight-line estimate; GPS accuracy is disclosed and no verified access gate or road distance is implied. GPS hardware, physical-phone/secure-host permission and genuine outage acceptance remain pending. Verified access logistics, stronger evidence-supported recommendations and design/manual acceptance remain Phase 1 work. Android packaging remains deferred for this checkpoint.
 
-**Delivery:** implementation commit `d583532`, published on `codex/nearby-weather` in [PR #13](https://github.com/JinxedAsh/bird-wanderer/pull/13). The configured-key scan found zero leaks across 114 files; private context/reviews, secrets, databases and build output remain excluded. The PR records final check/merge status; automatic merge follows passing final-commit checks under standing authorization. The [Nearby/weather walkthrough](NEARBY_WEATHER_WALKTHROUGH.md) contains the flow, modules, limits, manual checks and five Viva questions. Next: verified access logistics and remaining Phase 1 demonstration/design acceptance.
+**Delivery:** implementation commit `d583532`, published on `nearby-weather` in [PR #13](https://github.com/JinxedAsh/bird-wanderer/pull/13). The configured-key scan found zero leaks across 114 files; private context/reviews, secrets, databases and build output remain excluded. The PR records final check/merge status; automatic merge follows passing final-commit checks under standing authorization. The [Nearby/weather walkthrough](NEARBY_WEATHER_WALKTHROUGH.md) contains the flow, modules, limits, manual checks and five Viva questions. Next: verified access logistics and remaining Phase 1 demonstration/design acceptance.
 
 ### Entry 23 — Reviewed official-source hotspot access
 
@@ -536,9 +536,17 @@ The header logo now uses a bundled SVG following the supplied green bird emblem,
 
 **Browser acceptance:** Test chat directly checked Lodhi, both Nursery records and unmatched Yamuna Phase I. Source links, review date, unavailable fields, operator conflict, entrance caveats, keyboard collapse/reopen, navigation and 390-pixel wrapping passed. Nearby/maps/weather and existing saved-state regression passed; no console warnings/errors were reported. Prior saves were preserved and the viewport restored. Expiry/identity guards were tested automatically, not by changing the browser clock. Physical-phone/on-site/outage checks remain pending.
 
-**Delivery:** implementation commit `225b106`, published on `codex/hotspot-access` in [PR #14](https://github.com/JinxedAsh/bird-wanderer/pull/14). The configured-key scan found zero leaks across 118 files; private context/reviews, secrets, databases and build output remain excluded. The PR records final checks and merge status; automatic merge follows passing final-commit checks under standing authorization.
+**Delivery:** implementation commit `225b106`, published on `hotspot-access` in [PR #14](https://github.com/JinxedAsh/bird-wanderer/pull/14). The configured-key scan found zero leaks across 118 files; private context/reviews, secrets, databases and build output remain excluded. The PR records final checks and merge status; automatic merge follows passing final-commit checks under standing authorization.
 
 **Remaining:** broader access coverage, current operator/on-site confirmation, local seasonal/difficulty evidence, stronger environmental recommendations and design/physical-phone/failure acceptance. APK remains deferred for this checkpoint.
+
+### Entry 24 — Repository naming cleanup
+
+**Date/group:** 4 October 2026 IST; repository presentation and maintenance.
+
+**Change:** existing remote feature branches and their local counterparts use plain feature names. Contribution examples and delivery references were updated to the same convention, and the README describes the startup fallback as a local runtime. Future branches use plain descriptive names.
+
+**Checks and boundaries:** no open pull requests existed before renaming. Remote branch commit IDs are checked before/after; local tracking is updated. This changes names and documentation, not application behavior or historical commits. The launcher's internal runtime installation path is retained to preserve startup. Private notes and dependency/source attribution are unaffected.
 
 ## 4. How the current application fits together
 
