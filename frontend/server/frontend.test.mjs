@@ -10,24 +10,26 @@ import { renderToStaticMarkup } from 'react-dom/server';
 const root = fileURLToPath(new URL('../', import.meta.url));
 let temporaryDirectory;
 let render;
+let mapHelpers;
 
 before(async () => {
   temporaryDirectory = mkdtempSync(join(root, '.stage1-render-'));
   const screens = {};
-  const names = ['GlobalSearchScreen', 'SettingsScreen', 'SpeciesDetailScreen', 'HotspotDetailScreen', 'HotspotsScreen', 'ExploreScreen', 'Header'];
+  const names = ['GlobalSearchScreen', 'SettingsScreen', 'SpeciesDetailScreen', 'HotspotMap', 'HotspotDetailScreen', 'HotspotsScreen', 'ExploreScreen', 'Header'];
   // Compile these existing TSX screens for Node rendering; no browser or new test framework.
-  for (const relative of ['lib/useDialogFocus.ts', ...names.map((name) => `components/${name}.tsx`)]) {
+  for (const relative of ['lib/useDialogFocus.ts', 'lib/maps.ts', ...names.map((name) => `components/${name}.tsx`)]) {
     const output = join(temporaryDirectory, relative.replace(/\.tsx?$/, '.mjs'));
     mkdirSync(dirname(output), { recursive: true });
     const source = readFileSync(join(root, 'src', relative), 'utf8');
     const { code } = transformSync(source, { loader: 'tsx', format: 'esm', jsx: 'automatic', target: 'es2022' });
-    writeFileSync(output, code.replace('../lib/useDialogFocus"', '../lib/useDialogFocus.mjs"'));
+    writeFileSync(output, code.replace('../lib/useDialogFocus"', '../lib/useDialogFocus.mjs"').replace('../lib/maps"', '../lib/maps.mjs"').replace('./HotspotMap"', './HotspotMap.mjs"'));
   }
   for (const name of names) {
     const module = await import(pathToFileURL(join(temporaryDirectory, 'components', `${name}.mjs`)).href);
     screens[name] = module[name];
   }
   render = (name, props) => renderToStaticMarkup(createElement(screens[name], props));
+  mapHelpers = await import(pathToFileURL(join(temporaryDirectory, 'lib/maps.mjs')).href);
 });
 
 after(() => {
@@ -39,6 +41,41 @@ after(() => {
 
 const noop = () => {};
 const searchProps = { speciesList: [], hotspots: [], posts: [], onSelectSpecies: noop, onSelectHotspot: noop, onNavigate: noop };
+
+test('map coordinates accept genuine zero values and reject missing, non-finite and out-of-range values', () => {
+  assert.deepEqual(mapHelpers.hotspotCoordinates({ latitude: 0, longitude: 0 }), [0, 0]);
+  assert.deepEqual(mapHelpers.hotspotCoordinates({ latitude: -90, longitude: 180 }), [-90, 180]);
+  for (const point of [{}, { latitude: 28.5 }, { latitude: NaN, longitude: 77 }, { latitude: 28, longitude: Infinity }, { latitude: 91, longitude: 77 }, { latitude: 28, longitude: -181 }, { latitude: '28.5', longitude: 77 }]) {
+    assert.equal(mapHelpers.hotspotCoordinates(point), null);
+    assert.equal(mapHelpers.hotspotDirectionsUrl(point), null);
+  }
+});
+
+test('directions encode the selected hotspot coordinates without confusing lat/lng or including keys', () => {
+  const url = new URL(mapHelpers.hotspotDirectionsUrl({ latitude: 28.567, longitude: 77.311 }));
+  assert.equal(url.origin, 'https://www.google.com');
+  assert.equal(url.pathname, '/maps/dir/');
+  assert.equal(url.searchParams.get('api'), '1');
+  assert.equal(url.searchParams.get('destination'), '28.567,77.311');
+  assert.equal(url.searchParams.has('key'), false);
+  assert.equal(url.searchParams.has('origin'), false);
+});
+
+test('real map area and directions use source coordinates; missing coordinates provide an honest fallback', () => {
+  const hotspot = { id: 'L123', name: 'Test Wetland', source: 'eBird', latitude: 28.567, longitude: 77.311, coordinates: '28.567, 77.311', imageUrl: '/discovery-placeholder.svg', recentSightings: [], photos: [], speciesList: [] };
+  const props = { hotspot, onNavigate: noop, onToggleSave: noop, onSelectSpeciesByName: noop, showToast: noop };
+  const detail = render('HotspotDetailScreen', props);
+  assert.match(detail, /aria-label="Map of Test Wetland"/);
+  assert.match(detail, /destination=28.567%2C77.311/);
+  assert.match(detail, /Open directions/);
+  const missing = render('HotspotDetailScreen', { ...props, hotspot: { ...hotspot, latitude: undefined } });
+  assert.match(missing, /Directions unavailable/);
+  assert.doesNotMatch(missing, /google.com\/maps\/dir/);
+  const list = render('HotspotsScreen', { hotspots: [hotspot], externalDiscovery: true, onSelectHotspot: noop, onNavigate: noop, showToast: noop });
+  assert.match(list, /aria-label="Map of filtered eBird hotspots"/);
+  assert.doesNotMatch(list, /Delhi Map View|Sultanpur/);
+  assert.match(render('HotspotMap', { hotspots: [], label: 'Empty map' }), /No valid hotspot coordinates/);
+});
 
 test('external species details show genuine reports without fabricated photos, conservation status or map locations', () => {
   const html = render('SpeciesDetailScreen', {

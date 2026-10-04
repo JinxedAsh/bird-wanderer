@@ -40,3 +40,18 @@
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
 }
+
+/* Keep map layers beneath the app header, dialogs and bottom navigation. */
+.hotspot-map.leaflet-container { z-index: 0; font-family: inherit; }
+.hotspot-map .leaflet-control-attribution { font-size: 10px; }
+.hotspot-map-pin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid white;
+  border-radius: 50%;
+  background: #154212;
+  box-shadow: 0 2px 5px #181c2040;
+}
+.hotspot-map-pin span { width: 8px; height: 8px; border-radius: 50%; background: white; }
+.hotspot-map-pin.is-selected { outline: 3px solid #fe932c; outline-offset: 2px; }

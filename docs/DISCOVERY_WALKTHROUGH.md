@@ -85,3 +85,34 @@ The first increment above connected the catalogue. This increment completes inte
 **Viva concepts:** a stable ID joins records reliably; names are display labels. Recent reports and all-time records answer different questions. Request cancellation prevents old responses overwriting the current selection. History stores the selected entity so returning to a screen restores its context. A bounded cache reduces repeat provider requests without indefinitely growing server memory.
 
 Maps/directions, weather, photo metadata, persistent bookmarks and Android packaging remain separate increments.
+
+## 4 October 2026 - Interactive maps and directions increment
+
+Maps/directions are now implemented, superseding the earlier entries' map gap. Weather, photo metadata, persistent bookmarks and Android packaging remain incomplete.
+
+### How the map works
+
+`HotspotsScreen.tsx` passes its filtered hotspot records to `HotspotMap.tsx`. The map and list therefore show the same search/Saved/Popular results. Leaflet handles movement, zoom, markers and popups; OpenStreetMap provides the background imagery. Pin selection highlights the location, and **Open hotspot** uses its stable ID to open the existing detail page. That page reuses the component with a single location.
+
+`lib/maps.ts` validates coordinates before either displaying pins or building directions. It rejects missing values, strings, infinity and out-of-range values, while allowing genuine zero coordinates. The directions helper builds a [Google Maps URL](https://developers.google.com/maps/documentation/urls/get-started) with `api=1` and a latitude/longitude destination; no paid maps key or assumed starting point is added. The location is the provider's hotspot point, not a verified entrance.
+
+Leaflet loads only when a browser map is needed. Effect cleanup removes the map and resize observer when navigation closes it, preventing duplicate map instances. Popup names use DOM text rather than HTML. Empty filters show a clear fallback; failed imagery shows an error and retry while discovery cards/directions remain available. Visible attribution, ordinary browser caching and no tile prefetching follow the [OpenStreetMap tile policy](https://operations.osmfoundation.org/policies/tiles/). API keys remain on the server.
+
+### Verification and manual checks
+
+TypeScript checking, all **29 tests** and the production build passed. Three new tests cover coordinate validation, precise directions URLs and map/directions/empty server-rendered output. Existing account/discovery/proxy checks passed. These checks do not exercise Leaflet interaction or fetch map tiles; browser interaction testing was unavailable, and physical-phone acceptance remains pending.
+
+1. Sign in on the phone and open Hotspots. Confirm tiles load, attribution is visible and pins match the configured region. Pan, pinch and use zoom controls; check the header/navigation still work.
+2. Search a hotspot name. Confirm cards and pins filter together. Try an impossible name and check the empty message. Save a location and repeat with Saved; test Popular too.
+3. Tap a pin, read its name and select **Open hotspot**. Confirm the correct name/coordinates/detail map. Return using the app Back control.
+4. Open directions. Confirm Google Maps opens with that hotspot as destination and handles the starting point. Return to the app. Do not assume the pin identifies an entrance.
+5. Navigate repeatedly between locations; check for blank/duplicate maps. Test landscape, a narrow screen and keyboard marker/popup navigation on desktop.
+6. Interrupt internet access after discovery loads. Check map failure feedback, remaining cards and Retry map after reconnecting. If a browser blocks tiles without producing an error event, note that outcome for follow-up.
+
+### Viva notes
+
+- **What changed?** Real coordinates now appear as interactive pins, and each hotspot can open directions. Existing discovery and login flows remain intact.
+- **Why one map component?** List and detail screens need the same tile/marker/error behavior. Reusing it avoids maintaining two separate map implementations.
+- **Why validate coordinates?** Missing or malformed numbers should not create misleading locations. Latitude is between -90 and 90, longitude between -180 and 180, and zero is valid.
+- **What does effect cleanup do?** It removes the map and resize observer when the component closes, avoiding leftover listeners and duplicate initialization.
+- **Are directions computed by our backend?** No. The app builds a destination URL; Google Maps handles routing. eBird provides location data, OpenStreetMap provides imagery, and Leaflet provides interaction.
