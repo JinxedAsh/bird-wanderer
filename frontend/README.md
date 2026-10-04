@@ -36,7 +36,7 @@ pnpm build
 ```
 
 The lint command currently checks TypeScript types. Tests use temporary isolated databases and do not change your development accounts.
-The suite also includes server-rendered frontend regression checks and HTTP checks for both Vite proxies. See `../docs/STAGE_1_WALKTHROUGH.md` for browser checks still required.
+The suite also includes server-rendered frontend regression checks and HTTP checks for both Vite proxies. See [presentation/device acceptance](../docs/PHASE_1_PRESENTATION.md) for current demo checks; the Stage 1 walkthrough retains the initial delivery history.
 
 ## Current status
 

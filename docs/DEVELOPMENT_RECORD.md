@@ -42,7 +42,7 @@ Bird Wanderer helps birdwatchers and wildlife photographers discover species and
 
 | Area | Actual state |
 | --- | --- |
-| Interface | Fifteen screen components exist. Frontend corrections and accessibility improvements have been implemented. Exact visual acceptance remains pending. |
+| Interface | Fifteen screen components exist. Frontend corrections and accessibility improvements have been implemented. Six core screens are under direct browser/design comparison in Entry 26; exact visual and physical-device acceptance remain pending. |
 | Accounts | Real registration, login, session restoration and logout are implemented. Accounts and sessions survive a server restart. |
 | Discovery | eBird taxonomy, regional hotspots and latest regional reports are connected; search and existing detail screens use source IDs. Live API checks passed. Species-to-hotspot links, hotspot-specific recent reports and catalogue-matched all-time species lists are connected. Manual device acceptance remains pending. |
 | Personal discovery activity | eBird bird/hotspot saved IDs and the latest ten real searches persist per account in SQLite. Existing Saved hotspot filtering and Search saved-bird filtering use the same confirmed records. See Entry 21. |
@@ -566,6 +566,26 @@ The header logo now uses a bundled SVG following the supplied green bird emblem,
 
 **Remaining:** imported seasonal evidence and justified local timing, measured species difficulty, multi-photo/verified-environment comparisons, broader site access and full design/phone/failure acceptance. Android packaging remains deferred for this checkpoint. The [Planning extension walkthrough](SEASONAL_PLANNING_WALKTHROUGH.md) explains the calculation, scope and five Viva questions.
 
+### Entry 26 — Phase 1 presentation acceptance and mobile polish
+
+**Date/group:** 4 October 2026 IST; Phase 1 checkpoint preparation. **Status:** implemented; automated and scoped browser checks passed; publication tracked in [PR #20](https://github.com/JinxedAsh/bird-wanderer/pull/20).
+
+**Review scope:** inspected the six original authentication, Explore, Search, species, hotspots and hotspot-detail images under design-reference, and requested direct running-browser comparison in Test chat. Compared layout structure and mobile usability, distinguishing actual provider records and necessary attribution/disclosures from mock values. This does not establish pixel-perfect design conformity or complete all fifteen screens' acceptance.
+
+**Fixes:** authentication now reuses the local header logo in the reference's rounded-square frame and replaces an unsupported weekly sightings total with descriptive text in the same badge. Visible labels focus their inputs. Primary auth, Search, Explore, header/navigation, bookmark and hotspot-location controls gain 44-pixel touch targets. Search input/history items can shrink/wrap so long terms remain usable at narrow widths. Explore's report-scope label sits below its heading to prevent awkward wrapping of All sights. The header logo retains its image size inside a native button. Missing hotspot summary values now use smaller wrapping text after overlap was observed at 320 pixels; numeric values keep their original size. Existing callbacks, authentication/session/persistence and screen order are preserved.
+
+**Photo evidence:** a real Indian Spot-billed Duck reference supplied a long author/contact/rights paragraph. Compact cards now place long author metadata in a Full photo credit & rights disclosure; the complete source text and associated credit/attribution/terms/restrictions remain available, with licence/source/crop notice visible. Short captions and full species-page credits retain their previous behavior. No provider metadata was truncated or rewritten.
+
+**Shared deliverable:** [Phase 1 presentation guide](PHASE_1_PRESENTATION.md) contains a seven-minute demo script, preflight, scope/data/design distinctions, device checklist and five Viva questions. The developer identified Oppo K13 as the probable phone and Zen as preferred browser. Zen's official FAQ has no Android version; Chrome/Firefox phone acceptance was proposed. On 4 October the developer reported that the LAN app opens and login works on the Oppo K13. This is user-reported physical evidence; exact browser/version, keyboard/touch/layout, refresh/logout, orientation and connectivity acceptance remain pending. The current LAN setup was inspected; no configuration or server restart was required.
+
+**Files:** frontend/src/components/AuthScreen.tsx; GlobalSearchScreen.tsx; SpeciesPhoto.tsx; ExploreScreen.tsx; Header.tsx; SpeciesDetailScreen.tsx; HotspotsScreen.tsx; HotspotDetailScreen.tsx; frontend/server/frontend.test.mjs; README.md; frontend/README.md; docs/PHASE_1_PRESENTATION.md; this record. No backend, schema, dependency or later-phase feature was added.
+
+**Automated checks:** TypeScript, all 79 tests and production build passed after final source changes. Added regression checks cover local branding, truthful copy, label associations and complete long-credit disclosure; existing account/discovery/EXIF/planning/map/weather/access/persistence/proxy checks remain passing. Programmatic rendering does not measure hit areas or demonstrate real touch.
+
+**Browser acceptance:** Test chat directly compared the six core reference screens and checked the running app at 390px and 320px. Registration, wrong-password rejection, login, refreshed session, logout, search/filter/history controls, bird photo/EXIF/guide, hotspot maps/navigation/weather/access disclosures and saved-item refresh passed. Long history wrapped without horizontal page overflow; patched primary controls measured 44px. Full long photo credits opened by keyboard without navigating the card and preserved the author/credit/terms; native logo/back keyboard navigation passed. A final fresh recheck confirmed missing hotspot summary values remain inside their cards during loading and after weather arrives at both widths. Final console checks reported no warnings or errors; no remaining blockers were found in this scoped browser review. This establishes responsive browser usability, not exact visual approval, provider outage recovery or physical-device acceptance.
+
+**Remaining:** physical-phone/permission/orientation/network acceptance, exact visual fidelity and later-screen comparison, imported seasonal/local timing evidence, measured difficulty, verified-environment/multi-photo recommendations and broader access coverage. APK remains deferred for this checkpoint. No full Phase 1 completion claim is made.
+
 ## 4. How the current application fits together
 
 The interface is what the user sees and interacts with. The backend is the program that receives requests and checks account information. The database is where persistent account information is saved.
@@ -648,6 +668,7 @@ These paths help the developer find implementation details; teammates can unders
 | Runtime and checks | Start-Dev.ps1; frontend/scripts/dev.mjs; frontend/vite.config.ts; frontend/package.json; frontend/pnpm-lock.yaml; frontend/pnpm-workspace.yaml; frontend/.env.example; .github/workflows/ci.yml |
 | Stage 1 regression tests | frontend/server/frontend.test.mjs; frontend/server/proxy.test.mjs |
 | Repository hygiene | .gitignore; frontend/.gitignore; .gitattributes; CONTRIBUTING.md; .github/pull_request_template.md; .github/ISSUE_TEMPLATE/bug_report.md |
+| Presentation acceptance | docs/PHASE_1_PRESENTATION.md; six core design-reference images; Entry 26 browser/device evidence |
 | Supporting documentation | README.md; frontend/README.md; AUTH_WALKTHROUGH.md; STAGE_1_WALKTHROUGH.md; design-reference/README.md and original images |
 
 The Stage 1 delivery changed 26 files: twelve components, App.tsx, index.css, the focus hook, index.html, package.json, dev.mjs, vite.config.ts, two new test files and five documentation files. Its walkthrough/PR provide the detailed delivery context. Entry 09 describes the initial uncommitted phone-access snapshot; Entry 11 records its publication checks.

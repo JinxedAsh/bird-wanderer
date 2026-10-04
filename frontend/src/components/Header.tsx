@@ -82,27 +82,15 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               onClick={onBack}
               aria-label="Go back"
-              className="w-10 h-10 -ml-1 flex items-center justify-center rounded-xl text-[#181c20] hover:bg-[#ebeef3] active:bg-[#e0e3e8] transition-colors"
+              className="w-11 h-11 shrink-0 -ml-1 flex items-center justify-center rounded-xl text-[#181c20] hover:bg-[#ebeef3] active:bg-[#e0e3e8] transition-colors"
             >
               <span className="material-symbols-outlined text-[24px]">arrow_back</span>
             </button>
           ) : null}
 
-          <img
-            src={logoUrl}
-            alt="Bird Wanderer Logo"
-            className="h-8 w-auto object-contain flex-shrink-0 cursor-pointer"
-            onClick={() => onNavigate('explore')}
-            role="button"
-            tabIndex={0}
-            aria-label="Open Explore"
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                onNavigate('explore');
-              }
-            }}
-          />
+          <button type="button" onClick={() => onNavigate('explore')} aria-label="Open Explore" className="h-11 w-11 shrink-0 flex items-center justify-center rounded-xl hover:bg-[#ebeef3]">
+            <img src={logoUrl} alt="Bird Wanderer Logo" className="h-8 w-auto object-contain" />
+          </button>
 
           <div className="flex flex-col min-w-0">
             <span className="text-[10px] font-semibold tracking-wider uppercase text-[#42493e] truncate">
@@ -132,7 +120,7 @@ export const Header: React.FC<HeaderProps> = ({
                 }
               }}
               aria-label="Share observation"
-              className="w-10 h-10 flex items-center justify-center rounded-xl text-[#42493e] hover:text-[#181c20] hover:bg-[#ebeef3] transition-colors"
+              className="w-11 h-11 shrink-0 flex items-center justify-center rounded-xl text-[#42493e] hover:text-[#181c20] hover:bg-[#ebeef3] transition-colors"
             >
               <span className="material-symbols-outlined text-[20px]">share</span>
             </button>
@@ -140,7 +128,7 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               onClick={() => onNavigate('notifications')}
               aria-label="Notifications and field alerts"
-              className="relative w-10 h-10 flex items-center justify-center rounded-xl text-[#42493e] hover:text-[#181c20] hover:bg-[#ebeef3] transition-colors"
+              className="relative w-11 h-11 shrink-0 flex items-center justify-center rounded-xl text-[#42493e] hover:text-[#181c20] hover:bg-[#ebeef3] transition-colors"
             >
               <span className="material-symbols-outlined text-[22px]">notifications</span>
               {unreadCount > 0 && (
@@ -152,7 +140,7 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             onClick={() => onNavigate('profile')}
             aria-label="Profile details"
-            className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-[#ebeef3] transition-colors"
+            className="w-11 h-11 shrink-0 flex items-center justify-center rounded-xl hover:bg-[#ebeef3] transition-colors"
           >
             <img
               src={avatarUrl}

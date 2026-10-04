@@ -60,7 +60,7 @@ export const ExploreScreen: React.FC<ExploreScreenProps> = ({
           <button
             onClick={() => onNavigate('search')}
             aria-label="Open search"
-            className="w-10 h-10 rounded-full bg-[#ebeef3] flex items-center justify-center text-[#154212] hover:bg-[#e0e3e8] active:scale-95 transition-all shadow-sm flex-shrink-0"
+            className="w-11 h-11 rounded-full bg-[#ebeef3] flex items-center justify-center text-[#154212] hover:bg-[#e0e3e8] active:scale-95 transition-all shadow-sm flex-shrink-0"
           >
             <span className="material-symbols-outlined text-[22px]">search</span>
           </button>
@@ -92,7 +92,7 @@ export const ExploreScreen: React.FC<ExploreScreenProps> = ({
       {/* Main Section: What's out there? */}
       <section className="flex flex-col space-y-3">
         <div className="flex items-center justify-between">
-          <div className="flex items-baseline gap-2">
+          <div className="flex min-w-0 flex-col gap-1">
             <h3 className="text-[20px] font-bold text-[#181c20]">What’s out there?</h3>
             <span className="text-[10px] font-bold uppercase tracking-wider text-[#154212]">
               {externalDiscovery ? location ? 'Reports within 50 km' : 'Recent regional reports' : 'Active nearby'}
@@ -100,7 +100,7 @@ export const ExploreScreen: React.FC<ExploreScreenProps> = ({
           </div>
           <button
             onClick={() => onNavigate(externalDiscovery ? 'search' : 'life-list')}
-            className="text-[12px] font-semibold text-[#154212] hover:text-[#2d5a27] transition-colors flex items-center gap-0.5"
+            className="min-h-11 shrink-0 whitespace-nowrap text-[12px] font-semibold text-[#154212] hover:text-[#2d5a27] transition-colors flex items-center gap-0.5"
           >
             All sights
             <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
@@ -135,7 +135,7 @@ export const ExploreScreen: React.FC<ExploreScreenProps> = ({
                   e.stopPropagation();
                   onQuickLog(bird);
                 }}
-                className="w-9 h-9 rounded-lg bg-[#f1f4f9] flex items-center justify-center text-[#42493e] hover:text-[#154212] hover:bg-[#ebeef3] active:scale-95 transition-all flex-shrink-0"
+                className="w-11 h-11 rounded-lg bg-[#f1f4f9] flex items-center justify-center text-[#42493e] hover:text-[#154212] hover:bg-[#ebeef3] active:scale-95 transition-all flex-shrink-0"
               >
                 <span className="material-symbols-outlined text-[18px]">add_circle</span>
               </button>

@@ -76,7 +76,7 @@ export const HotspotsScreen: React.FC<HotspotsScreenProps> = ({
           <button
             onClick={() => onChooseLocation ? onChooseLocation() : showToast('Nearby locations are sample data. Live GPS is not connected yet.')}
             aria-label="Current location"
-            className="absolute right-3 w-8 h-8 flex items-center justify-center rounded-full text-[#42493e] hover:text-[#154212] transition-colors"
+            className="absolute right-1 w-11 h-11 flex items-center justify-center rounded-full text-[#42493e] hover:text-[#154212] transition-colors"
           >
             <span className="material-symbols-outlined text-[18px]">near_me</span>
           </button>
@@ -90,7 +90,7 @@ export const HotspotsScreen: React.FC<HotspotsScreenProps> = ({
               <button
                 key={filter}
                 onClick={() => setActiveFilter(filter)}
-                className={`px-4 py-1.5 rounded-full text-[13px] font-semibold capitalize transition-all active:scale-95 whitespace-nowrap ${
+                className={`min-h-11 px-4 py-1.5 rounded-full text-[13px] font-semibold capitalize transition-all active:scale-95 whitespace-nowrap ${
                   isActive
                     ? 'bg-[#154212] text-white shadow-sm'
                     : 'bg-[#f1f4f9] text-[#42493e] hover:bg-[#ebeef3]'

@@ -22,13 +22,20 @@ export interface PhotoLoadState {
 
 export const PhotoCredit: React.FC<{ photo: Photo; full?: boolean }> = ({ photo, full = false }) => (
   <figcaption onClick={(event) => event.stopPropagation()} onKeyDown={(event) => event.stopPropagation()} className="col-span-3 row-start-2 mt-1 text-[10px] leading-relaxed text-[#42493e] break-words">
-    <span>Photo: {photo.author} • </span>
+    <span>{!full && photo.author.length > 180 ? 'Photo reference • ' : `Photo: ${photo.author} • `}</span>
     <a href={photo.licenseUrl} target="_blank" rel="noreferrer" className="underline">{photo.license}</a>
     <span> • </span><a href={photo.sourceUrl} target="_blank" rel="noreferrer" className="underline">Wikimedia Commons</a>
     {!full && <span> • cropped to fit</span>}
     {full && <><p>{photo.title} • Cropped to fit the display.</p>{photo.credit && <p>Credit: {photo.credit}</p>}{photo.attribution && <p>Attribution: {photo.attribution}</p>}{photo.usageTerms && <p>Usage terms: {photo.usageTerms}</p>}{photo.restrictions && <p>Source restrictions: {photo.restrictions}</p>}<a href={photo.matchUrl} target="_blank" rel="noreferrer" className="underline">Scientific-name match on Wikidata</a><p>Reference photograph; not evidence of a recent sighting or verified camera settings.</p></>}
-    {!full && photo.attribution && <span> • {photo.attribution}</span>}
-    {!full && photo.restrictions && <span> • {photo.restrictions}</span>}
+    {!full && photo.author.length > 180 ? <details>
+      <summary className="flex min-h-11 cursor-pointer items-center font-semibold underline">Full photo credit &amp; rights</summary>
+      <p>Photo: {photo.author}</p>
+      {photo.credit && <p>Credit: {photo.credit}</p>}
+      {photo.attribution && <p>Attribution: {photo.attribution}</p>}
+      {photo.usageTerms && <p>Usage terms: {photo.usageTerms}</p>}
+      {photo.restrictions && <p>Source restrictions: {photo.restrictions}</p>}
+    </details> : !full && <>{photo.attribution && <span> • {photo.attribution}</span>}{photo.restrictions && <span> • {photo.restrictions}</span>}</>}
+
   </figcaption>
 );
 

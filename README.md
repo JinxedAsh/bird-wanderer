@@ -8,6 +8,8 @@ Bird Wanderer brings species discovery, hotspots, photography logistics, persona
 
 **Required delivery:** an Android app/APK. The current runtime is a React mobile web interface; Android packaging and device testing are still pending. Stage 1 frontend stabilization does not produce an APK.
 
+For the Tuesday checkpoint, use the [presentation script and Oppo K13 acceptance checklist](docs/PHASE_1_PRESENTATION.md). Browser checks and physical-device acceptance are recorded separately; remaining Phase 1 specification gaps are explicit.
+
 ## Current functionality
 
 - Fifteen frontend screens for discovery, species, hotspots, community, observations, journal, life list, quiz, messages, profile, search, notifications, settings and authentication.
