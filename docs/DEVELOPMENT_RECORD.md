@@ -342,7 +342,7 @@ The header logo now uses a bundled SVG following the supplied green bird emblem,
 
 **Manual recheck:** end a test session in another tab, then return to the original page or trigger a discovery request; confirm login appears without refresh and old records/bookmarks disappear. Check that an isolated eBird outage does not sign the account out, fresh login still restores discovery and the header logo loads. Avoid changing real account data for this test.
 
-**Delivery:** prepared on `codex/session-and-brand-fixes`; publication evidence follows before merging. Next increment: weather and sourced trip-planning information. No test-account credentials or browser screenshots are included in the repository.
+**Delivery:** implementation commit `29312fc`, published on `codex/session-and-brand-fixes` in [PR #6](https://github.com/JinxedAsh/bird-wanderer/pull/6). The PR records check/merge results; merging follows passing checks. Next increment: weather and sourced trip-planning information. No test-account credentials or browser screenshots are included in the repository.
 
 ## 4. How the current application fits together
 
