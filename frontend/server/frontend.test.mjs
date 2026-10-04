@@ -14,7 +14,7 @@ let render;
 before(async () => {
   temporaryDirectory = mkdtempSync(join(root, '.stage1-render-'));
   const screens = {};
-  const names = ['GlobalSearchScreen', 'SettingsScreen', 'SpeciesDetailScreen', 'Header'];
+  const names = ['GlobalSearchScreen', 'SettingsScreen', 'SpeciesDetailScreen', 'HotspotDetailScreen', 'HotspotsScreen', 'ExploreScreen', 'Header'];
   // Compile these existing TSX screens for Node rendering; no browser or new test framework.
   for (const relative of ['lib/useDialogFocus.ts', ...names.map((name) => `components/${name}.tsx`)]) {
     const output = join(temporaryDirectory, relative.replace(/\.tsx?$/, '.mjs'));
@@ -39,6 +39,38 @@ after(() => {
 
 const noop = () => {};
 const searchProps = { speciesList: [], hotspots: [], posts: [], onSelectSpecies: noop, onSelectHotspot: noop, onNavigate: noop };
+
+test('external species details show genuine reports without fabricated photos, conservation status or map locations', () => {
+  const html = render('SpeciesDetailScreen', {
+    species: { id: 'indrol2', name: 'Indian Roller', scientificName: 'Coracias benghalensis', source: 'eBird', sourceUrl: 'https://ebird.org/species/indrol2', image: '/discovery-placeholder.svg', habitat: 'Not available from eBird', habitatDetail: 'Not available from eBird', bestTime: 'Not available from eBird', bestTimeDetail: 'Not available from eBird', fieldGuideNotes: 'Not available from eBird', audioCallDuration: 'Unavailable', recentObservations: [{ hotspotId: 'L123', location: 'Test Wetland', observedAt: '2026-10-04 07:15' }] },
+    onNavigate: noop, onQuickLog: noop, showToast: noop,
+  });
+  assert.match(html, /Test Wetland/);
+  assert.match(html, /Status unavailable/);
+  assert.match(html, /Photo metadata not connected/);
+  assert.doesNotMatch(html, /Verified Field Shot|1\/2500|32 uploads|Okhla|Yamuna Bio-Diversity/);
+});
+
+test('external hotspot and search distinguish all-time species totals from unavailable daily activity and distance', () => {
+  const hotspot = { id: 'L123', name: 'Roller Wetland', source: 'eBird', sourceUrl: 'https://ebird.org/hotspot/L123', region: 'IN-DL', coordinates: '28.5, 77.2', imageUrl: '/discovery-placeholder.svg', speciesCount: 0, activeTodayCount: null, distanceKm: null, recentSightings: [], photos: [], speciesList: [] };
+  const html = render('HotspotDetailScreen', { hotspot, onToggleSave: noop, onNavigate: noop, onSelectSpeciesByName: noop, showToast: noop });
+  assert.match(html, /Species recorded all time \(0\)/);
+  assert.match(html, /Unavailable/);
+  assert.doesNotMatch(html, /06:00|06:14|68%|Wetland Hotspot|Barrage Watchtower/);
+  const search = render('GlobalSearchScreen', { ...searchProps, hotspots: [hotspot] });
+  assert.match(search, /0 species recorded all time/);
+  assert.match(search, /Distance unavailable/);
+  assert.doesNotMatch(search, /species active today/);
+  const list = render('HotspotsScreen', { hotspots: [hotspot], externalDiscovery: true, onSelectHotspot: noop, onNavigate: noop, showToast: noop });
+  assert.match(list, /Roller Wetland/);
+  assert.doesNotMatch(list, /Delhi Map View|Sultanpur|Yamuna/);
+});
+
+test('external explore works with an empty catalogue and does not show sample weather or notable reports', () => {
+  const html = render('ExploreScreen', { observerName: 'Test Birder', speciesList: [], externalDiscovery: true, discoveryRegion: 'IN-DL', onSelectSpecies: noop, onNavigate: noop, onQuickLog: noop });
+  assert.match(html, /No recent species reports loaded/);
+  assert.doesNotMatch(html, /24°C|8 km\/h|Seen 2h ago|14 nearby/);
+});
 
 test('search renders its only matching hotspot and every matching bird', () => {
   const html = render('GlobalSearchScreen', {

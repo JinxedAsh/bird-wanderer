@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Hotspot, ScreenType } from '../types';
 
 interface HotspotsScreenProps {
+  externalDiscovery?: boolean;
   hotspots: Hotspot[];
   onSelectHotspot: (hotspot: Hotspot) => void;
   onNavigate: (screen: ScreenType) => void;
@@ -9,6 +10,7 @@ interface HotspotsScreenProps {
 }
 
 export const HotspotsScreen: React.FC<HotspotsScreenProps> = ({
+  externalDiscovery = false,
   hotspots,
   onSelectHotspot,
   onNavigate,
@@ -29,7 +31,7 @@ export const HotspotsScreen: React.FC<HotspotsScreenProps> = ({
       if (!matches) return false;
     }
     if (activeFilter === 'popular') {
-      return h.speciesCount >= 15;
+      return (h.speciesCount ?? 0) >= 15;
     }
     if (activeFilter === 'saved') {
       return h.isSaved;
@@ -66,7 +68,7 @@ export const HotspotsScreen: React.FC<HotspotsScreenProps> = ({
             type="text"
           />
           <button
-            onClick={() => showToast('Nearby locations are sample data. Live GPS is not connected yet.')}
+            onClick={() => showToast(externalDiscovery ? 'Showing the configured eBird region. GPS and distance sorting are not connected yet.' : 'Nearby locations are sample data. Live GPS is not connected yet.')}
             aria-label="Current location"
             className="absolute right-3 w-8 h-8 flex items-center justify-center rounded-full text-[#42493e] hover:text-[#154212] transition-colors"
           >
@@ -88,7 +90,7 @@ export const HotspotsScreen: React.FC<HotspotsScreenProps> = ({
                     : 'bg-[#f1f4f9] text-[#42493e] hover:bg-[#ebeef3]'
                 }`}
               >
-                {filter}
+                  {externalDiscovery && filter === 'nearby' ? 'Region' : filter}
               </button>
             );
           })}
@@ -96,7 +98,7 @@ export const HotspotsScreen: React.FC<HotspotsScreenProps> = ({
       </div>
 
       {/* Map Stage */}
-      <div className="px-4 my-2">
+      {!externalDiscovery && <div className="px-4 my-2">
         <div className="relative w-full h-60 rounded-2xl overflow-hidden bg-[#ebeef3] shadow-sm border border-[#e0e3e8]">
           <img
             src="https://lh3.googleusercontent.com/aida-public/AB6AXuCYCLW4O-VpotfLtQjSzbP881hkudRW2F-Cz5OTlz5qWB2-YtqSDwyEbnv5DjLGgo8dEgBFh1PMWNppQ-ythe0OXVVa46KIfY-1Td2FXsLyPizYHMblBoJnbT1Et5ubzR5dp_74y_PeeKZz_Md2rHggMarwul09J03eTq4-_yoWnBPFRPGB2jUAehrVsaGUxAQ-mx6WLF6lCCz0iJSKDmzTV9p1fEk2to48vS2HgaRHwjX_XQCrmXDjEQ"
@@ -157,6 +159,8 @@ export const HotspotsScreen: React.FC<HotspotsScreenProps> = ({
         </div>
       </div>
 
+      }
+      {externalDiscovery && <p className="px-4 py-3 text-[12px] text-[#42493e]">Real hotspot coordinates are available in each location. Interactive maps are the next step. Popular filters by at least 15 species recorded all time.</p>}
       {/* Location Cards List */}
       <div className="px-4 pt-1 flex flex-col gap-2.5">
         {filteredHotspots.map((hotspot) => {
@@ -181,9 +185,9 @@ export const HotspotsScreen: React.FC<HotspotsScreenProps> = ({
               <div className="flex flex-col min-w-0">
                 <h2 className="text-[16px] font-bold text-[#181c20] truncate">{hotspot.name}</h2>
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-1 text-[12px] text-[#42493e]">
-                  <span className="font-bold text-[#154212]">{hotspot.speciesCount} species</span>
+                  <span className="font-bold text-[#154212]">{hotspot.speciesCount ?? 'Unknown'} species{hotspot.source ? ' all time' : ''}</span>
                   <span className="w-1 h-1 rounded-full bg-[#c2c9bb]"></span>
-                  <span>{hotspot.distanceKm} km</span>
+                  <span>{hotspot.distanceKm === null ? 'Distance unavailable' : `${hotspot.distanceKm} km`}</span>
                   <span className="w-1 h-1 rounded-full bg-[#c2c9bb]"></span>
                   <span>Best time: {hotspot.bestTime}</span>
                 </div>

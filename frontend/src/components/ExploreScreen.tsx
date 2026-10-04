@@ -2,6 +2,8 @@ import React from 'react';
 import { BirdSpecies, ScreenType } from '../types';
 
 interface ExploreScreenProps {
+  externalDiscovery?: boolean;
+  discoveryRegion?: string;
   observerName: string;
   speciesList: BirdSpecies[];
   onSelectSpecies: (species: BirdSpecies) => void;
@@ -10,6 +12,8 @@ interface ExploreScreenProps {
 }
 
 export const ExploreScreen: React.FC<ExploreScreenProps> = ({
+  externalDiscovery = false,
+  discoveryRegion,
   observerName,
   speciesList,
   onSelectSpecies,
@@ -17,7 +21,7 @@ export const ExploreScreen: React.FC<ExploreScreenProps> = ({
   onQuickLog,
 }) => {
   const nearbyBirds = speciesList.slice(0, 4);
-  const notableBird = speciesList.find((s) => s.id === 'hornbill') || speciesList[4];
+  const notableBird = externalDiscovery ? undefined : speciesList.find((s) => s.id === 'hornbill') || speciesList[4];
 
   return (
     <div className="flex flex-col w-full px-4 pb-28 pt-2 space-y-6">
@@ -32,7 +36,7 @@ export const ExploreScreen: React.FC<ExploreScreenProps> = ({
               >
                 near_me
               </span>
-              Delhi, India
+              {externalDiscovery ? discoveryRegion || 'Region not loaded' : 'Delhi, India'}
             </span>
             <h2 className="text-[24px] font-bold text-[#181c20] tracking-tight">
               Good morning, {observerName}
@@ -56,13 +60,13 @@ export const ExploreScreen: React.FC<ExploreScreenProps> = ({
             >
               wb_sunny
             </span>
-            <span className="text-[14px] font-bold text-[#181c20]">24°C</span>
+            <span className="text-[14px] font-bold text-[#181c20]">{externalDiscovery ? 'Weather not connected' : '24°C'}</span>
             <span className="text-[#c2c9bb] text-[12px]">•</span>
-            <span className="text-[14px] text-[#42493e]">Clear</span>
+            <span className="text-[14px] text-[#42493e]">{externalDiscovery ? '' : 'Clear'}</span>
           </div>
           <div className="flex items-center gap-1.5 text-[#42493e]">
             <span className="material-symbols-outlined text-[16px]">air</span>
-            <span className="text-[12px] font-semibold">8 km/h</span>
+            <span className="text-[12px] font-semibold">{externalDiscovery ? 'Unavailable' : '8 km/h'}</span>
           </div>
         </div>
       </section>
@@ -73,11 +77,11 @@ export const ExploreScreen: React.FC<ExploreScreenProps> = ({
           <div className="flex items-baseline gap-2">
             <h3 className="text-[20px] font-bold text-[#181c20]">What’s out there?</h3>
             <span className="text-[10px] font-bold uppercase tracking-wider text-[#154212]">
-              Active nearby
+              {externalDiscovery ? 'Recent regional reports' : 'Active nearby'}
             </span>
           </div>
           <button
-            onClick={() => onNavigate('life-list')}
+            onClick={() => onNavigate(externalDiscovery ? 'search' : 'life-list')}
             className="text-[12px] font-semibold text-[#154212] hover:text-[#2d5a27] transition-colors flex items-center gap-0.5"
           >
             All sights
@@ -86,6 +90,7 @@ export const ExploreScreen: React.FC<ExploreScreenProps> = ({
         </div>
 
         <div className="flex flex-col space-y-2">
+          {externalDiscovery && nearbyBirds.length === 0 && <p className="text-[13px] text-[#42493e]">No recent species reports loaded. Search the catalogue when discovery is available.</p>}
           {nearbyBirds.map((bird) => (
             <article
               key={bird.id}
@@ -156,7 +161,7 @@ export const ExploreScreen: React.FC<ExploreScreenProps> = ({
             <span className="text-[12px] font-semibold text-[#181c20] mt-2 truncate w-full">
               Hotspots
             </span>
-            <span className="text-[10px] text-[#42493e] mt-0.5">14 nearby</span>
+            <span className="text-[10px] text-[#42493e] mt-0.5">{externalDiscovery ? 'Explore region' : '14 nearby'}</span>
           </button>
 
           {/* 3. Bird Quiz */}

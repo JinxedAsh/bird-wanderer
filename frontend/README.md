@@ -40,9 +40,32 @@ The suite also includes server-rendered frontend regression checks and HTTP chec
 
 ## Current status
 
-Implemented: registration, password hashing, login, session restoration, logout, origin checks and authentication rate limiting. Most other screens still display prototype fixtures. Password recovery does not send email yet; the interface reports this honestly.
+Implemented: registration, password hashing, login, session restoration, logout, origin checks and authentication rate limiting. External species/hotspot discovery now uses eBird when configured; later-phase screens still display prototype fixtures. Password recovery does not send email yet; the interface reports this honestly.
 
 See `../docs/AUTH_WALKTHROUGH.md` for the request/data flow and `../docs/DEVELOPMENT_RECORD.md` for deadlines and the living documentation link. Original screen designs are in `../docs/design-reference`.
+
+## External discovery setup
+
+Authentication works without an external API key. Real discovery requires a personal [eBird API key](https://ebird.org/api/keygen).
+
+Add these values to the ignored `frontend/.env` file (not the repository root):
+
+```dotenv
+EBIRD_API_KEY=your-personal-key
+EBIRD_REGION=IN-DL
+```
+
+Do not put the key in chat, source code, screenshots or any `VITE_` variable. It is used only by the Express server. Restart the API after configuration changes. The default region is Delhi; change `EBIRD_REGION` to another valid eBird region code to load its hotspots and recent reports.
+
+After signing in, Explore shows species with recent regional reports. Global Search searches the worldwide eBird species taxonomy by common/scientific name and the configured region's hotspots by name. Results retain eBird species codes and location IDs. Hotspots shows the configured region, not a GPS-derived nearby radius. Use Saved to check bookmarks within the current session; bookmarks are not yet persistent.
+
+The backend requests the taxonomy, regional hotspots and latest regional observations from the past 14 days. It caches the combined catalogue in memory for 15 minutes and shares concurrent loads. The retrieval timestamp stays unchanged when cached data is served. Cache is lost on server restart, and expired data is not silently used after a failed refresh.
+
+Discovery requires a valid signed-in session. Missing/rejected keys, timeouts, provider failures and malformed responses produce an error with a retry control; the app does not substitute sample discovery results. Species results are limited to 60 displayed matches per query; refine broad searches to find more. Community/journal/quiz screens remain separate prototypes.
+
+Latest observation reports are not total sightings counts. Hotspot species counts mean species recorded all time; missing counts and distances are unavailable. Observation times are shown as supplied by eBird in observation-local time. Regional latest-per-species reports do not provide a complete hotspot history or species inventory. Habitat, conservation status, photos, EXIF, weather, recommended gear, fees, opening hours and interactive maps are not supplied by this integration. Their placeholder states are explicit.
+
+See [Discovery walkthrough](../docs/DISCOVERY_WALKTHROUGH.md) for the request flow, tests and manual acceptance checklist.
 
 ## Deployment prerequisites
 

@@ -44,7 +44,7 @@ Bird Wanderer helps birdwatchers and wildlife photographers discover species and
 | --- | --- |
 | Interface | Fifteen screen components exist. Frontend corrections and accessibility improvements have been implemented. Exact visual acceptance remains pending. |
 | Accounts | Real registration, login, session restoration and logout are implemented. Accounts and sessions survive a server restart. |
-| Discovery | Local search works with sample birds and hotspots. Live external discovery is not implemented. |
+| Discovery | eBird taxonomy, regional hotspots and latest regional reports are connected; search and existing detail screens use source IDs. Live API checks passed. Complete hotspot inventory and manual device acceptance remain pending. |
 | Maps and logistics | Their interface exists; real interactive maps and data-derived photography guidance remain incomplete. |
 | Journal, profiles and social activity | Many interactions work temporarily within the running app. Most changes are not stored for later use. |
 | Alerts and quizzes | Demonstration screens exist. Automated alerts, complete quiz progress and challenges are not delivered. |
@@ -259,6 +259,26 @@ Newer changes were found in eight existing files: frontend/.env.example, fronten
 
 **Delivery:** proposed in [PR #2](https://github.com/JinxedAsh/bird-wanderer/pull/2), alongside the shared development history. Publication and merge are separate steps; GitHub check results will be verified after pushing.
 
+### Entry 12 - External discovery connected to eBird
+
+- **Date:** 4 October 2026.
+- **Group:** Phase 1 external datasets and discovery.
+- **Status:** implemented; automated and live API checks passed; phone/browser acceptance pending.
+
+**Problem:** discovery depended on sample birds and locations, which did not meet the external-data requirement.
+
+**What changed:** added a session-protected discovery route to the existing Express application. The server uses a private eBird key to fetch the worldwide species taxonomy, configured regional hotspots and latest regional observations from the past 14 days. Stable provider IDs connect the records to the existing search/detail screens. Explore uses species with recent regional reports. A 15-minute memory cache shares successful results and concurrent requests. Loading, error/retry and empty states explain what is happening.
+
+**User-visible result:** search now finds externally sourced species and regional hotspots, with real coordinates and source links. All-time hotspot species totals are distinguished from daily activity. Missing photos, weather, conservation information and photography metadata are explicitly unavailable. External records do not reuse prototype facts. Later-phase demonstrations remain separate and people/posts search results are labelled accordingly. The default region is Delhi; it is not a GPS-derived nearby radius.
+
+**Verification:** TypeScript checking, all 19 tests and the production build passed. Discovery regressions cover normalization, caching, credentials, session protection, provider/setup failures and retries; rendering regressions reject invented external metadata; both proxies exercise discovery. Live eBird calls returned 11,167 species, 191 Delhi hotspots and 161 species with recent regional reports. A separate isolated HTTP check rejected anonymous access, accepted authenticated discovery and found Indian Roller and Okhla. No credentials or existing account data were included in output or source control.
+
+**Affected files/modules:** discovery server/service tests and client helper; auth route mounting and server startup; App.tsx and existing Explore/search/species/hotspot screens; shared types; placeholder image; environment example/test script; rendering/proxy tests; README and discovery walkthrough. No new schema or framework was introduced.
+
+**Limits:** latest regional reports are not complete hotspot history or sightings totals. Habitat/species enrichment, complete hotspot species inventory, maps, weather, photo metadata, persistent bookmarks and Android delivery still require later increments. Browser clicks, design fidelity and physical-phone behavior require manual testing. The cache is not a persistent offline fallback.
+
+**Delivery:** implementation commit `ddb8b83`, published on `codex/external-discovery` in [PR #3](https://github.com/JinxedAsh/bird-wanderer/pull/3). The PR records the GitHub check and merge results; merging follows passing checks. Details and the manual checklist are in [Discovery walkthrough](DISCOVERY_WALKTHROUGH.md).
+
 ## 4. How the current application fits together
 
 The interface is what the user sees and interacts with. The backend is the program that receives requests and checks account information. The database is where persistent account information is saved.
@@ -271,7 +291,7 @@ User's screen -> React interface -> account request -> Express backend -> SQLite
 Other current screens -> sample information and temporary React memory
 ```
 
-In development, Vite serves the interface and forwards account requests to Express. SQLite currently stores users, sessions and authentication rate-limit records. There are no persistent sighting, journal, media, follow or alert tables in the delivered Stage 1 implementation.
+In development, Vite serves the interface and forwards account requests to Express. SQLite currently stores users, sessions and authentication rate-limit records. There are no persistent sighting, journal, media, follow or alert tables. External discovery uses server-side eBird requests and a 15-minute memory cache; it does not add database tables.
 
 React, TypeScript, Tailwind CSS, Vite, Express, Node.js 24 and SQLite remain the chosen implementation. Keeping one frontend/backend package is intentional for a manageable university project. The specification mentions microservices, but the current backend is a single Express application; that architectural wording still needs reconciliation against evaluator expectations. No microservice conversion has been implemented.
 
@@ -294,7 +314,7 @@ Manual checks still include design comparison for all screens, mobile layout/tou
 
 | Phase | Remaining implementation and acceptance |
 | --- | --- |
-| Phase 1 — core | Real external species/hotspot search and details; interactive geographic maps; sourced photography logistics/weather/open-photo metadata; complete design/manual acceptance. |
+| Phase 1 — core | Complete species enrichment and hotspot-specific inventory/history; interactive geographic maps; sourced photography logistics/weather/open-photo metadata; complete design/manual acceptance. External catalogue/search is connected in Entry 12. |
 | Phase 2 — community | Persistent profiles and sightings; validated photograph upload/storage; EXIF extraction; journal/life-list relationships and reconciled statistics; real feed/follows/likes/comments/reporting; server ownership/visibility checks. |
 | Phase 3 — alerts | Subscriptions/preferences; qualifying-sighting matching; automated delivery; protected-species coordinate handling and privacy checks. Privacy must also be applied earlier wherever location data becomes accessible. |
 | Phase 4 — retention | Complete identification quiz sessions, persistent progress and photography challenges without disrupting discovery. |
@@ -324,6 +344,7 @@ These paths help the developer find implementation details; teammates can unders
 
 | Group | Important files |
 | --- | --- |
+| External discovery | frontend/server/discovery.mjs; frontend/server/discovery.test.mjs; frontend/src/lib/discovery.ts; docs/DISCOVERY_WALKTHROUGH.md |
 | Accounts | frontend/src/components/AuthScreen.tsx; frontend/src/lib/auth.ts; frontend/server/auth.mjs; frontend/server/index.mjs; frontend/server/auth.test.mjs |
 | Shared frontend state | frontend/src/App.tsx; frontend/src/types.ts; frontend/src/data/mockData.ts |
 | Stage 1 components | BottomNav.tsx, CommunityScreen.tsx, ExploreScreen.tsx, GlobalSearchScreen.tsx, Header.tsx, HotspotDetailScreen.tsx, HotspotsScreen.tsx, LifeListScreen.tsx, LogObservationScreen.tsx, ProfileScreen.tsx, SettingsScreen.tsx, SpeciesDetailScreen.tsx, all under frontend/src/components |

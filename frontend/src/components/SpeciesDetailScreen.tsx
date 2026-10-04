@@ -111,7 +111,7 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
           {/* Ambient Badge */}
           <div className="absolute bottom-3 left-3 flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/75 backdrop-blur-md text-white text-[11px] font-medium shadow-sm">
             <span className="w-2 h-2 rounded-full bg-[#fe932c] animate-pulse"></span>
-            <span>Verified Field Shot • 1/2500s ƒ/5.6</span>
+            <span>{species.source ? 'Photo metadata not connected yet' : 'Verified Field Shot • 1/2500s ƒ/5.6'}</span>
           </div>
 
           {/* Audio Visualizer Overlay Pill */}
@@ -131,7 +131,7 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
         <div className="flex items-baseline justify-between gap-2">
           <h2 className="text-[26px] font-bold text-[#181c20] tracking-tight">{species.name}</h2>
           <span className="text-[11px] text-[#904d00] px-2 py-0.5 rounded bg-[#ffdcc3] uppercase tracking-widest font-bold">
-            {species.iucnStatus || 'LC'}
+            {species.iucnStatus || (species.source ? 'Status unavailable' : 'LC')}
           </span>
         </div>
         <p className="text-[14px] text-[#42493e] italic mt-0.5">
@@ -183,9 +183,9 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
           <div className="mt-2">
             <div className="flex items-baseline gap-1">
               <span className="text-[16px] font-bold text-[#181c20]">
-                {species.sightingsThisWeek ?? 0}
+                {species.source ? species.recentObservations?.length ? 'Reported' : 'Unavailable' : species.sightingsThisWeek ?? 0}
               </span>
-              <span className="text-[12px] text-[#42493e]">this week</span>
+              <span className="text-[12px] text-[#42493e]">{species.source ? 'past 14 days' : 'this week'}</span>
             </div>
             <span className="text-[12px] text-[#3b6934] font-medium truncate block">
               {species.region || 'Delhi-NCR region'}
@@ -201,7 +201,7 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
           </div>
           <div className="mt-2">
             <span className="text-[16px] font-bold text-[#181c20] block leading-tight">
-              {species.photographyDifficulty || 'Medium'}
+              {species.photographyDifficulty || (species.source ? 'Unavailable' : 'Medium')}
             </span>
             <div className="flex items-center gap-1 mt-1">
               <span className="w-3 h-1.5 rounded-full bg-[#904d00]"></span>
@@ -226,7 +226,7 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
         </button>
 
         <button
-          onClick={() => showToast(`Suggested early morning session for ${species.name}. Trip saving is not connected yet.`)}
+          onClick={() => showToast(species.source ? 'Photography logistics are not connected yet.' : `Suggested early morning session for ${species.name}. Trip saving is not connected yet.`)}
           className="flex-1 h-12 rounded-xl bg-[#2d5a27] text-white font-semibold text-[13px] flex items-center justify-center gap-2 shadow-sm hover:opacity-95 active:scale-[0.98] transition-all"
         >
           <span className="material-symbols-outlined text-[18px]">add_a_photo</span>
@@ -282,6 +282,7 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
         </div>
       </div>
 
+      {!species.source && <>
       {/* Recent Gallery Strip */}
       <div className="px-4 pb-5">
         <div className="flex items-center justify-between mb-2">
@@ -316,6 +317,9 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
         </div>
       </div>
 
+      </>}
+
+      {!species.source && <>
       {/* Sightings & Field Map Section */}
       <section
         id="sightings-sheet-anchor"
@@ -440,6 +444,18 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
           </div>
         )}
       </section>
+      </>}
+      {species.source && (
+        <section id="sightings-sheet-anchor" className="mx-4 rounded-xl bg-white p-4 text-[13px] text-[#42493e]">
+          <h3 className="font-bold text-[#181c20]">Recent eBird report</h3>
+          <p className="mt-2">Latest regional report per species within 14 days; this is not a total sightings count. Interactive maps are not connected yet.</p>
+          {species.recentObservations?.length ? species.recentObservations.map((obs) => (
+            <p key={obs.hotspotId} className="mt-2">{obs.location} - {obs.observedAt} (observation local time)</p>
+          )) : <p className="mt-2">No recent regional report in this response. This does not establish that the species is absent.</p>}
+          <a href={species.sourceUrl} target="_blank" rel="noreferrer" className="mt-3 inline-block font-semibold text-[#154212] underline">View species on eBird</a>
+        </section>
+      )}
+
     </div>
   );
 };

@@ -5,6 +5,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { auth, type AuthUser } from './lib/auth';
+import { loadDiscovery, type DiscoveryCatalogue } from './lib/discovery';
 import {
   ScreenType,
   BirdSpecies,
@@ -55,6 +56,26 @@ export default function App() {
   const [posts, setPosts] = useState<CommunityPost[]>(COMMUNITY_POSTS);
   const [journalEntries, setJournalEntries] = useState<JournalEntry[]>(JOURNAL_ENTRIES);
   const [notifications, setNotifications] = useState<AppNotification[]>(APP_NOTIFICATIONS);
+  const [discovery, setDiscovery] = useState<DiscoveryCatalogue | null>(null);
+  const [discoveryError, setDiscoveryError] = useState('');
+  const [discoveryLoading, setDiscoveryLoading] = useState(false);
+  const [discoveryAttempt, setDiscoveryAttempt] = useState(0);
+
+  useEffect(() => {
+    setDiscovery(null);
+    setDiscoveryError('');
+    if (!sessionUser) { setDiscoveryLoading(false); return; }
+    const controller = new AbortController();
+    setDiscoveryLoading(true);
+    loadDiscovery(controller.signal).then((data) => {
+      if (!controller.signal.aborted) setDiscovery(data);
+    }).catch((error) => {
+      if (!controller.signal.aborted) setDiscoveryError(error.message || 'Discovery is unavailable.');
+    }).finally(() => {
+      if (!controller.signal.aborted) setDiscoveryLoading(false);
+    });
+    return () => controller.abort();
+  }, [sessionUser?.id, discoveryAttempt]);
 
   const acceptSession = (user: AuthUser) => {
     setSessionUser(user);
@@ -129,7 +150,7 @@ export default function App() {
   };
 
   const handleSelectSpeciesByName = (name: string) => {
-    const found = speciesList.find((s) => s.name.toLowerCase().includes(name.toLowerCase()));
+    const found = discovery?.species.find((s) => s.name.toLowerCase() === name.toLowerCase()) || speciesList.find((s) => s.name.toLowerCase().includes(name.toLowerCase()));
     if (found) {
       setSelectedSpecies(found);
       navigateTo('species-detail');
@@ -194,8 +215,9 @@ export default function App() {
   };
 
   const handleToggleSaveHotspot = (hotspotId: string) => {
-    const hotspot = hotspotsList.find((h) => h.id === hotspotId);
+    const hotspot = discovery?.hotspots.find((h) => h.id === hotspotId) || hotspotsList.find((h) => h.id === hotspotId);
     if (!hotspot) return;
+    setDiscovery((prev) => prev ? { ...prev, hotspots: prev.hotspots.map((h) => h.id === hotspotId ? { ...h, isSaved: !h.isSaved } : h) } : prev);
     setHotspotsList((prev) => prev.map((h) =>
       h.id === hotspotId ? { ...h, isSaved: !h.isSaved } : h
     ));
@@ -326,6 +348,12 @@ export default function App() {
             currentScreen !== 'auth' ? 'pt-16' : ''
           }`}
         >
+          {['explore', 'search', 'hotspots'].includes(currentScreen) && (
+            <div role="status" className="mx-4 mt-2 rounded-xl bg-[#f1f4f9] p-3 text-[12px] text-[#42493e]">
+              {discoveryLoading ? 'Loading birds and hotspots from eBird...' : discoveryError || (discovery ? `eBird - ${discovery.region}. Retrieved ${new Date(discovery.fetchedAt).toLocaleString()}. Recent reports: past 14 days. ${discovery.cached ? 'Using server cache.' : ''}` : 'External discovery has not loaded.')}
+              {discoveryError && <button type="button" className="ml-2 font-semibold text-[#154212] underline" onClick={() => setDiscoveryAttempt((prev) => prev + 1)}>Try again</button>}
+            </div>
+          )}
           {currentScreen === 'auth' && (
             <AuthScreen
               onLoginSuccess={acceptSession}
@@ -336,7 +364,9 @@ export default function App() {
           {currentScreen === 'explore' && (
             <ExploreScreen
               observerName={userProfile.name}
-              speciesList={speciesList}
+              speciesList={discovery?.species.filter((s) => s.recentObservations?.length) || []}
+              externalDiscovery
+              discoveryRegion={discovery?.region}
               onSelectSpecies={handleSelectSpecies}
               onNavigate={navigateTo}
               onQuickLog={handleQuickLog}
@@ -357,7 +387,8 @@ export default function App() {
 
           {currentScreen === 'hotspots' && (
             <HotspotsScreen
-              hotspots={hotspotsList}
+              hotspots={discovery?.hotspots || []}
+              externalDiscovery
               onSelectHotspot={handleSelectHotspot}
               onNavigate={navigateTo}
               showToast={showToast}
@@ -407,7 +438,7 @@ export default function App() {
           {currentScreen === 'hotspot-detail' && (
             <HotspotDetailScreen
               key={selectedHotspot.id}
-              hotspot={hotspotsList.find((h) => h.id === selectedHotspot.id) || selectedHotspot}
+              hotspot={discovery?.hotspots.find((h) => h.id === selectedHotspot.id) || hotspotsList.find((h) => h.id === selectedHotspot.id) || selectedHotspot}
               onToggleSave={handleToggleSaveHotspot}
               onNavigate={navigateTo}
               onSelectSpeciesByName={handleSelectSpeciesByName}
@@ -433,8 +464,9 @@ export default function App() {
 
           {currentScreen === 'search' && (
             <GlobalSearchScreen
-              speciesList={speciesList}
-              hotspots={hotspotsList}
+              externalDiscovery
+              speciesList={discovery?.species || []}
+              hotspots={discovery?.hotspots || []}
               posts={posts}
               onSelectSpecies={handleSelectSpecies}
               onSelectHotspot={handleSelectHotspot}

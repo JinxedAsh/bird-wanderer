@@ -3,6 +3,7 @@ import express from 'express';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createApp } from './auth.mjs';
+import { createDiscoveryService } from './discovery.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const production = process.env.NODE_ENV === 'production';
@@ -21,6 +22,7 @@ const { app, db } = createApp({
   origin: process.env.APP_ORIGIN || 'http://localhost:3000',
   additionalOrigins,
   secureCookies: production,
+  discovery: createDiscoveryService({ apiKey: process.env.EBIRD_API_KEY, region: process.env.EBIRD_REGION || 'IN-DL' }),
 });
 if (production) {
   app.use(express.static(resolve(root, 'dist')));

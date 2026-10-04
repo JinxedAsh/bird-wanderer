@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { BirdSpecies, Hotspot, ScreenType, CommunityPost } from '../types';
 
 interface GlobalSearchScreenProps {
+  externalDiscovery?: boolean;
   onSelectSpecies: (species: BirdSpecies) => void;
   onSelectHotspot: (hotspot: Hotspot) => void;
   onNavigate: (screen: ScreenType) => void;
@@ -11,6 +12,7 @@ interface GlobalSearchScreenProps {
 }
 
 export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
+  externalDiscovery = false,
   onSelectSpecies,
   onSelectHotspot,
   onNavigate,
@@ -33,9 +35,10 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
   const q = query.toLowerCase().trim();
 
   // Matched results
-  const matchedBirds = speciesList.filter(
+  const matchingBirds = speciesList.filter(
     (b) => !q || b.name.toLowerCase().includes(q) || b.scientificName.toLowerCase().includes(q)
   );
+  const matchedBirds = matchingBirds.slice(0, 60);
 
   const matchedHotspots = hotspots.filter(
     (h) => !q || h.name.toLowerCase().includes(q) || h.region.toLowerCase().includes(q)
@@ -152,7 +155,9 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
         </div>
       )}
 
+      {showBirds && matchingBirds.length > 60 && <p role="status" className="text-[12px] text-[#42493e]">Showing 60 of {matchingBirds.length} species. Refine your search to see more.</p>}
       {/* Search Results Stream */}
+      {externalDiscovery && (showPeople || showPosts) && <p className="text-[12px] text-[#42493e]">People and community posts are still demonstration data.</p>}
       <div className="flex flex-col gap-2.5 pt-2">
         {/* Bird Result */}
         {showBirds && matchedBirds.map((bird) => (
@@ -188,7 +193,7 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
                 >
                   visibility
                 </span>
-                <span>{bird.sightingsThisWeek ?? 0} local sightings this week</span>
+                <span>{bird.source ? bird.recentObservations?.length ? 'Recent regional report available' : 'No recent regional report in this response' : `${bird.sightingsThisWeek ?? 0} local sightings this week`}</span>
               </div>
             </div>
             <span className="material-symbols-outlined text-[#c2c9bb] text-[20px]">
@@ -259,11 +264,11 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
                 </span>
               </div>
               <p className="text-[12px] text-[#72796e] truncate">
-                {hotspot.region} • {hotspot.distanceKm} km away
+                {hotspot.region} • {hotspot.distanceKm === null ? 'Distance unavailable' : `${hotspot.distanceKm} km away`}
               </p>
               <div className="flex items-center gap-1 mt-1 text-[#42493e] text-[11px] font-semibold">
                 <span className="material-symbols-outlined text-[#154212] text-[14px]">eco</span>
-                <span className="text-[#3b6934] font-bold">{hotspot.activeTodayCount} species active today</span>
+                <span className="text-[#3b6934] font-bold">{hotspot.source ? `${hotspot.speciesCount ?? 'Unknown'} species recorded all time` : `${hotspot.activeTodayCount} species active today`}</span>
               </div>
             </div>
             <span className="material-symbols-outlined text-[#c2c9bb] text-[20px]">
