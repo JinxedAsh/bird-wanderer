@@ -277,7 +277,7 @@ Newer changes were found in eight existing files: frontend/.env.example, fronten
 
 **Limits:** latest regional reports are not complete hotspot history or sightings totals. Habitat/species enrichment, complete hotspot species inventory, maps, weather, photo metadata, persistent bookmarks and Android delivery still require later increments. Browser clicks, design fidelity and physical-phone behavior require manual testing. The cache is not a persistent offline fallback.
 
-**Delivery:** branch `codex/external-discovery`; the verified increment will be pushed and merged after GitHub checks pass. Details and the manual checklist are in [Discovery walkthrough](DISCOVERY_WALKTHROUGH.md).
+**Delivery:** implementation commit `ddb8b83`, published on `codex/external-discovery` in [PR #3](https://github.com/JinxedAsh/bird-wanderer/pull/3). The PR records the GitHub check and merge results; merging follows passing checks. Details and the manual checklist are in [Discovery walkthrough](DISCOVERY_WALKTHROUGH.md).
 
 ## 4. How the current application fits together
 
