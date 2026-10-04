@@ -1,15 +1,11 @@
 import { normalizeExif } from './exif.mjs';
+import { claimValues as claims, normalizeScientificName as normalizeName, findSpeciesEntities } from './wikidata.mjs';
 
 export class PhotoError extends Error {
   constructor(status, message) { super(message); this.status = status; }
 }
 
 const userAgent = 'BirdWanderer/0.1 (https://github.com/JinxedAsh/bird-wanderer)';
-const normalizeName = (name) => name.trim().replace(/\s+/g, ' ').toLowerCase();
-const claims = (entity, property) => (Array.isArray(entity.claims?.[property]) ? entity.claims[property] : [])
-  .filter((claim) => claim && claim.rank !== 'deprecated' && claim.mainsnak?.snaktype === 'value')
-  .sort((a, b) => Number(b.rank === 'preferred') - Number(a.rank === 'preferred'))
-  .map((claim) => claim.mainsnak.datavalue?.value);
 
 // Commons attribution fields contain HTML. Return text only; React renders it
 // as text, never executable markup. Preserve author/credit instead of truncating.
@@ -75,15 +71,10 @@ export function createPhotoService({ fetchImpl = fetch, now = Date.now, ttl = 24
     return data;
   }
   async function load(scientificName) {
-    const search = await request('www.wikidata.org', { action: 'wbsearchentities', search: scientificName, language: 'en', limit: '5' });
-    if (!Array.isArray(search.search)) throw new PhotoError(502, 'The photo provider returned unsupported species matches.');
-    const ids = search.search.map((item) => item?.id).filter((id) => typeof id === 'string' && /^Q\d+$/.test(id)).slice(0, 5);
-    if (!ids.length) return null;
-    const entities = await request('www.wikidata.org', { action: 'wbgetentities', ids: ids.join('|'), props: 'claims' });
-    if (!entities.entities || typeof entities.entities !== 'object') throw new PhotoError(502, 'The photo provider returned unsupported species details.');
-    for (const id of ids) {
-      const entity = entities.entities[id];
-      if (!entity || !claims(entity, 'P225').some((name) => typeof name === 'string' && normalizeName(name) === normalizeName(scientificName)) || !claims(entity, 'P105').some((rank) => rank?.id === 'Q7432')) continue;
+    let matches;
+    try { matches = await findSpeciesEntities(scientificName, request); }
+    catch (error) { if (error instanceof PhotoError) throw error; throw new PhotoError(502, 'The photo provider returned unsupported species matches.'); }
+    for (const { id, entity } of matches) {
       const files = claims(entity, 'P18').filter((file) => typeof file === 'string' && file.length <= 300 && !file.includes('|')).slice(0, 3);
       if (!files.length) continue;
       const data = await request('commons.wikimedia.org', { action: 'query', formatversion: '2', prop: 'imageinfo', titles: files.map((file) => `File:${file}`).join('|'),

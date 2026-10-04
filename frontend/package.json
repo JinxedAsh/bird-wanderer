@@ -9,7 +9,7 @@
     "dev:client": "vite",
     "dev:server": "node --watch server/index.mjs",
     "start": "node server/index.mjs",
-    "test": "node --test server/auth.test.mjs server/discovery.test.mjs server/weather.test.mjs server/photos.test.mjs server/exif.test.mjs server/frontend.test.mjs server/proxy.test.mjs",
+    "test": "node --test server/auth.test.mjs server/discovery.test.mjs server/weather.test.mjs server/photos.test.mjs server/exif.test.mjs server/species-info.test.mjs server/frontend.test.mjs server/proxy.test.mjs",
     "build": "vite build",
     "preview": "vite preview",
     "lint": "tsc --noEmit"

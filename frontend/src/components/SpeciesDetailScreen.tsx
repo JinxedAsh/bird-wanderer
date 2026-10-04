@@ -3,6 +3,7 @@ import { BirdSpecies, ScreenType } from '../types';
 import type { SpeciesLocations } from '../lib/discovery';
 import { SpeciesPhoto, type PhotoLoadState } from './SpeciesPhoto';
 import { PhotoPlanning } from './PhotoPlanning';
+import { SpeciesInfoPanel } from './SpeciesInfoPanel';
 
 interface SpeciesDetailScreenProps {
   onSessionExpired?: () => void;
@@ -62,6 +63,8 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
 
   const focusSection = (id: string) => {
     const section = document.getElementById(id);
+    const disclosure = section?.closest('details');
+    if (disclosure) disclosure.open = true;
     section?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
     section?.focus({ preventScroll: true });
   };
@@ -165,10 +168,10 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
           </div>
           <div className="mt-2">
             <span className="text-[16px] font-bold text-[#181c20] block leading-tight">
-              {species.habitat || 'Wetlands'}
+              {species.source ? 'Read species reference' : species.habitat || 'Wetlands'}
             </span>
             <span className="text-[12px] text-[#42493e]">
-              {species.habitatDetail || 'Rivers & reed ponds'}
+              {species.source ? <button type="button" onClick={() => focusSection('species-information')} className="font-semibold text-[#154212] underline">Identification &amp; habitat details</button> : species.habitatDetail || 'Rivers & reed ponds'}
             </span>
           </div>
         </div>
@@ -181,10 +184,10 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
           </div>
           <div className="mt-2">
             <span className="text-[16px] font-bold text-[#181c20] block leading-tight">
-              {species.bestTime || '06:30 – 08:30'}
+              {species.source ? 'Unverified' : species.bestTime || '06:30 – 08:30'}
             </span>
             <span className="text-[12px] text-[#42493e]">
-              {species.bestTimeDetail || 'Optimal low angle glare'}
+              {species.source ? 'Check hotspot daylight & access' : species.bestTimeDetail || 'Optimal low angle glare'}
             </span>
           </div>
         </div>
@@ -218,11 +221,11 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
             <span className="text-[16px] font-bold text-[#181c20] block leading-tight">
               {species.photographyDifficulty || (species.source ? 'Unavailable' : 'Medium')}
             </span>
-            <div className="flex items-center gap-1 mt-1">
+            {!species.source && <div className="flex items-center gap-1 mt-1">
               <span className="w-3 h-1.5 rounded-full bg-[#904d00]"></span>
               <span className="w-3 h-1.5 rounded-full bg-[#904d00]"></span>
               <span className="w-3 h-1.5 rounded-full bg-[#e0e3e8]"></span>
-            </div>
+            </div>}
           </div>
         </div>
       </div>
@@ -260,6 +263,7 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
             </div>
             <h3 className="text-[16px] font-bold text-[#181c20]">Field Guide & Technique</h3>
           </div>
+          {species.source && <SpeciesInfoPanel key={species.id} speciesId={species.id} onSessionExpired={onSessionExpired} />}
           {species.source ? <PhotoPlanning speciesId={species.id} state={photoState} onChooseHotspot={() => focusSection('sightings-sheet-anchor')} /> : <p className="text-[13px] text-[#42493e] leading-relaxed">
             {species.fieldGuideNotes ||
               '400mm+ recommended. Kingfishers dive rapidly from low perches; maintain shutter speed at 1/2000s or faster in morning light. Look for regular fishing perches 1–2 meters above stagnant river channels.'}
