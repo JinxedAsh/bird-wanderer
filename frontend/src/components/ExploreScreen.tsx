@@ -1,8 +1,15 @@
 import React from 'react';
 import { BirdSpecies, ScreenType } from '../types';
 import { SpeciesPhoto } from './SpeciesPhoto';
+import type { LocationPoint } from '../lib/location';
+import type { HotspotWeather } from '../lib/discovery';
 
 interface ExploreScreenProps {
+  location?: LocationPoint | null;
+  onChooseLocation?: () => void;
+  weather?: Omit<HotspotWeather, 'hotspotId'>;
+  weatherError?: string;
+  onRetryWeather?: () => void;
   onSessionExpired?: () => void;
   externalDiscovery?: boolean;
   discoveryRegion?: string;
@@ -14,6 +21,11 @@ interface ExploreScreenProps {
 }
 
 export const ExploreScreen: React.FC<ExploreScreenProps> = ({
+  location,
+  onChooseLocation,
+  weather,
+  weatherError,
+  onRetryWeather,
   onSessionExpired,
   externalDiscovery = false,
   discoveryRegion,
@@ -32,15 +44,15 @@ export const ExploreScreen: React.FC<ExploreScreenProps> = ({
       <section className="flex flex-col space-y-2.5 pt-1">
         <div className="flex items-start justify-between">
           <div className="flex flex-col">
-            <span className="text-[12px] font-medium text-[#42493e] flex items-center gap-1.5">
+            <button type="button" onClick={onChooseLocation} className="text-[12px] font-medium text-[#42493e] flex items-center gap-1.5 text-left">
               <span
                 className="material-symbols-outlined text-[15px] text-[#154212]"
                 style={{ fontVariationSettings: "'FILL' 1" }}
               >
                 near_me
               </span>
-              {externalDiscovery ? discoveryRegion || 'Region not loaded' : 'Delhi, India'}
-            </span>
+              {externalDiscovery ? location ? `${location.source} location · ${discoveryRegion || 'Region not loaded'}` : `${discoveryRegion || 'Region not loaded'} · Choose location` : 'Delhi, India'}
+            </button>
             <h2 className="text-[24px] font-bold text-[#181c20] tracking-tight">
               Good morning, {observerName}
             </h2>
@@ -55,7 +67,7 @@ export const ExploreScreen: React.FC<ExploreScreenProps> = ({
         </div>
 
         {/* Weather & Field Conditions Pill */}
-        <div className="flex items-center justify-between px-4 py-2.5 rounded-xl bg-[#f1f4f9] shadow-sm">
+        <div className="flex items-center justify-between gap-2 flex-wrap px-4 py-2.5 rounded-xl bg-[#f1f4f9] shadow-sm">
           <div className="flex items-center gap-2">
             <span
               className="material-symbols-outlined text-[18px] text-[#fe932c]"
@@ -63,15 +75,18 @@ export const ExploreScreen: React.FC<ExploreScreenProps> = ({
             >
               wb_sunny
             </span>
-            <span className="text-[14px] font-bold text-[#181c20]">{externalDiscovery ? 'Weather not connected' : '24°C'}</span>
+            <span className="text-[14px] font-bold text-[#181c20]">{externalDiscovery ? !location ? 'Choose location for weather' : weatherError ? 'Weather unavailable' : !weather ? 'Loading weather…' : weather.current.temperatureC == null ? 'Unavailable' : `${weather.current.temperatureC}°C` : '24°C'}</span>
             <span className="text-[#c2c9bb] text-[12px]">•</span>
-            <span className="text-[14px] text-[#42493e]">{externalDiscovery ? '' : 'Clear'}</span>
+            <span className="text-[14px] text-[#42493e]">{externalDiscovery ? weather?.current.condition || '' : 'Clear'}</span>
           </div>
           <div className="flex items-center gap-1.5 text-[#42493e]">
             <span className="material-symbols-outlined text-[16px]">air</span>
-            <span className="text-[12px] font-semibold">{externalDiscovery ? 'Unavailable' : '8 km/h'}</span>
+            <span className="text-[12px] font-semibold">{externalDiscovery ? weather?.current.windKmh == null ? 'Unavailable' : `${weather.current.windKmh} km/h` : '8 km/h'}</span>
           </div>
         </div>
+        {externalDiscovery && weather && <p className="text-[11px] text-[#72796e]">Approximate point forecast · {weather.timezone} · {weather.current.time}. <a href={weather.sourceUrl} target="_blank" rel="noreferrer" className="underline">Open-Meteo</a> · <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer" className="underline">CC BY 4.0</a>. Retrieved {new Date(weather.fetchedAt).toLocaleString()}{weather.cached ? ' (cached)' : ''}.</p>}
+        {externalDiscovery && weatherError && <p role="status" className="text-[12px] text-[#904d00]">{weatherError} <button type="button" onClick={onRetryWeather} className="underline">Retry Explore weather</button></p>}
+        {location?.accuracyM !== undefined && <p className="text-[11px] text-[#72796e]">Device accuracy estimate: ±{Math.round(location.accuracyM)} m. Hotspot distances are approximate.</p>}
       </section>
 
       {/* Main Section: What's out there? */}
@@ -80,7 +95,7 @@ export const ExploreScreen: React.FC<ExploreScreenProps> = ({
           <div className="flex items-baseline gap-2">
             <h3 className="text-[20px] font-bold text-[#181c20]">What’s out there?</h3>
             <span className="text-[10px] font-bold uppercase tracking-wider text-[#154212]">
-              {externalDiscovery ? 'Recent regional reports' : 'Active nearby'}
+              {externalDiscovery ? location ? 'Reports within 50 km' : 'Recent regional reports' : 'Active nearby'}
             </span>
           </div>
           <button
@@ -93,7 +108,7 @@ export const ExploreScreen: React.FC<ExploreScreenProps> = ({
         </div>
 
         <div className="flex flex-col space-y-2">
-          {externalDiscovery && nearbyBirds.length === 0 && <p className="text-[13px] text-[#42493e]">No recent species reports loaded. Search the catalogue when discovery is available.</p>}
+          {externalDiscovery && nearbyBirds.length === 0 && <p className="text-[13px] text-[#42493e]">{location ? 'No recent reports at loaded hotspots within 50 km. Coverage is limited to the configured eBird region.' : 'No recent species reports loaded. Search the catalogue when discovery is available.'}</p>}
           {nearbyBirds.map((bird) => (
             <article
               key={bird.id}

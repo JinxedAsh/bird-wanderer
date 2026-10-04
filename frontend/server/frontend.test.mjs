@@ -14,18 +14,19 @@ let mapHelpers;
 let authClient;
 let discoveryClient;
 let activityClient;
+let locationHelpers;
 
 before(async () => {
   temporaryDirectory = mkdtempSync(join(root, '.stage1-render-'));
   const screens = {};
-  const names = ['GlobalSearchScreen', 'SettingsScreen', 'SpeciesDetailScreen', 'SpeciesPhoto', 'PhotoMetadata', 'PhotoPlanning', 'SpeciesInfoPanel', 'HotspotMap', 'HotspotWeatherPanel', 'HotspotDetailScreen', 'HotspotsScreen', 'ExploreScreen', 'Header'];
+  const names = ['GlobalSearchScreen', 'SettingsScreen', 'SpeciesDetailScreen', 'SpeciesPhoto', 'PhotoMetadata', 'PhotoPlanning', 'SpeciesInfoPanel', 'HotspotMap', 'HotspotWeatherPanel', 'HotspotDetailScreen', 'HotspotsScreen', 'ExploreScreen', 'LocationPicker', 'Header'];
   // Compile these existing TSX screens for Node rendering; no browser or new test framework.
-  for (const relative of ['lib/useDialogFocus.ts', 'lib/maps.ts', 'lib/auth.ts', 'lib/discovery.ts', 'lib/activity.ts', ...names.map((name) => `components/${name}.tsx`)]) {
+  for (const relative of ['lib/useDialogFocus.ts', 'lib/maps.ts', 'lib/auth.ts', 'lib/discovery.ts', 'lib/activity.ts', 'lib/location.ts', ...names.map((name) => `components/${name}.tsx`)]) {
     const output = join(temporaryDirectory, relative.replace(/\.tsx?$/, '.mjs'));
     mkdirSync(dirname(output), { recursive: true });
     const source = readFileSync(join(root, 'src', relative), 'utf8');
     const { code } = transformSync(source, { loader: 'tsx', format: 'esm', jsx: 'automatic', target: 'es2022' });
-    writeFileSync(output, code.replace('../lib/useDialogFocus"', '../lib/useDialogFocus.mjs"').replace('../lib/maps"', '../lib/maps.mjs"').replace('./HotspotMap"', './HotspotMap.mjs"').replace('./HotspotWeatherPanel"', './HotspotWeatherPanel.mjs"').replace('./SpeciesPhoto"', './SpeciesPhoto.mjs"').replace('./PhotoMetadata"', './PhotoMetadata.mjs"').replace('./PhotoPlanning"', './PhotoPlanning.mjs"').replace('./SpeciesInfoPanel"', './SpeciesInfoPanel.mjs"').replace('../lib/discovery"', '../lib/discovery.mjs"').replace('../lib/auth"', '../lib/auth.mjs"').replace('./auth"', './auth.mjs"'));
+    writeFileSync(output, code.replace('../lib/useDialogFocus"', '../lib/useDialogFocus.mjs"').replace('../lib/maps"', '../lib/maps.mjs"').replace('./HotspotMap"', './HotspotMap.mjs"').replace('./HotspotWeatherPanel"', './HotspotWeatherPanel.mjs"').replace('./SpeciesPhoto"', './SpeciesPhoto.mjs"').replace('./PhotoMetadata"', './PhotoMetadata.mjs"').replace('./PhotoPlanning"', './PhotoPlanning.mjs"').replace('./SpeciesInfoPanel"', './SpeciesInfoPanel.mjs"').replace('../lib/discovery"', '../lib/discovery.mjs"').replace('../lib/auth"', '../lib/auth.mjs"').replace('./auth"', './auth.mjs"').replace('./maps"', './maps.mjs"').replace('../lib/location"', '../lib/location.mjs"'));
   }
   for (const name of names) {
     const module = await import(pathToFileURL(join(temporaryDirectory, 'components', `${name}.mjs`)).href);
@@ -36,6 +37,7 @@ before(async () => {
   render = (name, props) => renderToStaticMarkup(createElement(screens[name], props));
   mapHelpers = await import(pathToFileURL(join(temporaryDirectory, 'lib/maps.mjs')).href);
   authClient = await import(pathToFileURL(join(temporaryDirectory, 'lib/auth.mjs')).href);
+  locationHelpers = await import(pathToFileURL(join(temporaryDirectory, 'lib/location.mjs')).href);
   activityClient = await import(pathToFileURL(join(temporaryDirectory, 'lib/activity.mjs')).href);
   discoveryClient = await import(pathToFileURL(join(temporaryDirectory, 'lib/discovery.mjs')).href);
 });
@@ -49,6 +51,67 @@ after(() => {
 
 const noop = () => {};
 const searchProps = { speciesList: [], hotspots: [], posts: [], onSelectSpecies: noop, onSelectHotspot: noop, onNavigate: noop };
+
+test('location distance preserves zero, handles the date line and rejects invalid points', () => {
+  const from = { latitude: 0, longitude: 0, source: 'Manual' };
+  assert.equal(locationHelpers.distanceKm(from, { latitude: 0, longitude: 0 }), 0);
+  assert.ok(Math.abs(locationHelpers.distanceKm(from, { latitude: 0, longitude: 1 }) - 111.195) < 0.01);
+  assert.ok(Math.abs(locationHelpers.distanceKm({ ...from, longitude: 179.9 }, { latitude: 0, longitude: -179.9 }) - 22.239) < 0.01);
+  assert.equal(locationHelpers.distanceKm(from, {}), null);
+  assert.equal(locationHelpers.distanceKm({ ...from, latitude: NaN }, { latitude: 0, longitude: 0 }), null);
+});
+
+test('device location requests once with finite timeout and explains permission/security failures', async () => {
+  let options;
+  const mock = { getCurrentPosition: (success, _error, supplied) => { options = supplied; success({ coords: { latitude: 0, longitude: 0, accuracy: 100 } }); } };
+  assert.deepEqual(await locationHelpers.getDeviceLocation(mock, true), { latitude: 0, longitude: 0, source: 'GPS', accuracyM: 100 });
+  assert.equal(options.timeout, 10000);
+  assert.equal(options.enableHighAccuracy, false);
+  await assert.rejects(locationHelpers.getDeviceLocation(mock, false), /HTTPS or localhost/);
+  await assert.rejects(locationHelpers.getDeviceLocation(null, true), /does not support GPS/);
+  for (const [code, message] of [[1, /denied/], [2, /unavailable/], [3, /timed out/]]) {
+    await assert.rejects(locationHelpers.getDeviceLocation({ getCurrentPosition: (_success, error) => error({ code }) }, true), message);
+  }
+  await assert.rejects(locationHelpers.getDeviceLocation({ getCurrentPosition: (success) => success({ coords: { latitude: 91, longitude: 0 } }) }, true), /invalid coordinates/);
+});
+
+test('Explore location weather preserves zero values and distinguishes prompt, loading, errors and nearby emptiness', () => {
+  const props = { observerName: 'Tester', speciesList: [], externalDiscovery: true, onNavigate: noop, onSelectSpecies: noop, onQuickLog: noop };
+  assert.match(render('ExploreScreen', props), /Choose location for weather/);
+  const location = { latitude: 0, longitude: 0, source: 'Manual' };
+  assert.match(render('ExploreScreen', { ...props, location }), /Loading weather/);
+  const weather = { current: { temperatureC: 0, windKmh: 0, condition: 'Clear', time: '2026-10-04T07:00' }, timezone: 'UTC', sourceUrl: 'https://open-meteo.com/', fetchedAt: '2026-10-04T07:00:00Z', cached: true };
+  const html = render('ExploreScreen', { ...props, location, weather });
+  for (const value of ['0°C', '0 km/h', 'Open-Meteo', 'CC BY 4.0', 'Approximate point forecast', 'Reports within 50 km', 'Coverage is limited', 'cached']) assert.ok(html.includes(value), value);
+  assert.match(render('ExploreScreen', { ...props, location, weatherError: 'Provider unavailable', onRetryWeather: noop }), /Retry Explore weather/);
+  const picker = render('LocationPicker', { location, onSelect: noop, onClose: noop });
+  assert.match(picker, /Use device location/);
+  assert.match(picker, /Location latitude/);
+  assert.match(picker, /Clear location and return to region/);
+});
+
+test('nearby hotspots filter the list and map consistently, retain zero distance and order closest first', () => {
+  const hotspot = (id, name, distanceKm) => ({ id, name, source: 'eBird', latitude: 28, longitude: 77, distanceKm, region: 'IN-DL', trailDifficulty: 'Unavailable', speciesCount: 20, activeTodayCount: null, imageUrl: '/test.svg' });
+  const html = render('HotspotsScreen', { hotspots: [hotspot('L3', 'Faraway', 50.01), hotspot('L2', 'Second closest', 5), hotspot('L1', 'At selected point', 0)], nearbyEnabled: true, externalDiscovery: true, onChooseLocation: noop, onSelectHotspot: noop, onNavigate: noop, showToast: noop });
+  assert.doesNotMatch(html, /Faraway/);
+  assert.ok(html.indexOf('At selected point') < html.indexOf('Second closest'));
+  assert.match(html, /0.0 km/);
+  assert.match(html, /Nearby \(50 km\)/);
+});
+
+test('location weather client rounds coordinates and keeps them out of the URL, validating response identity', async () => {
+  const previous = globalThis.fetch;
+  let sent;
+  try {
+    globalThis.fetch = async (url, options) => { sent = { url, ...options }; return Response.json({ latitude: 28.55, longitude: 77.22, source: 'Open-Meteo', current: {}, days: [], hourly: [] }); };
+    await discoveryClient.loadLocationWeather(28.55123, 77.22123, new AbortController().signal);
+    assert.equal(sent.url, '/api/discovery/weather');
+    assert.equal(sent.method, 'POST');
+    assert.deepEqual(JSON.parse(sent.body), { latitude: 28.55, longitude: 77.22 });
+    globalThis.fetch = async () => Response.json({ latitude: 0, longitude: 0, source: 'Open-Meteo', current: {}, days: [], hourly: [] });
+    await assert.rejects(discoveryClient.loadLocationWeather(28.55, 77.22, new AbortController().signal), /Unexpected location weather/);
+  } finally { globalThis.fetch = previous; }
+});
 
 test('search uses supplied real history with safe text and no fabricated recent searches', () => {
   const empty = render('GlobalSearchScreen', { ...searchProps, externalDiscovery: true, onRecordSearch: noop });

@@ -1,8 +1,11 @@
 import React, { useMemo, useState } from 'react';
 import { Hotspot, ScreenType } from '../types';
 import { HotspotMap } from './HotspotMap';
+import { nearbyRadiusKm } from '../lib/location';
 
 interface HotspotsScreenProps {
+  nearbyEnabled?: boolean;
+  onChooseLocation?: () => void;
   externalDiscovery?: boolean;
   hotspots: Hotspot[];
   onSelectHotspot: (hotspot: Hotspot) => void;
@@ -11,6 +14,8 @@ interface HotspotsScreenProps {
 }
 
 export const HotspotsScreen: React.FC<HotspotsScreenProps> = ({
+  nearbyEnabled = false,
+  onChooseLocation,
   externalDiscovery = false,
   hotspots,
   onSelectHotspot,
@@ -37,8 +42,8 @@ export const HotspotsScreen: React.FC<HotspotsScreenProps> = ({
     if (activeFilter === 'saved') {
       return h.isSaved;
     }
-    return true;
-  }), [hotspots, searchQuery, activeFilter]);
+    return !nearbyEnabled || (h.distanceKm != null && h.distanceKm <= nearbyRadiusKm);
+  }).sort((a, b) => nearbyEnabled ? (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity) : 0), [hotspots, searchQuery, activeFilter, nearbyEnabled]);
 
   const handlePinClick = (id: string) => {
     setActivePinId(id);
@@ -69,7 +74,7 @@ export const HotspotsScreen: React.FC<HotspotsScreenProps> = ({
             type="text"
           />
           <button
-            onClick={() => showToast(externalDiscovery ? 'Showing the configured eBird region. GPS and distance sorting are not connected yet.' : 'Nearby locations are sample data. Live GPS is not connected yet.')}
+            onClick={() => onChooseLocation ? onChooseLocation() : showToast('Nearby locations are sample data. Live GPS is not connected yet.')}
             aria-label="Current location"
             className="absolute right-3 w-8 h-8 flex items-center justify-center rounded-full text-[#42493e] hover:text-[#154212] transition-colors"
           >
@@ -91,7 +96,7 @@ export const HotspotsScreen: React.FC<HotspotsScreenProps> = ({
                     : 'bg-[#f1f4f9] text-[#42493e] hover:bg-[#ebeef3]'
                 }`}
               >
-                  {externalDiscovery && filter === 'nearby' ? 'Region' : filter}
+                  {externalDiscovery && filter === 'nearby' ? nearbyEnabled ? 'Nearby (50 km)' : 'Region' : filter}
               </button>
             );
           })}
@@ -166,7 +171,7 @@ export const HotspotsScreen: React.FC<HotspotsScreenProps> = ({
           const hotspot = filteredHotspots.find((h) => h.id === id);
           if (hotspot) onSelectHotspot(hotspot);
         }} />
-        <p className="mt-2 text-[12px] text-[#42493e]">Select a pin to open its location. Popular filters by at least 15 species recorded all time. GPS and distance sorting are not connected yet.</p>
+        <p className="mt-2 text-[12px] text-[#42493e]">Select a pin to open its location. Popular filters by at least 15 species recorded all time. {nearbyEnabled ? 'Distances are straight-line estimates. Nearby uses 50 km within the configured eBird region; Popular and Saved include the whole loaded region.' : 'Choose a location for nearby filtering and distances; browsing the configured region still works.'}</p>
       </div>}
       {/* Location Cards List */}
       <div className="px-4 pt-1 flex flex-col gap-2.5">
@@ -194,7 +199,7 @@ export const HotspotsScreen: React.FC<HotspotsScreenProps> = ({
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-1 text-[12px] text-[#42493e]">
                   <span className="font-bold text-[#154212]">{hotspot.speciesCount ?? 'Unknown'} species{hotspot.source ? ' all time' : ''}</span>
                   <span className="w-1 h-1 rounded-full bg-[#c2c9bb]"></span>
-                  <span>{hotspot.distanceKm === null ? 'Distance unavailable' : `${hotspot.distanceKm} km`}</span>
+                  <span>{hotspot.distanceKm == null ? 'Distance unavailable' : `${hotspot.distanceKm.toFixed(1)} km`}</span>
                   <span className="w-1 h-1 rounded-full bg-[#c2c9bb]"></span>
                   <span>Best time: {hotspot.bestTime}</span>
                 </div>

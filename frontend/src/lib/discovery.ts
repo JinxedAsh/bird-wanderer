@@ -104,10 +104,10 @@ export interface SpeciesInformation {
   cached: boolean;
 }
 
-async function request(path: string, signal: AbortSignal) {
+async function request(path: string, signal: AbortSignal, body?: object) {
   let response: Response;
   try {
-    response = await fetch(`/api/discovery/${path}`, { signal, credentials: 'same-origin' });
+    response = await fetch(`/api/discovery/${path}`, { signal, credentials: 'same-origin', method: body ? 'POST' : 'GET', headers: body ? { 'Content-Type': 'application/json' } : undefined, body: body ? JSON.stringify(body) : undefined });
   } catch (error) {
     if (signal.aborted) throw error;
     throw new Error('Cannot reach discovery. Check your connection and try again.');
@@ -139,6 +139,13 @@ export async function loadHotspotDetails(id: string, signal: AbortSignal): Promi
 export async function loadHotspotWeather(id: string, signal: AbortSignal): Promise<HotspotWeather> {
   const data = await request(`hotspots/${encodeURIComponent(id)}/weather`, signal);
   if (data?.hotspotId !== id || data?.source !== 'Open-Meteo' || !data?.current || !Array.isArray(data?.days) || !Array.isArray(data?.hourly)) throw new Error('Unexpected hotspot weather response.');
+  return data;
+}
+
+export async function loadLocationWeather(latitude: number, longitude: number, signal: AbortSignal): Promise<Omit<HotspotWeather, 'hotspotId'>> {
+  const point = { latitude: Number(latitude.toFixed(2)), longitude: Number(longitude.toFixed(2)) };
+  const data = await request('weather', signal, point);
+  if (data?.source !== 'Open-Meteo' || data.latitude !== point.latitude || data.longitude !== point.longitude || !data.current || !Array.isArray(data.days) || !Array.isArray(data.hourly)) throw new Error('Unexpected location weather response.');
   return data;
 }
 
