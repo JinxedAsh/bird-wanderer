@@ -15,6 +15,7 @@ let authClient;
 let discoveryClient;
 let activityClient;
 let locationHelpers;
+let planningHelpers;
 
 before(async () => {
   temporaryDirectory = mkdtempSync(join(root, '.stage1-render-'));
@@ -35,6 +36,7 @@ before(async () => {
     if (module.SpeciesInformationContent) screens.SpeciesInformationContent = module.SpeciesInformationContent;
   }
   render = (name, props) => renderToStaticMarkup(createElement(screens[name], props));
+  planningHelpers = await import(pathToFileURL(join(temporaryDirectory, 'components/PhotoPlanning.mjs')).href);
   mapHelpers = await import(pathToFileURL(join(temporaryDirectory, 'lib/maps.mjs')).href);
   authClient = await import(pathToFileURL(join(temporaryDirectory, 'lib/auth.mjs')).href);
   locationHelpers = await import(pathToFileURL(join(temporaryDirectory, 'lib/location.mjs')).href);
@@ -228,7 +230,7 @@ test('photo planning remains useful with loading, failed, missing and partial ev
   const props = { speciesId: 'duck', state: { speciesId: 'duck', photo, loading: false, error: '' }, onChooseHotspot: noop };
   const partial = render('PhotoPlanning', props);
   assert.match(partial, /145 mm/);
-  assert.doesNotMatch(partial, /f\/5.6|1\/500|ISO 400|reference exposure/);
+  assert.doesNotMatch(partial.replace(/<select[\s\S]*?<\/select>/g, ''), /f\/5.6|1\/500|ISO 400|reference exposure/);
   for (const state of [{ ...props.state, speciesId: 'previous' }, { ...props.state, loading: true }]) {
     const html = render('PhotoPlanning', { ...props, state });
     assert.match(html, /Loading this species/);
@@ -237,7 +239,7 @@ test('photo planning remains useful with loading, failed, missing and partial ev
   const missing = render('PhotoPlanning', { ...props, state: { ...props.state, photo: null } });
   assert.match(missing, /No exposure or focal-length evidence/);
   assert.match(missing, /General technique guidance/);
-  assert.doesNotMatch(missing, /ISO 400|1\/500|145 mm/);
+  assert.doesNotMatch(missing.replace(/<select[\s\S]*?<\/select>/g, ''), /ISO 400|1\/500|145 mm/);
   const failed = render('PhotoPlanning', { ...props, state: { ...props.state, photo: null, error: 'Provider unavailable' } });
   assert.match(failed, /Use Retry photo above/);
   assert.match(failed, /Choose a reported hotspot/);
@@ -458,4 +460,24 @@ test('settings and header display the supplied account identity', () => {
   const header = render('Header', { currentScreen: 'explore', userProfile, onNavigate: noop, onBack: noop, showToast: noop });
   assert.match(header, /alt="Test Observer profile"/);
   assert.match(header, /src="\/observer.jpg"/);
+});
+
+
+test('exposure comparisons preserve the same-light/aperture tradeoff and reject invalid or excessive values', () => {
+  const { equivalentIso } = planningHelpers;
+  assert.equal(equivalentIso(400, 1 / 500, 1 / 2000), 1600);
+  assert.equal(equivalentIso(400, 1 / 500, 1 / 250), 200);
+  assert.equal(equivalentIso(400, 1 / 500, 1 / 500), 400);
+  for (const input of [[null, 0.002, 0.001], [400, null, 0.001], [0, 1, 1], [400, -1, 1], [400, 1, 0], [NaN, 1, 1], [400, Infinity, 1], [400, 1, NaN], [1000000, 1, 0.00001]]) assert.equal(equivalentIso(...input), null);
+});
+
+test('seasonal planning validates regional links and keeps reporting frequency distinct from recent reports and presets', () => {
+  assert.equal(planningHelpers.seasonalChartUrl('IN-DL'), 'https://ebird.org/barchart?r=IN-DL');
+  assert.equal(planningHelpers.seasonalChartUrl('US-NY-061'), 'https://ebird.org/barchart?r=US-NY-061');
+  for (const region of [undefined, '', 'Delhi NCR', 'IN-DL&x=1', 'https://example.com', '<script>']) assert.equal(planningHelpers.seasonalChartUrl(region), null);
+  const props = { speciesId: 'indrol2', speciesName: 'Indian Roller', region: 'IN-DL', state: { speciesId: 'previous', photo: null, loading: false, error: '' }, onChooseHotspot: noop };
+  const html = render('PhotoPlanning', props);
+  for (const text of ['Find Indian Roller', 'share of complete checklists', 'Historical seasonal values are not imported', 'Planned shot', 'not a measured species difficulty rating', 'Choose a test shutter', 'not an optimal preset', 'Aperture']) assert.ok(html.includes(text), text);
+  assert.match(render('PhotoPlanning', { ...props, region: undefined }), /No valid eBird region/);
+  assert.doesNotMatch(html, /equivalent ISO is approximately/);
 });

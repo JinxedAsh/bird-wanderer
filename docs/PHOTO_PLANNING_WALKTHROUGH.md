@@ -59,3 +59,7 @@ Important modules are `SpeciesPhoto` (fetch/callback/cancellation), `PhotoPlanni
 3. **How do we prevent old settings showing during navigation?** Abort stale requests, check species IDs and withhold source values during loading/errors.
 4. **What does Plan a Shot actually do?** Opens the existing guide card, then connects to real reported hotspots, weather and directions; it does not save a trip yet.
 5. **Why not derive best time from capture time?** One camera clock may be old or lack timezone, and it does not establish a species' activity pattern or today's site access.
+
+## Subsequent planning extension — 4 October 2026
+
+The [Seasonal/exposure walkthrough](SEASONAL_PLANNING_WALKTHROUGH.md) records the later regional chart references, selectable motion guidance and same-light/aperture shutter-to-ISO comparison. This initial walkthrough remains historical evidence for Entry 19. Reviewed access coverage is separately recorded in Entry 23.
