@@ -1,6 +1,10 @@
 # Bird Wanderer: agreed project context
 
-Updated 3 October 2026 (Asia/Kolkata).
+Updated 4 October 2026 (Asia/Kolkata).
+
+## Development documentation
+
+[docs/DEVELOPMENT_RECORD.md](docs/DEVELOPMENT_RECORD.md) is the main chronological, grouped record for teammates and progress reporting. Append each completed increment and material decision with its date, purpose, changes, files, checks, limitations and commit/PR evidence. Keep the current-state summary up to date and distinguish uncommitted work from delivered changes. The user intends this record to support the original project documentation; write it so a teammate can understand it without reading code.
 
 ## Living source of truth
 
