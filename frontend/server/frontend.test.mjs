@@ -17,18 +17,19 @@ let discoveryClient;
 before(async () => {
   temporaryDirectory = mkdtempSync(join(root, '.stage1-render-'));
   const screens = {};
-  const names = ['GlobalSearchScreen', 'SettingsScreen', 'SpeciesDetailScreen', 'HotspotMap', 'HotspotWeatherPanel', 'HotspotDetailScreen', 'HotspotsScreen', 'ExploreScreen', 'Header'];
+  const names = ['GlobalSearchScreen', 'SettingsScreen', 'SpeciesDetailScreen', 'SpeciesPhoto', 'HotspotMap', 'HotspotWeatherPanel', 'HotspotDetailScreen', 'HotspotsScreen', 'ExploreScreen', 'Header'];
   // Compile these existing TSX screens for Node rendering; no browser or new test framework.
   for (const relative of ['lib/useDialogFocus.ts', 'lib/maps.ts', 'lib/auth.ts', 'lib/discovery.ts', ...names.map((name) => `components/${name}.tsx`)]) {
     const output = join(temporaryDirectory, relative.replace(/\.tsx?$/, '.mjs'));
     mkdirSync(dirname(output), { recursive: true });
     const source = readFileSync(join(root, 'src', relative), 'utf8');
     const { code } = transformSync(source, { loader: 'tsx', format: 'esm', jsx: 'automatic', target: 'es2022' });
-    writeFileSync(output, code.replace('../lib/useDialogFocus"', '../lib/useDialogFocus.mjs"').replace('../lib/maps"', '../lib/maps.mjs"').replace('./HotspotMap"', './HotspotMap.mjs"').replace('./HotspotWeatherPanel"', './HotspotWeatherPanel.mjs"').replace('./auth"', './auth.mjs"'));
+    writeFileSync(output, code.replace('../lib/useDialogFocus"', '../lib/useDialogFocus.mjs"').replace('../lib/maps"', '../lib/maps.mjs"').replace('./HotspotMap"', './HotspotMap.mjs"').replace('./HotspotWeatherPanel"', './HotspotWeatherPanel.mjs"').replace('./SpeciesPhoto"', './SpeciesPhoto.mjs"').replace('../lib/discovery"', '../lib/discovery.mjs"').replace('../lib/auth"', '../lib/auth.mjs"').replace('./auth"', './auth.mjs"'));
   }
   for (const name of names) {
     const module = await import(pathToFileURL(join(temporaryDirectory, 'components', `${name}.mjs`)).href);
     screens[name] = module[name];
+    if (module.PhotoCredit) screens.PhotoCredit = module.PhotoCredit;
   }
   render = (name, props) => renderToStaticMarkup(createElement(screens[name], props));
   mapHelpers = await import(pathToFileURL(join(temporaryDirectory, 'lib/maps.mjs')).href);
@@ -45,6 +46,19 @@ after(() => {
 
 const noop = () => {};
 const searchProps = { speciesList: [], hotspots: [], posts: [], onSelectSpecies: noop, onSelectHotspot: noop, onNavigate: noop };
+
+test('photo credit retains author/licence/source and escapes supplied markup without inventing sighting or EXIF evidence', () => {
+  const photo = { title: 'File:Roller.jpg', author: '<img src=x onerror=alert(1)>', license: 'CC BY-SA 4.0', licenseUrl: 'https://creativecommons.org/licenses/by-sa/4.0/', sourceUrl: 'https://commons.wikimedia.org/wiki/File:Roller.jpg', matchUrl: 'https://www.wikidata.org/wiki/Q123', credit: 'Original creator', attribution: 'Required attribution', usageTerms: 'Creative Commons', restrictions: 'Source notice' };
+  const html = render('PhotoCredit', { photo, full: true });
+  assert.match(html, /&lt;img src=x onerror=alert\(1\)&gt;/);
+  assert.doesNotMatch(html, /<img src=x/);
+  for (const text of ['CC BY-SA 4.0', photo.licenseUrl, photo.sourceUrl, 'Original creator', 'Required attribution', 'Source notice', 'Cropped to fit', 'not evidence of a recent sighting']) assert.ok(html.includes(text), text);
+  const bird = { id: 'indrol2', name: 'Indian Roller', scientificName: 'Coracias benghalensis', source: 'eBird', image: '/discovery-placeholder.svg' };
+  const fallback = render('SpeciesPhoto', { species: bird, hero: true, frameClassName: 'photo-frame' });
+  assert.match(fallback, /Photo unavailable: Indian Roller/);
+  assert.match(fallback, /Loading species photograph/);
+  assert.doesNotMatch(fallback, /Verified Field Shot|1\/2500/);
+});
 
 test('hotspot weather presents sourced forecasts, genuine zeros, missing values, loading and retry states', () => {
   const weather = { source: 'Open-Meteo', timezone: 'Asia/Kolkata', fetchedAt: '2026-10-04T01:00:00Z', cached: true,
@@ -63,7 +77,7 @@ test('hotspot weather presents sourced forecasts, genuine zeros, missing values,
 test('protected discovery rejects ended sessions distinctly from provider/network failures and incorrect passwords', async () => {
   const previousFetch = globalThis.fetch;
   const signal = new AbortController().signal;
-  const loads = [() => discoveryClient.loadDiscovery(signal), () => discoveryClient.loadSpeciesLocations('comkin1', signal), () => discoveryClient.loadHotspotDetails('L123', signal), () => discoveryClient.loadHotspotWeather('L123', signal)];
+  const loads = [() => discoveryClient.loadDiscovery(signal), () => discoveryClient.loadSpeciesLocations('comkin1', signal), () => discoveryClient.loadHotspotDetails('L123', signal), () => discoveryClient.loadHotspotWeather('L123', signal), () => discoveryClient.loadSpeciesPhoto('comkin1', signal)];
   try {
     globalThis.fetch = async () => new Response(JSON.stringify({ error: 'Sign in required.' }), { status: 401 });
     for (const load of loads) await assert.rejects(load, authClient.SessionExpiredError);

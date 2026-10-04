@@ -19,6 +19,7 @@ Bird Wanderer brings species discovery, hotspots, photography logistics, persona
 - External discovery: worldwide species taxonomy, regional hotspots and latest regional reports from eBird, with stable source IDs, server-side key handling, a short cache and explicit error/unavailable states. Species pages link to matching hotspots, and hotspot-specific reports/all-time lists link back by species ID. Live checks passed with a local key; each installation must configure its own key.
 - Interactive hotspot maps use Leaflet and OpenStreetMap. Pins follow the displayed filters and open the selected hotspot; its detail page links to Google Maps directions using validated coordinates. Phone interaction and visual acceptance remain pending.
 - Hotspot weather uses Open-Meteo forecasts for the selected eBird location: temperature, wind, humidity, rain, cloud cover, sunrise/sunset and upcoming hourly forecasts. Photography planning tips are labelled general guidance, not photo-derived evidence or predictions of bird activity.
+- Species reference photographs in Explore, Search and species details come from Wikimedia Commons through exact scientific-name matches on Wikidata. Creator, licence and source links are displayed. Missing matches or failed images use a fallback; camera metadata extraction remains pending.
 
 ## Technology
 
@@ -97,6 +98,7 @@ All four phases are required by **20 October 2026**. Password recovery, open-pho
 - [Living project specification](https://docs.google.com/document/d/1_KcOFYP8ELQf6WegrDuPw5uNlLqqlc90Gf2x46mSUvc/edit?usp=sharing)
 - [External discovery setup and walkthrough](docs/DISCOVERY_WALKTHROUGH.md)
 - [Hotspot weather and photography planning walkthrough](docs/WEATHER_WALKTHROUGH.md)
+- [Species photographs and attribution walkthrough](docs/PHOTOS_WALKTHROUGH.md)
 - [Authentication walkthrough](docs/AUTH_WALKTHROUGH.md)
 - [Stage 1 walkthrough and manual checks](docs/STAGE_1_WALKTHROUGH.md)
 - [Design reference index](docs/design-reference/README.md)

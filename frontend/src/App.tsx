@@ -473,6 +473,7 @@ export default function App() {
 
           {currentScreen === 'explore' && (
             <ExploreScreen
+              onSessionExpired={resetSession}
               observerName={userProfile.name}
               speciesList={discovery?.species.filter((s) => s.recentObservations?.length) || []}
               externalDiscovery
@@ -527,6 +528,7 @@ export default function App() {
 
           {currentScreen === 'species-detail' && (
             <SpeciesDetailScreen
+              onSessionExpired={resetSession}
               key={selectedSpecies.id}
               species={speciesList.find((s) => s.id === selectedSpecies.id) || selectedSpecies}
               onNavigate={navigateTo}
@@ -585,6 +587,7 @@ export default function App() {
 
           {currentScreen === 'search' && (
             <GlobalSearchScreen
+              onSessionExpired={resetSession}
               externalDiscovery
               speciesList={discovery?.species || []}
               hotspots={discovery?.hotspots || []}

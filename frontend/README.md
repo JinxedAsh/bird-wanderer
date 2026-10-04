@@ -83,6 +83,14 @@ The server caches successful forecasts for 15 minutes, shares concurrent request
 
 See [Weather walkthrough](../docs/WEATHER_WALKTHROUGH.md) for design boundaries, tests and viva notes.
 
+### Species reference photographs
+
+Explore, Search and species details request photographs independently of eBird discovery. The signed-in endpoint `GET /api/discovery/species/:speciesId/photo` checks the eBird catalogue, matches its scientific name and species rank on Wikidata, then reads the associated Commons image information. No additional key is required. Server access to `www.wikidata.org` and `commons.wikimedia.org`, and browser access to `upload.wikimedia.org`/`thumb.wikimedia.org`, are needed. Restart an already-running API after adding this route.
+
+Creator, licence and Commons links accompany each photo; details retain full credit, required attribution, usage terms and source restrictions. Images are cropped to fit existing frames. Supported sources require an author and a CC BY/CC BY-SA unported licence or CC0 URL. Unsupported licences, absent photos or taxonomy mismatches give an explicit detail-page unavailable state. Provider/image failures show a fallback and details offer retry. A reference photo can be old or captive and does not prove a recent hotspot sighting.
+
+Successful matches and no-match results are cached in memory for 24 hours (300 entries); failures are not cached. Concurrent requests for the same name share work, at most three species load simultaneously, and at most 30 distinct lookups can be pending. Cards load near the viewport; changing screens aborts stale browser requests. Catalogue search remains usable while photos load. Original file URLs are retained as provenance, but binaries are not downloaded and EXIF/camera settings are not extracted in this increment. See [Photos walkthrough](../docs/PHOTOS_WALKTHROUGH.md).
+
 ## Deployment prerequisites
 
 Build the frontend, set `NODE_ENV=production`, `APP_ORIGIN` to the exact HTTPS origin, and `DATABASE_PATH` to a persistent private disk location, then run `pnpm start`. Configure the host and port for the chosen platform and serve HTTPS through its reverse proxy. The Express server serves the built frontend in production. Hosting, backups and a mail provider are not configured yet.
