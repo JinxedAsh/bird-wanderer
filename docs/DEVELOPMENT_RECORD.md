@@ -430,7 +430,7 @@ The header logo now uses a bundled SVG following the supplied green bird emblem,
 
 **Remaining limits:** no guarantee of EXIF for every photo; malformed/unsupported metadata is conservatively unavailable. Genuine browser provider-outage/retry, independent EXIF authenticity, physical phone and complete design acceptance remain pending. Neither a reference photograph nor its clock provides live sighting/GPS evidence. Later-phase prototype field-shot badges remain outside this increment.
 
-**Delivery:** prepared on `codex/external-photo-exif`; publication evidence will follow. The [EXIF walkthrough](EXIF_WALKTHROUGH.md) explains supported fields, privacy/timezone rules, acceptance checks and Viva Notes. Next: evidence-based photography logistics, keeping source-photo examples distinct from general guidance.
+**Delivery:** implementation commit `151d79e`, published on `codex/external-photo-exif` in [PR #9](https://github.com/JinxedAsh/bird-wanderer/pull/9). Local checks and the configured-key scan passed; the PR records final GitHub check/merge status, with automatic merge following passing checks under standing authorization. Private context/reviews, environment secrets and databases remain excluded. The [EXIF walkthrough](EXIF_WALKTHROUGH.md) explains supported fields, privacy/timezone rules, acceptance checks and Viva Notes. Next: evidence-based photography logistics, keeping source-photo examples distinct from general guidance.
 
 ## 4. How the current application fits together
 
