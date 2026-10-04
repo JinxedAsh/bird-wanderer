@@ -38,7 +38,8 @@ export const HotspotMap: React.FC<HotspotMapProps> = ({ hotspots, label, selecte
     import('leaflet').then((L) => {
       if (cancelled || !container.current) return;
       leafletRef.current = L;
-      map = L.map(container.current, { scrollWheelZoom: false });
+      // Avoid delayed zoom-transition callbacks after rapid navigation removes this map.
+      map = L.map(container.current, { scrollWheelZoom: false, zoomAnimation: false });
       mapRef.current = map;
       layerRef.current = L.layerGroup().addTo(map);
       L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -48,7 +49,9 @@ export const HotspotMap: React.FC<HotspotMapProps> = ({ hotspots, label, selecte
         if (!cancelled) setError('Map imagery could not load. Hotspot lists and directions remain available.');
       }).addTo(map);
       if (typeof ResizeObserver !== 'undefined') {
-        resizeObserver = new ResizeObserver(() => map?.invalidateSize());
+        resizeObserver = new ResizeObserver(() => {
+          if (!cancelled) map?.invalidateSize();
+        });
         resizeObserver.observe(container.current);
       }
       setReady(true);

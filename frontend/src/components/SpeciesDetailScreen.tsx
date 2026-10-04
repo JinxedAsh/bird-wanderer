@@ -274,7 +274,7 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
             <h3 className="text-[16px] font-bold text-[#181c20]">Field Guide & Technique</h3>
           </div>
           {species.source && <SpeciesInfoPanel key={species.id} speciesId={species.id} onSessionExpired={onSessionExpired} />}
-          {species.source ? <PhotoPlanning key={species.id} region={species.region} speciesName={species.name} speciesId={species.id} state={photoState} onChooseHotspot={() => focusSection('sightings-sheet-anchor')} /> : <p className="text-[13px] text-[#42493e] leading-relaxed">
+          {species.source ? <PhotoPlanning key={`planning-${species.id}`} region={species.region} speciesName={species.name} speciesId={species.id} state={photoState} onChooseHotspot={() => focusSection('sightings-sheet-anchor')} /> : <p className="text-[13px] text-[#42493e] leading-relaxed">
             {species.fieldGuideNotes ||
               '400mm+ recommended. Kingfishers dive rapidly from low perches; maintain shutter speed at 1/2000s or faster in morning light. Look for regular fishing perches 1–2 meters above stagnant river channels.'}
           </p>}

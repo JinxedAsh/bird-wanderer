@@ -26,9 +26,10 @@ The result is withheld without successful current-species exposure and ISO, or f
 | --- | --- |
 | frontend/src/components/PhotoPlanning.tsx | Existing EXIF guards, two local selection states, exposure ratio, validated regional chart URL and progressive disclosures. |
 | frontend/src/components/SpeciesDetailScreen.tsx | Supplies name/region, keys planning by species ID and connects the existing Best Time tile to guide focus. |
+| frontend/src/components/HotspotMap.tsx | Disable delayed animated-zoom callbacks after navigation; guard cancelled resize notifications. |
 | frontend/server/frontend.test.mjs | Exposure calculations/invalid values, safe region links and rendering regressions. |
 
-`equivalentIso` is a small pure function: the same inputs yield the same result without a request or database. `seasonalChartUrl` accepts only the provider region-code shape and constructs a fixed eBird URL. React state controls selections; keying by species ID resets them on navigation. Loading/errors/wrong-species states continue to withhold photo-derived evidence. No new API route, dependency, persistent table or duplicated photo request was added.
+`equivalentIso` is a small pure function: the same inputs yield the same result without a request or database. `seasonalChartUrl` accepts only the provider region-code shape and constructs a fixed eBird URL. React state controls selections; a planning-prefixed species key resets them on navigation and remains unique beside the species-information panel. Loading/errors/wrong-species states continue to withhold photo-derived evidence. No new API route, dependency, persistent table or duplicated photo request was added.
 
 ## Sources and requirement boundaries
 
@@ -40,9 +41,15 @@ The living specification was re-read through Google Drive on 4 October. It requi
 
 ## Verification
 
-All 77 tests, TypeScript and production build passed. New tests cover faster/slower/unchanged shutter ratios, missing/invalid/extreme input, valid/invalid region codes and separation of frequency, recent reports and preset claims. Existing missing-photo tests were adjusted to distinguish selectable test speeds from displayed source-photo evidence. Browser acceptance and delivery evidence are recorded in Development Record Entry 25.
+All 77 tests, TypeScript and production build passed. New tests cover faster/slower/unchanged shutter ratios, missing/invalid/extreme input, valid/invalid region codes and separation of frequency, recent reports and preset claims. Existing missing-photo tests were adjusted to distinguish selectable test speeds from displayed source-photo evidence. Initial browser acceptance confirmed controls and arithmetic but caught a duplicate sibling key introduced by this change. It was corrected to a planning-prefixed key, and all checks were rerun successfully. Fresh browser acceptance and the map lifecycle correction are recorded in Development Record Entry 25.
 
 Manual checks: keyboard disclosure/select operation, clearing/resetting choices, correct live arithmetic after species switching, regional/source links, 390-pixel layout and existing photo/hotspot/weather/access/saved-state behavior. A physical phone, genuine provider failures and full design comparison remain pending. Missing/partial EXIF and invalid regions have automated coverage, not forced browser-outage coverage.
+
+## Browser-discovered fixes
+
+The initial browser check caught a duplicate React sibling key: planning and species information both used the bare species ID. Planning now prefixes its key, preserving per-species reset without collisions.
+
+A separate map error reproduced three times in a fresh tab when the user pressed Enter on Zoom in and immediately activated Go back. Leaflet's delayed zoom-transition handler then accessed a removed map pane. The installed source and stack matched this lifecycle race. The embedded map now uses the public [zoomAnimation option](https://leafletjs.com/reference.html#map-zoomanimation) set to false, preserving interactive zoom without the delayed transition. Resize notifications check the cancellation flag before touching the map. No library internals or dependency version were changed. See Entry 25 for final rapid-navigation browser results; rendering tests alone do not prove this timing fix.
 
 ## Viva Notes
 
