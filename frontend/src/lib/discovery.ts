@@ -1,4 +1,5 @@
 import type { BirdSpecies, Hotspot } from '../types';
+import { SessionExpiredError } from './auth';
 
 export interface DiscoveryCatalogue {
   species: BirdSpecies[];
@@ -34,6 +35,7 @@ async function request(path: string, signal: AbortSignal) {
     if (signal.aborted) throw error;
     throw new Error('Cannot reach discovery. Check your connection and try again.');
   }
+  if (response.status === 401) throw new SessionExpiredError();
   const data = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(typeof data?.error === 'string' ? data.error : 'Discovery is unavailable. Please try again.');
   return data;

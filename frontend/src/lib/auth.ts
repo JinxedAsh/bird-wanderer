@@ -1,5 +1,9 @@
 export interface AuthUser { id: string; name: string; email: string }
 
+export class SessionExpiredError extends Error {
+  constructor() { super('Your session has ended. Please sign in again.'); }
+}
+
 async function request(path: string, body?: object): Promise<AuthUser | null> {
   let response: Response;
   try {

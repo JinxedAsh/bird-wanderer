@@ -322,6 +322,28 @@ Newer changes were found in eight existing files: frontend/.env.example, fronten
 
 **Delivery:** implementation commit `855dc55`, published on `codex/hotspot-maps` in [PR #5](https://github.com/JinxedAsh/bird-wanderer/pull/5). The PR records check/merge results; merging follows passing checks. See the [Discovery walkthrough](DISCOVERY_WALKTHROUGH.md) for manual checks and viva explanations.
 
+### Entry 15 - Browser acceptance evidence and session/header fixes
+
+- **Date:** 4 October 2026, India Standard Time.
+- **Group:** Phase 1 reliability and presentation.
+- **Status:** implemented; 30 automated tests, TypeScript checking and build passed; browser recheck of the fixes pending.
+
+**Browser evidence before these fixes:** a separate project chat tested the running application in the built-in browser. Both localhost and the computer's Wi-Fi address were accessible in that testing session; the latest flow used the Wi-Fi address. Login, incorrect-password feedback, refresh persistence after fresh login, logout, discovery, search/empty results, hotspot filtering, map-pin selection and opening its matching hotspot passed. This was a desktop browser check, not a physical-phone certification or full feature audit. Opening Google Maps directions, all touch gestures and complete design matching were not established by those actions.
+
+**Bugs identified:** an invalid session left the interface looking signed in until refresh; the externally hosted header logo appeared broken. Missing bird photos/weather/travel details are pending Phase 1 functionality, while Journal/Community demonstration data belongs to later increments.
+
+**Fixes:** protected discovery requests now raise a distinct session-expired error for the app server's HTTP 401 response. Catalogue, species-location and hotspot-detail requests clear the signed-in interface on that error. Logout reuses the same reset function, which clears user identity, discovery/detail state, temporary bookmarks and navigation. Returning to the page checks the current session through the existing `/api/auth/me` endpoint; obsolete checks cannot update a replaced session. Network/provider failures do not force logout. This does not continuously poll idle sessions: expiry is detected on a protected request or return to the page.
+
+The header logo now uses a bundled SVG following the supplied green bird emblem, removing its dependency on the unavailable external image. Header dimensions/navigation remain unchanged. Exact visual acceptance of the local asset remains pending.
+
+**Files changed:** App.tsx, lib/auth.ts, lib/discovery.ts, components/Header.tsx, public/bird-wanderer-logo.svg and server/frontend.test.mjs, plus this record and the discovery walkthrough.
+
+**Checks:** all 30 tests passed, including a new test exercising all three protected discovery clients on HTTP 401, provider HTTP 503 and network failure. Incorrect-password errors remain ordinary login errors, and `/api/auth/me` returns null for an invalid session. Existing map/authentication/discovery/proxy checks pass. TypeScript and the production build passed. The React transition and focus listener still require a browser recheck; client tests alone do not establish their interaction behavior.
+
+**Manual recheck:** end a test session in another tab, then return to the original page or trigger a discovery request; confirm login appears without refresh and old records/bookmarks disappear. Check that an isolated eBird outage does not sign the account out, fresh login still restores discovery and the header logo loads. Avoid changing real account data for this test.
+
+**Delivery:** implementation commit `29312fc`, published on `codex/session-and-brand-fixes` in [PR #6](https://github.com/JinxedAsh/bird-wanderer/pull/6). The PR records check/merge results; merging follows passing checks. Next increment: weather and sourced trip-planning information. No test-account credentials or browser screenshots are included in the repository.
+
 ## 4. How the current application fits together
 
 The interface is what the user sees and interacts with. The backend is the program that receives requests and checks account information. The database is where persistent account information is saved.

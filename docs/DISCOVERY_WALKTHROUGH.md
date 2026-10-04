@@ -116,3 +116,13 @@ TypeScript checking, all **29 tests** and the production build passed. Three new
 - **Why validate coordinates?** Missing or malformed numbers should not create misleading locations. Latitude is between -90 and 90, longitude between -180 and 180, and zero is valid.
 - **What does effect cleanup do?** It removes the map and resize observer when the component closes, avoiding leftover listeners and duplicate initialization.
 - **Are directions computed by our backend?** No. The app builds a destination URL; Google Maps handles routing. eBird provides location data, OpenStreetMap provides imagery, and Leaflet provides interaction.
+
+## 4 October 2026 - Browser evidence and reliability fixes
+
+An independent project-chat browser check passed login, incorrect-password feedback, refresh persistence, logout, discovery, search, hotspot filtering, map pin popups and opening the matching detail record. It did not establish physical-phone gestures, Google Maps opening or complete design acceptance. See Entry 15 in the development record for evidence boundaries.
+
+That check exposed a stale signed-in interface after session invalidation and a broken remotely hosted header logo. The logo is now local. Discovery's own HTTP 401 raises `SessionExpiredError`; the three loading flows call the shared `resetSession()` in App.tsx. Focus/visibility changes recheck `/api/auth/me`, with an active flag to ignore old checks and no forced logout on a network failure. Provider failures remain separate: the backend reports rejected eBird credentials as a provider error, not an app-session 401.
+
+All 30 tests, TypeScript checking and the build passed. Manual rechecking of the fixes is pending. Confirm that invalidating a disposable session returns the original page to login on focus/request, while provider failures keep the account signed in. Check fresh login/logout and the bundled header emblem.
+
+**Viva:** the browser's React state is not proof of a valid server session. HTTP 401 identifies an authentication failure from our protected endpoint. A dedicated error class lets the app handle that differently from HTTP 503 or loss of internet. Reusing one reset function keeps logout and expiry consistent; listener cleanup prevents an old check from changing a newer session.
