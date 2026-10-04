@@ -1,3 +1,5 @@
+import { normalizeExif } from './exif.mjs';
+
 export class PhotoError extends Error {
   constructor(status, message) { super(message); this.status = status; }
 }
@@ -49,7 +51,7 @@ function photoFrom(page, entityId, scientificName) {
   return { title: page.title, author, credit: text(meta.Credit?.value), attribution: text(meta.Attribution?.value),
     usageTerms: text(meta.UsageTerms?.value), restrictions: text(meta.Restrictions?.value), license, licenseUrl,
     thumbnailUrl, originalUrl, sourceUrl, source: 'Wikimedia Commons', mime: info.mime,
-    scientificName, matchedEntityId: entityId, matchUrl: `https://www.wikidata.org/wiki/${entityId}` };
+    scientificName, matchedEntityId: entityId, matchUrl: `https://www.wikidata.org/wiki/${entityId}`, exif: normalizeExif(info.metadata) };
 }
 
 // Load only requested species. Cache successful/no-match results; never let
@@ -85,7 +87,7 @@ export function createPhotoService({ fetchImpl = fetch, now = Date.now, ttl = 24
       const files = claims(entity, 'P18').filter((file) => typeof file === 'string' && file.length <= 300 && !file.includes('|')).slice(0, 3);
       if (!files.length) continue;
       const data = await request('commons.wikimedia.org', { action: 'query', formatversion: '2', prop: 'imageinfo', titles: files.map((file) => `File:${file}`).join('|'),
-        iiprop: 'url|extmetadata|mime|mediatype', iiurlwidth: '960', iiextmetadatalanguage: 'en',
+        iiprop: 'url|extmetadata|metadata|mime|mediatype', iimetadataversion: 'latest', iiurlwidth: '960', iiextmetadatalanguage: 'en',
         iiextmetadatafilter: 'Artist|Credit|Attribution|LicenseShortName|LicenseUrl|UsageTerms|Restrictions' });
       if (!Array.isArray(data.query?.pages)) throw new PhotoError(502, 'The photo provider returned unsupported file details.');
       // Retain Wikidata preference order; Commons may return pages in another order.

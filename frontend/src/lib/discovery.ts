@@ -41,6 +41,19 @@ export interface HotspotWeather {
   days: Array<{ date: string; sunrise: string | null; sunset: string | null }>;
 }
 
+export interface PhotoExif {
+  status: 'available' | 'unavailable';
+  cameraMake: string | null;
+  cameraModel: string | null;
+  lens: string | null;
+  exposureSeconds: number | null;
+  aperture: number | null;
+  iso: number | null;
+  focalLengthMm: number | null;
+  capturedAt: string | null;
+  utcOffset: string | null;
+}
+
 export interface SpeciesPhoto {
   title: string;
   author: string;
@@ -58,6 +71,7 @@ export interface SpeciesPhoto {
   scientificName: string;
   matchedEntityId: string;
   matchUrl: string;
+  exif: PhotoExif;
 }
 
 export interface SpeciesPhotoResponse {
@@ -108,5 +122,11 @@ export async function loadHotspotWeather(id: string, signal: AbortSignal): Promi
 export async function loadSpeciesPhoto(id: string, signal: AbortSignal): Promise<SpeciesPhotoResponse> {
   const data = await request(`species/${encodeURIComponent(id)}/photo`, signal);
   if (data?.speciesId !== id || !Object.hasOwn(data, 'photo') || (data.photo !== null && (data.photo?.source !== 'Wikimedia Commons' || typeof data.photo.thumbnailUrl !== 'string' || typeof data.photo.author !== 'string' || typeof data.photo.licenseUrl !== 'string'))) throw new Error('Unexpected species photo response.');
+  if (data.photo !== null) {
+    const exif = data.photo.exif;
+    if (!exif || !['available', 'unavailable'].includes(exif.status)
+      || ['cameraMake', 'cameraModel', 'lens', 'capturedAt', 'utcOffset'].some((key) => exif[key] !== null && typeof exif[key] !== 'string')
+      || ['exposureSeconds', 'aperture', 'iso', 'focalLengthMm'].some((key) => exif[key] !== null && (typeof exif[key] !== 'number' || !Number.isFinite(exif[key]) || exif[key] <= 0))) throw new Error('Unexpected species photo metadata response.');
+  }
   return data;
 }

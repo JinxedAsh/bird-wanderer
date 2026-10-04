@@ -36,6 +36,20 @@ test('photos match exact scientific species name, ignore unrelated results and r
   assert.ok(calls.every(({ options }) => options.signal && options.headers['User-Agent'].includes('BirdWanderer')));
   assert.ok(calls.every(({ url }) => !url.searchParams.has('apikey')));
   assert.equal(calls[2].url.searchParams.get('iiurlwidth'), '960');
+  assert.ok(calls[2].url.searchParams.get('iiprop').split('|').includes('metadata'));
+  assert.equal(calls[2].url.searchParams.get('iimetadataversion'), 'latest');
+  assert.equal(result.photo.exif.status, 'unavailable');
+});
+
+test('photo EXIF comes from the same selected file metadata and never description-page claims', async () => {
+  const page = file();
+  page.imageinfo[0].metadata = [{ name: 'ExposureTime', value: '1/400' }, { name: 'ISOSpeedRatings', value: 200 }, { name: 'GPSLatitude', value: 'private-coordinate' }];
+  page.imageinfo[0].extmetadata.ExposureTime = { value: '1/9999' };
+  const result = await createPhotoService({ fetchImpl: upstream([], (url) => url.hostname === 'commons.wikimedia.org' ? { query: { pages: [page] } } : undefined) }).photo('Coracias benghalensis');
+  assert.equal(result.photo.exif.exposureSeconds, 0.0025);
+  assert.equal(result.photo.exif.iso, 200);
+  assert.equal(result.photo.exif.aperture, null);
+  assert.doesNotMatch(JSON.stringify(result), /GPS|private-coordinate|9999/);
 });
 
 test('missing photos, taxonomic mismatches and deprecated claims return no match instead of another bird', async () => {

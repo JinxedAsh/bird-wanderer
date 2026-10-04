@@ -116,10 +116,10 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
         <SpeciesPhoto key={species.id} species={species} hero onSessionExpired={onSessionExpired} frameClassName="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-[#ebeef3] shadow-sm">
 
           {/* Ambient Badge */}
-          <div className="absolute bottom-3 left-3 flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/75 backdrop-blur-md text-white text-[11px] font-medium shadow-sm">
+          {!species.source && <div className="absolute bottom-3 left-3 flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/75 backdrop-blur-md text-white text-[11px] font-medium shadow-sm">
             <span className="w-2 h-2 rounded-full bg-[#fe932c] animate-pulse"></span>
-            <span>{species.source ? 'Photo metadata not connected yet' : 'Verified Field Shot • 1/2500s ƒ/5.6'}</span>
-          </div>
+            <span>Verified Field Shot • 1/2500s ƒ/5.6</span>
+          </div>}
 
           {/* Audio Visualizer Overlay Pill */}
           {isPlayingAudio && (

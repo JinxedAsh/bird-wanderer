@@ -17,14 +17,14 @@ let discoveryClient;
 before(async () => {
   temporaryDirectory = mkdtempSync(join(root, '.stage1-render-'));
   const screens = {};
-  const names = ['GlobalSearchScreen', 'SettingsScreen', 'SpeciesDetailScreen', 'SpeciesPhoto', 'HotspotMap', 'HotspotWeatherPanel', 'HotspotDetailScreen', 'HotspotsScreen', 'ExploreScreen', 'Header'];
+  const names = ['GlobalSearchScreen', 'SettingsScreen', 'SpeciesDetailScreen', 'SpeciesPhoto', 'PhotoMetadata', 'HotspotMap', 'HotspotWeatherPanel', 'HotspotDetailScreen', 'HotspotsScreen', 'ExploreScreen', 'Header'];
   // Compile these existing TSX screens for Node rendering; no browser or new test framework.
   for (const relative of ['lib/useDialogFocus.ts', 'lib/maps.ts', 'lib/auth.ts', 'lib/discovery.ts', ...names.map((name) => `components/${name}.tsx`)]) {
     const output = join(temporaryDirectory, relative.replace(/\.tsx?$/, '.mjs'));
     mkdirSync(dirname(output), { recursive: true });
     const source = readFileSync(join(root, 'src', relative), 'utf8');
     const { code } = transformSync(source, { loader: 'tsx', format: 'esm', jsx: 'automatic', target: 'es2022' });
-    writeFileSync(output, code.replace('../lib/useDialogFocus"', '../lib/useDialogFocus.mjs"').replace('../lib/maps"', '../lib/maps.mjs"').replace('./HotspotMap"', './HotspotMap.mjs"').replace('./HotspotWeatherPanel"', './HotspotWeatherPanel.mjs"').replace('./SpeciesPhoto"', './SpeciesPhoto.mjs"').replace('../lib/discovery"', '../lib/discovery.mjs"').replace('../lib/auth"', '../lib/auth.mjs"').replace('./auth"', './auth.mjs"'));
+    writeFileSync(output, code.replace('../lib/useDialogFocus"', '../lib/useDialogFocus.mjs"').replace('../lib/maps"', '../lib/maps.mjs"').replace('./HotspotMap"', './HotspotMap.mjs"').replace('./HotspotWeatherPanel"', './HotspotWeatherPanel.mjs"').replace('./SpeciesPhoto"', './SpeciesPhoto.mjs"').replace('./PhotoMetadata"', './PhotoMetadata.mjs"').replace('../lib/discovery"', '../lib/discovery.mjs"').replace('../lib/auth"', '../lib/auth.mjs"').replace('./auth"', './auth.mjs"'));
   }
   for (const name of names) {
     const module = await import(pathToFileURL(join(temporaryDirectory, 'components', `${name}.mjs`)).href);
@@ -55,9 +55,45 @@ test('photo credit retains author/licence/source and escapes supplied markup wit
   for (const text of ['CC BY-SA 4.0', photo.licenseUrl, photo.sourceUrl, 'Original creator', 'Required attribution', 'Source notice', 'Cropped to fit', 'not evidence of a recent sighting']) assert.ok(html.includes(text), text);
   const bird = { id: 'indrol2', name: 'Indian Roller', scientificName: 'Coracias benghalensis', source: 'eBird', image: '/discovery-placeholder.svg' };
   const fallback = render('SpeciesPhoto', { species: bird, hero: true, frameClassName: 'photo-frame' });
-  assert.match(fallback, /Photo unavailable: Indian Roller/);
+  assert.match(fallback, /Loading photo: Indian Roller/);
   assert.match(fallback, /Loading species photograph/);
   assert.doesNotMatch(fallback, /Verified Field Shot|1\/2500/);
+});
+
+test('reference EXIF renders recorded units, partial missing fields and a timezone disclaimer without recommendations', () => {
+  const exif = { status: 'available', cameraMake: 'NIKON CORPORATION', cameraModel: 'NIKON D300', lens: null, exposureSeconds: 0.002, aperture: 8, iso: 400, focalLengthMm: 390, capturedAt: '2011-10-11 09:27:38', utcOffset: null };
+  const html = render('PhotoMetadata', { exif });
+  for (const value of ['Reference Photo EXIF', 'NIKON D300', '1/500 s', 'f/8', '400', '390 mm', '2011-10-11 09:27:38', 'timezone unknown', 'Unavailable', 'not independently verified or recommended settings']) assert.ok(html.includes(value), value);
+  assert.doesNotMatch(html, /GPS|Verified Field Shot|Best time|recommended lens/);
+  const longExposure = render('PhotoMetadata', { exif: { ...exif, exposureSeconds: 2.5, utcOffset: '+05:30', cameraModel: '<script>steal()</script>' } });
+  assert.match(longExposure, /2.5 s/);
+  assert.match(longExposure, /UTC\+05:30/);
+  assert.match(longExposure, /&lt;script&gt;/);
+  assert.doesNotMatch(longExposure, /<script>/);
+  const decimalExposure = render('PhotoMetadata', { exif: { ...exif, exposureSeconds: 0.3 } });
+  assert.match(decimalExposure, /0.3 s/);
+  assert.doesNotMatch(decimalExposure, /1\/3 s/);
+  const missing = render('PhotoMetadata', { exif: { ...exif, status: 'unavailable' } });
+  assert.match(missing, /absent, stripped or unreadable/);
+  assert.doesNotMatch(missing, /NIKON|1\/500/);
+});
+
+test('photo client accepts normalized EXIF and rejects malformed metadata or a mismatched species', async () => {
+  const previous = globalThis.fetch;
+  const exif = { status: 'available', cameraMake: null, cameraModel: 'Camera', lens: null, exposureSeconds: 0.002, aperture: null, iso: null, focalLengthMm: null, capturedAt: null, utcOffset: null };
+  const photo = { source: 'Wikimedia Commons', thumbnailUrl: 'https://thumb.wikimedia.org/wikipedia/commons/test.jpg', author: 'Creator', licenseUrl: 'https://creativecommons.org/licenses/by/4.0/', exif };
+  try {
+    globalThis.fetch = async () => Response.json({ speciesId: 'indrol2', photo });
+    assert.equal((await discoveryClient.loadSpeciesPhoto('indrol2', new AbortController().signal)).photo.exif.cameraModel, 'Camera');
+    for (const invalid of [null, { ...exif, iso: '400' }, { ...exif, exposureSeconds: -1 }, { ...exif, status: 'verified' }]) {
+      globalThis.fetch = async () => Response.json({ speciesId: 'indrol2', photo: { ...photo, exif: invalid } });
+      await assert.rejects(discoveryClient.loadSpeciesPhoto('indrol2', new AbortController().signal), /Unexpected species photo metadata/);
+    }
+    globalThis.fetch = async () => Response.json({ speciesId: 'comkin1', photo });
+    await assert.rejects(discoveryClient.loadSpeciesPhoto('indrol2', new AbortController().signal), /Unexpected species photo response/);
+    globalThis.fetch = async () => Response.json({ speciesId: 'indrol2', photo: null });
+    assert.equal((await discoveryClient.loadSpeciesPhoto('indrol2', new AbortController().signal)).photo, null);
+  } finally { globalThis.fetch = previous; }
 });
 
 test('hotspot weather presents sourced forecasts, genuine zeros, missing values, loading and retry states', () => {
@@ -134,7 +170,7 @@ test('external species details show genuine reports without fabricated photos, c
   assert.match(html, /Test Wetland/);
   assert.match(html, /aria-label="Open hotspot Test Wetland"/);
   assert.match(html, /Status unavailable/);
-  assert.match(html, /Photo metadata not connected/);
+  assert.match(html, /Loading photo metadata/);
   assert.doesNotMatch(html, /Verified Field Shot|1\/2500|32 uploads|Okhla|Yamuna Bio-Diversity/);
 });
 

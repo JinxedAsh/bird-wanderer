@@ -1,6 +1,6 @@
 # Species photographs — Phase 1 walkthrough
 
-Implemented 4 October 2026. This is the first remaining Phase 1 increment: real species reference photographs. Extracting camera metadata from external photographs is the next increment, not part of this delivery.
+Implemented 4 October 2026. This describes Entry 17: real species reference photographs. Camera metadata was added in the subsequent Entry 18; see [EXIF walkthrough](EXIF_WALKTHROUGH.md) for current metadata behavior. Statements below about pending EXIF describe the original photograph increment.
 
 ## What teammates will see
 
