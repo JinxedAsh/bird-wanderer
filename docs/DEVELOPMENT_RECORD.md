@@ -320,7 +320,7 @@ Newer changes were found in eight existing files: frontend/.env.example, fronten
 
 **Manual checks and limits:** browser interaction verification was unavailable for this increment. Map tile loading, pan/zoom, touch, keyboard selection, pin popups, layout and opening Google Maps on a phone still need manual checks. Directions target the hotspot point, not a confirmed entry gate. GPS/distance sorting, weather, photo metadata, persistent bookmarks and Android packaging are separate work. This web build is not an APK.
 
-**Delivery:** prepared on `codex/hotspot-maps`; publication evidence will be recorded before merging. See the [Discovery walkthrough](DISCOVERY_WALKTHROUGH.md) for manual checks and viva explanations.
+**Delivery:** implementation commit `855dc55`, published on `codex/hotspot-maps` in [PR #5](https://github.com/JinxedAsh/bird-wanderer/pull/5). The PR records check/merge results; merging follows passing checks. See the [Discovery walkthrough](DISCOVERY_WALKTHROUGH.md) for manual checks and viva explanations.
 
 ## 4. How the current application fits together
 
