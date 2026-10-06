@@ -586,6 +586,20 @@ The header logo now uses a bundled SVG following the supplied green bird emblem,
 
 **Remaining:** physical-phone/permission/orientation/network acceptance, exact visual fidelity and later-screen comparison, imported seasonal/local timing evidence, measured difficulty, verified-environment/multi-photo recommendations and broader access coverage. APK remains deferred for this checkpoint. No full Phase 1 completion claim is made.
 
+### Entry 27 — Automatic temporary tunnel configuration
+
+**Date/group:** 6 October 2026 IST; Phase 1 appraisal connectivity. **Status:** implemented and automated checks passed; real public-tunnel browser acceptance pending.
+
+**Problem:** a manually started Cloudflare quick tunnel generated a hostname rejected by Vite. Allowing only the page hostname would still leave login's exact-origin check unresolved.
+
+**Change:** Start-Tunnel.ps1 / pnpm dev:tunnel starts cloudflared, reads its generated HTTPS URL and starts the existing frontend/backend with TUNNEL_ORIGIN supplied for that session. Vite development and preview accept the exact hostname; Express adds the exact HTTPS origin alongside existing localhost/LAN settings. URLs are not persisted or committed. For separately managed/named tunnels, an explicit TUNNEL_ORIGIN remains available. Normal startup without this setting keeps existing defaults. The user's renamed Test.ps1 launcher/deleted Start-Dev.ps1 are left untouched and excluded from this increment.
+
+**How it works:** the tunnel launcher captures output across chunks, waits up to 60 seconds for a quick-tunnel URL, then passes it through child-process environment variables. Exact-origin validation rejects HTTP, paths, credentials and trailing slashes. Startup/child failures stop managed processes; Ctrl+C performs cleanup, including owned child process trees on Windows. No broad allowed-host/origin wildcard or authentication bypass was added.
+
+**Files:** Start-Tunnel.ps1; frontend/scripts/tunnel.mjs; frontend/scripts/tunnel-config.mjs; frontend/vite.config.ts; frontend/server/index.mjs; frontend/server/proxy.test.mjs; frontend/package.json; frontend/.env.example; frontend/README.md; this record.
+
+**Checks:** TypeScript, all 80 automated tests and production build passed. Development/preview integration checks exercise localhost registration, exact tunnel login, accepted Host, rejected other tunnel Host and rejected other tunnel Origin. URL parsing/validation checks cover missing values and invalid origins. Actual cloudflared startup/public URL, browser cookies and shutdown still require a real tunnel rehearsal; no live tunnel-browser pass is claimed. This changes connectivity only and does not complete remaining Phase 1 requirements.
+
 ## 4. How the current application fits together
 
 The interface is what the user sees and interacts with. The backend is the program that receives requests and checks account information. The database is where persistent account information is saved.
