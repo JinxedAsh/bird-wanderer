@@ -133,4 +133,12 @@ The existing **Plan Visit & Entry Gates** disclosure supplements eBird with manu
 
 ## Deployment prerequisites
 
+### Temporary Cloudflare demo link
+
+Stop the existing app and manually started quick tunnel first. From the project root run `./Start-Tunnel.ps1`, or run `pnpm dev:tunnel` from frontend. Install cloudflared/on PATH first (CLOUDFLARED_PATH can specify its executable). This starts a quick tunnel, captures the generated HTTPS URL, then starts the app with that exact hostname allowed by Vite and that exact origin accepted by the backend. Each new run discovers its new URL; localhost and configured LAN origins continue working. No generated URL is saved in .env or committed. Ctrl+C stops the managed processes. A missing executable, early process exit or 60-second URL timeout stops startup with an error.
+
+For a named or separately started tunnel, set `TUNNEL_ORIGIN=https://your-exact-host` in .env and restart the app normally. With TUNNEL_ORIGIN supplied, dev:tunnel starts only the app and leaves the externally managed tunnel alone. Remove/clear the setting to resume automatic quick-tunnel discovery. No path/trailing slash is allowed. The launcher cannot discover the URL of an unrelated cloudflared process that was started without sharing its output.
+
+This exposes the development app through a temporary public URL for a demo, not production hosting. It grants no blanket hostname/origin exception. Existing account/session validation remains enabled. See [Cloudflare quick tunnels](https://developers.cloudflare.com/tunnel/get-started/quick-tunnels/) and [Vite host checks](https://vite.dev/config/server-options#server-allowedhosts).
+
 Build the frontend, set `NODE_ENV=production`, `APP_ORIGIN` to the exact HTTPS origin, and `DATABASE_PATH` to a persistent private disk location, then run `pnpm start`. Configure the host and port for the chosen platform and serve HTTPS through its reverse proxy. The Express server serves the built frontend in production. Hosting, backups and a mail provider are not configured yet.

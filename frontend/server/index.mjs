@@ -4,10 +4,13 @@ import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createApp } from './auth.mjs';
 import { createDiscoveryService } from './discovery.mjs';
+import { tunnelOrigin } from '../scripts/tunnel-config.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const production = process.env.NODE_ENV === 'production';
 const additionalOrigins = (process.env.ADDITIONAL_APP_ORIGINS || '').split(',').map((value) => value.trim()).filter(Boolean);
+const tunnel = tunnelOrigin(process.env.TUNNEL_ORIGIN);
+if (tunnel) additionalOrigins.push(tunnel);
 for (const origin of additionalOrigins) {
   const parsed = new URL(origin);
   if (parsed.origin !== origin || !['http:', 'https:'].includes(parsed.protocol) || (production && parsed.protocol !== 'https:')) {
