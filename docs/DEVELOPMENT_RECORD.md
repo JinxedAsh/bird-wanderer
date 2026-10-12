@@ -641,7 +641,8 @@ User's screen -> React interface -> account request -> Express backend -> SQLite
                                       |
                            session cookie returned
 
-Other current screens -> sample information and temporary React memory
+Discovery/planning screens -> Express source modules -> eBird / Wikimedia / Open-Meteo
+Later-phase prototypes -> sample information and temporary React memory
 ```
 
 In development, Vite serves the interface and forwards account requests to Express. SQLite currently stores users, sessions, authentication rate-limit records, per-account eBird saved references and bounded search history. There are no persistent sighting, journal, media, follow or alert tables. External discovery uses server-side eBird requests and a 15-minute memory cache; it does not add database tables.
@@ -661,7 +662,7 @@ React, TypeScript, Tailwind CSS, Vite, Express, Node.js 24 and SQLite remain the
 
 For demonstration, use disposable test accounts/passwords. Identify sample content honestly. An observation privacy switch is not proof that privacy is enforced by a server. A displayed photo is not proof of upload/EXIF processing. A notification card is not proof of automated delivery.
 
-Manual checks still include design comparison for all screens, mobile layout/touch behavior, the five sheets' keyboard/zoom behavior, bookmark/comment consistency, account refresh/logout in an actual browser and physical Android testing. See the Stage 1 walkthrough for the steps.
+Further acceptance includes exact final-design approval, full physical-phone touch/keyboard/orientation/permissions, genuine provider-outage recovery and production operation. Scoped core browser auth/refresh/logout, saves, maps and 320/390px checks have passed; these do not certify later-phase prototype screens or physical Android delivery.
 
 ## 6. Remaining work grouped by specification phase
 
@@ -675,7 +676,7 @@ Manual checks still include design comparison for all screens, mobile layout/tou
 
 Other incomplete existing controls include password recovery, sourced audio, entity-specific sharing/navigation and simulated messaging. Their final scope and priority should follow the specification. No additional feature should be assumed complete from its appearance in the interface.
 
-The next implementation step requires a plan that explicitly includes Android delivery.
+Android delivery remains required for final submission but is explicitly deferred from this Phase 1 increment. Follow PHASE_1_ACCEPTANCE.md for current evidence blockers and continuation dependencies.
 
 ### Known issues still requiring follow-up
 

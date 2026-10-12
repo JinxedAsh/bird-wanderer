@@ -24,7 +24,7 @@ Baseline: main d00be49, 80 tests/type/build passed 13 October. Unrelated deleted
 
 | Criterion | Latest status and evidence |
 | --- | --- |
-| Species discovery/maps/details/saves | Implemented; existing flows passed fresh browser checks. Family and reported-location search added; final browser recheck recorded below. |
+| Species discovery/maps/details/saves | Implemented; existing flows passed fresh browser checks. Final 320px family search returned 18 Rollers (saved-only Indian Roller); Yamuna matched a loaded Pied Avocet report and saved-only correctly emptied results; nonsense showed No wanderings found. No overflow/console errors. |
 | Multiple reference comparisons | Implemented: up to 3 exact P18/depicts files, credits/EXIF, individual sample denominators and readable ranges; live Roller 3/2, Kingfisher 3/3, Cassowary 2/1. Empty/single/provider failure have fixture checks only. |
 | Local timing/weather preparation | Implemented dated timezone-aware approximate light windows and explicit daylight/rain/wind preparation candidates. No bird-activity or optimal-weather claim. |
 | Seasonal activity | Partial: official Okhla narratives for Pintail/Gadwall plus Yamuna site winter context. Numerical weekly frequency blocked by Cornell authentication/export availability; normal browser confirmed sign-in required. |
@@ -45,6 +45,19 @@ The most useful next input is a legitimately downloaded eBird histogram export f
 
 Measured difficulty and verified environment matching require new trustworthy evidence or explicit requirement reconciliation. Investigate published evidence when available; do not convert general advice into an ordinal rating or attach a future forecast to historical EXIF. Remaining manual checks: full Oppo flow, genuine weak-network/provider failure, tunnel logout/recovery, operator-currentness/entrance confirmation and final design approval. Android stays deferred.
 
-Git branch: phase1-evidence-planning. Focused delivery PR/link and exact merged SHA are recorded after CI below. User's Start-Dev.ps1 deletion/Test.ps1 rename stays untouched/unpublished. All new shared files are described in PHASE_1_EVIDENCE_WALKTHROUGH.md and Development Record Entries 28–29. Read Git status and this checklist before any resumed work; do not duplicate merged work or use stale LAN/tunnel addresses.
+Git branch: phase1-evidence-planning. Delivery: [PR #22](https://github.com/JinxedAsh/bird-wanderer/pull/22); browser checks passed and merge is gated on exact final-head CI. The PR provides authoritative merge/commit status. User's Start-Dev.ps1 deletion/Test.ps1 rename stays untouched/unpublished. Read Git status and this checklist before resumed work; do not duplicate delivered work or use stale LAN/tunnel addresses.
+
+## Files in this increment (25)
+
+| Group | Files |
+| --- | --- |
+| Documentation | README.md; docs/DEVELOPMENT_RECORD.md; docs/PHASE_1_ACCEPTANCE.md (new); docs/PHASE_1_EVIDENCE_WALKTHROUGH.md (new); docs/PHASE_1_PRESENTATION.md; frontend/README.md |
+| Configuration | frontend/.env.example |
+| Backend | frontend/server/access.mjs; discovery.mjs; index.mjs; photos.mjs; seasonal.mjs (new) |
+| Tests | frontend/server/access.test.mjs; discovery.test.mjs; frontend.test.mjs; photos.test.mjs |
+| Shared frontend | frontend/src/App.tsx; frontend/src/types.ts; frontend/src/lib/discovery.ts |
+| Components | frontend/src/components/GlobalSearchScreen.tsx; HotspotAccess.tsx; HotspotWeatherPanel.tsx; PhotoPlanning.tsx; ReferenceComparisons.tsx (new); SpeciesDetailScreen.tsx |
+
+Private notes, .env credentials, databases and generated files are excluded. The final configured-key scan covered 126 shared/build files and found zero leaks. Last source verification: 89 tests, TypeScript and build passed. Browser-only and fixture-only evidence remain distinguished above.
 
 Scheduled follow-up: Resume Bird Wanderer Phase 1, every two hours. It resumes unfinished autonomous work after limits permit, and stays quiet while only unchanged evidence/manual blockers remain. Scheduler availability and the exact usage-reset moment are not guaranteed.
