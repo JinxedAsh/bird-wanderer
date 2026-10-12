@@ -118,5 +118,7 @@ All four phases are required by **20 October 2026**. Password recovery, verified
 - [Design reference index](docs/design-reference/README.md)
 - [Development and contribution guide](CONTRIBUTING.md)
 - [Runtime and deployment notes](frontend/README.md)
+- [Phase 1 acceptance and continuation](docs/PHASE_1_ACCEPTANCE.md)
+- [Multiple-reference evidence, local timing and access — Viva Notes](docs/PHASE_1_EVIDENCE_WALKTHROUGH.md)
 
 Design references come from the team's specification. Runtime prototype imagery uses external URLs and still needs a source/attribution review before public release. No project-wide open-source license has been selected; existing file-level notices are preserved.

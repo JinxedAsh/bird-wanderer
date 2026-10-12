@@ -133,6 +133,10 @@ The existing **Plan Visit & Entry Gates** disclosure supplements eBird with manu
 
 ## Deployment prerequisites
 
+### Phase 1 evidence comparisons
+
+Plan a Shot now has on-demand comparisons of up to three exact-species Commons references, preserving each licence/credit/EXIF and displaying per-field sample counts. Hotspot weather has dated local light windows and explicit forecast preparation heuristics. Neither predicts species activity or matches historical photo weather. Delhi runtime includes IN-UP-GB by default for Noida/Okhla; coverage is labelled, source regions preserved, and EBIRD_ADDITIONAL_REGIONS can be empty or up to three codes. Reviewed access adds Yamuna phases and Okhla with conflicts/historical fees/unknown permissions explicit. Scoped seasonal narratives are a limited alternative; eBird histogram export requires Cornell authentication and imported statistics remain blocked. See [Evidence walkthrough](../docs/PHASE_1_EVIDENCE_WALKTHROUGH.md) and [acceptance/continuation](../docs/PHASE_1_ACCEPTANCE.md).
+
 ### Temporary Cloudflare demo link
 
 Stop the existing app and manually started quick tunnel first. From the project root run `./Start-Tunnel.ps1`, or run `pnpm dev:tunnel` from frontend. Install cloudflared/on PATH first (CLOUDFLARED_PATH can specify its executable). This starts a quick tunnel, captures the generated HTTPS URL, then starts the app with that exact hostname allowed by Vite and that exact origin accepted by the backend. Each new run discovers its new URL; localhost and configured LAN origins continue working. No generated URL is saved in .env or committed. Ctrl+C stops the managed processes. A missing executable, early process exit or 60-second URL timeout stops startup with an error.

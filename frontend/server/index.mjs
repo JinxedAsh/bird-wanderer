@@ -8,6 +8,9 @@ import { tunnelOrigin } from '../scripts/tunnel-config.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const production = process.env.NODE_ENV === 'production';
+const discoveryRegion = process.env.EBIRD_REGION || 'IN-DL';
+// Delhi's reference-design sanctuary is across the state boundary in Noida.
+const additionalRegions = (process.env.EBIRD_ADDITIONAL_REGIONS ?? (discoveryRegion === 'IN-DL' ? 'IN-UP-GB' : '')).split(',').map((value) => value.trim()).filter(Boolean);
 const additionalOrigins = (process.env.ADDITIONAL_APP_ORIGINS || '').split(',').map((value) => value.trim()).filter(Boolean);
 const tunnel = tunnelOrigin(process.env.TUNNEL_ORIGIN);
 if (tunnel) additionalOrigins.push(tunnel);
@@ -25,7 +28,7 @@ const { app, db } = createApp({
   origin: process.env.APP_ORIGIN || 'http://localhost:3000',
   additionalOrigins,
   secureCookies: production,
-  discovery: createDiscoveryService({ apiKey: process.env.EBIRD_API_KEY, region: process.env.EBIRD_REGION || 'IN-DL' }),
+  discovery: createDiscoveryService({ apiKey: process.env.EBIRD_API_KEY, region: discoveryRegion, additionalRegions }),
 });
 if (production) {
   app.use(express.static(resolve(root, 'dist')));

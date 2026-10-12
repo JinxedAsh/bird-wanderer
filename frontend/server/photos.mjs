@@ -70,33 +70,68 @@ export function createPhotoService({ fetchImpl = fetch, now = Date.now, ttl = 24
     if (!data || typeof data !== 'object' || Array.isArray(data) || data.error) throw new PhotoError(502, 'The photo provider returned an unsupported response.');
     return data;
   }
-  async function load(scientificName) {
+  async function load(scientificName, multiple = false) {
     let matches;
     try { matches = await findSpeciesEntities(scientificName, request); }
     catch (error) { if (error instanceof PhotoError) throw error; throw new PhotoError(502, 'The photo provider returned unsupported species matches.'); }
     for (const { id, entity } of matches) {
       const files = claims(entity, 'P18').filter((file) => typeof file === 'string' && file.length <= 300 && !file.includes('|')).slice(0, 3);
+      if (multiple) {
+        // Commons structured-data search requires an explicit depicts statement
+        // for this exact species entity, rather than a name/category guess.
+        const candidates = await request('commons.wikimedia.org', { action: 'query', list: 'search', srnamespace: '6',
+          srsearch: `haswbstatement:P180=${id} filetype:bitmap`, srlimit: '5' });
+        if (!Array.isArray(candidates.query?.search)) throw new PhotoError(502, 'The photo provider returned unsupported reference matches.');
+        for (const row of candidates.query.search) {
+          if (typeof row?.title === 'string' && row.title.startsWith('File:') && row.title.length <= 305 && !row.title.includes('|')) {
+            const file = row.title.slice(5);
+            if (!files.some((existing) => existing.replaceAll('_', ' ') === file.replaceAll('_', ' '))) files.push(file);
+          }
+        }
+      }
       if (!files.length) continue;
       const data = await request('commons.wikimedia.org', { action: 'query', formatversion: '2', prop: 'imageinfo', titles: files.map((file) => `File:${file}`).join('|'),
         iiprop: 'url|extmetadata|metadata|mime|mediatype', iimetadataversion: 'latest', iiurlwidth: '960', iiextmetadatalanguage: 'en',
         iiextmetadatafilter: 'Artist|Credit|Attribution|LicenseShortName|LicenseUrl|UsageTerms|Restrictions' });
       if (!Array.isArray(data.query?.pages)) throw new PhotoError(502, 'The photo provider returned unsupported file details.');
       // Retain Wikidata preference order; Commons may return pages in another order.
+      const references = [];
       for (const file of files) {
         const page = data.query.pages.find((page) => typeof page?.title === 'string' && page.title.replaceAll('_', ' ') === `File:${file}`.replaceAll('_', ' '));
         const photo = page && photoFrom(page, id, scientificName);
-        if (photo) return photo;
+        if (photo) {
+          if (!multiple) return photo;
+          if (!references.some((reference) => reference.sourceUrl === photo.sourceUrl)) references.push(photo);
+          if (references.length === 3) break;
+        }
       }
+      if (multiple && references.length) return references;
     }
-    return null;
+    return multiple ? [] : null;
   }
-  async function limitedLoad(name) {
+  async function limitedLoad(name, multiple = false) {
     if (active >= 3) await new Promise((resolve) => waiting.push(resolve));
     else active++;
-    try { return await load(name); }
+    try { return await load(name, multiple); }
     finally { const next = waiting.shift(); if (next) next(); else active--; }
   }
   return {
+    async references(scientificName) {
+      if (typeof scientificName !== 'string' || !scientificName.trim() || scientificName.length > 200) throw new PhotoError(400, 'A valid species scientific name is required.');
+      const key = `references:${normalizeName(scientificName)}`;
+      const entry = cache.get(key);
+      if (entry && now() - entry.time < ttl) return { ...entry.data, cached: true };
+      if (!pending.has(key)) {
+        if (pending.size >= 30) throw new PhotoError(503, 'Photo lookups are busy. Please try again.');
+        pending.set(key, limitedLoad(scientificName, true).then((references) => {
+          const data = { references, fetchedAt: new Date(now()).toISOString() };
+          if (cache.size >= 300) cache.delete(cache.keys().next().value);
+          cache.set(key, { data, time: now() });
+          return data;
+        }).finally(() => pending.delete(key)));
+      }
+      return { ...await pending.get(key), cached: false };
+    },
     async photo(scientificName) {
       if (typeof scientificName !== 'string' || !scientificName.trim() || scientificName.length > 200) throw new PhotoError(400, 'A valid species scientific name is required.');
       const key = normalizeName(scientificName);

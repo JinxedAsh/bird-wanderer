@@ -16,6 +16,8 @@ export type ScreenType =
   | 'settings';
 
 export interface BirdSpecies {
+  coverageLabel?: string;
+  seasonalContext?: { checkedAt: string; location: string; text: string; sourceUrl: string; sourceLabel: string } | null;
   source?: 'eBird';
   sourceUrl?: string;
   recentObservations?: Array<{ hotspotId: string; location: string; observedAt: string }>;
@@ -87,6 +89,7 @@ export interface CommunityPost {
 
 export interface AccessFact { text: string; sources: Array<{ label: string; url: string }> }
 export interface AccessInformation {
+  seasonalActivity?: AccessFact | null;
   checkedAt: string; reviewOverdue: boolean;
   openingHours: AccessFact | null; entryFee: AccessFact | null; cameraPass: AccessFact | null; approach: AccessFact | null;
 }

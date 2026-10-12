@@ -588,7 +588,7 @@ export default function App() {
           )}
           {['explore', 'search', 'hotspots'].includes(currentScreen) && (
             <div role="status" className="mx-4 mt-2 rounded-xl bg-[#f1f4f9] p-3 text-[12px] text-[#42493e]">
-              {discoveryLoading ? 'Loading birds and hotspots from eBird...' : discoveryError || (discovery ? `eBird - ${discovery.region}. Retrieved ${new Date(discovery.fetchedAt).toLocaleString()}. Recent reports: past 14 days. ${discovery.cached ? 'Using server cache.' : ''}` : 'External discovery has not loaded.')}
+              {discoveryLoading ? 'Loading birds and hotspots from eBird...' : discoveryError || (discovery ? `eBird - ${discovery.coverageLabel || discovery.region}. Retrieved ${new Date(discovery.fetchedAt).toLocaleString()}. Recent reports: past 14 days. ${discovery.cached ? 'Using server cache.' : ''}` : 'External discovery has not loaded.')}
               {discoveryError && <button type="button" className="ml-2 font-semibold text-[#154212] underline" onClick={() => setDiscoveryAttempt((prev) => prev + 1)}>Try again</button>}
             </div>
           )}
@@ -610,7 +610,7 @@ export default function App() {
               observerName={userProfile.name}
               speciesList={exploreSpecies}
               externalDiscovery
-              discoveryRegion={discovery?.region}
+              discoveryRegion={discovery?.coverageLabel || discovery?.region}
               onSelectSpecies={handleSelectSpecies}
               onNavigate={navigateTo}
               onQuickLog={handleQuickLog}
