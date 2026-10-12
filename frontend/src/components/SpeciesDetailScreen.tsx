@@ -216,7 +216,7 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
               <span className="text-[12px] text-[#42493e]">{species.source ? 'past 14 days' : 'this week'}</span>
             </div>
             <span className="text-[12px] text-[#3b6934] font-medium truncate block">
-              {species.region || 'Delhi-NCR region'}
+              {species.coverageLabel || species.region || 'Delhi-NCR region'}
             </span>
           </div>
         </div>
@@ -229,8 +229,9 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
           </div>
           <div className="mt-2">
             <span className="text-[16px] font-bold text-[#181c20] block leading-tight">
-              {species.photographyDifficulty || (species.source ? 'Unavailable' : 'Medium')}
+              {species.photographyDifficulty || (species.source ? 'Unrated' : 'Medium')}
             </span>
+            {species.source && <button type="button" onClick={() => focusSection('photography-planning')} className="min-h-11 text-left text-[12px] font-semibold text-[#154212] underline">Check motion, light &amp; gear demands</button>}
             {!species.source && <div className="flex items-center gap-1 mt-1">
               <span className="w-3 h-1.5 rounded-full bg-[#904d00]"></span>
               <span className="w-3 h-1.5 rounded-full bg-[#904d00]"></span>
@@ -274,7 +275,7 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
             <h3 className="text-[16px] font-bold text-[#181c20]">Field Guide & Technique</h3>
           </div>
           {species.source && <SpeciesInfoPanel key={species.id} speciesId={species.id} onSessionExpired={onSessionExpired} />}
-          {species.source ? <PhotoPlanning key={`planning-${species.id}`} region={species.region} speciesName={species.name} speciesId={species.id} state={photoState} onChooseHotspot={() => focusSection('sightings-sheet-anchor')} /> : <p className="text-[13px] text-[#42493e] leading-relaxed">
+          {species.source ? <PhotoPlanning key={`planning-${species.id}`} region={species.region} seasonalContext={species.seasonalContext} speciesName={species.name} speciesId={species.id} state={photoState} onSessionExpired={onSessionExpired} onChooseHotspot={() => focusSection('sightings-sheet-anchor')} /> : <p className="text-[13px] text-[#42493e] leading-relaxed">
             {species.fieldGuideNotes ||
               '400mm+ recommended. Kingfishers dive rapidly from low perches; maintain shutter speed at 1/2000s or faster in morning light. Look for regular fishing perches 1–2 meters above stagnant river channels.'}
           </p>}

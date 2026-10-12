@@ -1,6 +1,6 @@
 # Bird Wanderer — Development Record
 
-- **Last updated:** 4 October 2026, India Standard Time (Asia/Kolkata).
+- **Last updated:** 13 October 2026, India Standard Time (Asia/Kolkata).
 - **Current project phase:** Phase 1 — core discovery and photography logistics.
 - **Required final deliverable:** an Android application/APK.
 - **Audience:** team members, evaluators and the developer; no code knowledge is required for the main sections.
@@ -42,18 +42,18 @@ Bird Wanderer helps birdwatchers and wildlife photographers discover species and
 
 | Area | Actual state |
 | --- | --- |
-| Interface | Fifteen screen components exist. Frontend corrections and accessibility improvements have been implemented. Six core screens are under direct browser/design comparison in Entry 26; exact visual and physical-device acceptance remain pending. |
+| Interface | Fifteen screen components exist. Six core screens passed scoped 320/390px browser checks. Live-document image hashes match repository references on 13 October; exact design approval and full physical-device acceptance remain pending. |
 | Accounts | Real registration, login, session restoration and logout are implemented. Accounts and sessions survive a server restart. |
 | Discovery | eBird taxonomy, regional hotspots and latest regional reports are connected; search and existing detail screens use source IDs. Live API checks passed. Species-to-hotspot links, hotspot-specific recent reports and catalogue-matched all-time species lists are connected. Manual device acceptance remains pending. |
 | Personal discovery activity | eBird bird/hotspot saved IDs and the latest ten real searches persist per account in SQLite. Existing Saved hotspot filtering and Search saved-bird filtering use the same confirmed records. See Entry 21. |
 | Species information | Credited identification, habitat and behaviour excerpts load on demand with exact taxonomy/article identity checks. Missing sections remain unavailable; local seasonal timing and difficulty are unverified. See Entry 20. |
-| Species photographs and planning | Credited Commons photos and same-file camera EXIF are connected. Plan a Shot opens the existing guide card with the selected photo's settings, conditional preparation, general technique and a hotspot/weather/directions path. The guide adds regional seasonal-chart references, shot-motion preparation and a same-light/aperture exposure comparison (Entry 25). Guidance uses one photo; imported seasonal statistics, verified environmental matching and multi-photo recommendations remain unfinished. |
+| Species photographs and planning | Credited Commons photos and same-file EXIF are connected. The hero example remains; an on-demand disclosure compares up to three exact-species references with independent sample counts/ranges/credits. Forecast light windows and explicit condition heuristics support preparation. Imported annual statistics, measured difficulty and verified historical environment matching remain unsupported; limited seasonal narratives are scoped/cited. See Entries 28–29. |
 | Nearby discovery and Explore weather | Optional one-time GPS/manual point enables 50-km filtering and nearest-first straight-line hotspot distances within the configured region. Explore uses the rounded selected point for attributed forecasts; no account location is persisted. See Entry 22. |
-| Maps and logistics | Interactive hotspot maps, coordinate-based directions and hotspot forecasts are implemented. Desktop browser checks passed pins/filtering/detail navigation, weather, coordinate directions and a 390-pixel layout. Physical-phone/outage acceptance remains pending. General photography planning tips are labelled as heuristics; missing provider metadata stays unavailable and reviewed access snapshots cover two venues while broader access coverage remains incomplete (Entry 23). |
+| Maps and logistics | Maps/directions/forecasts are implemented. Delhi also covers Gautam Buddha Nagar, explicitly labelled. Reviewed access covers four venues (Lodhi, Sunder, Yamuna I/II and three Okhla records). Conflicting hours, historical fees and unknown entrances/permissions are explicit. 320/390px browser checks passed; phone/outage acceptance remains pending. |
 | Journal, profiles and social activity | Many interactions work temporarily within the running app. Most changes are not stored for later use. |
 | Alerts and quizzes | Demonstration screens exist. Automated alerts, complete quiz progress and challenges are not delivered. |
 | Android delivery | The final APK remains required. The user deferred packaging/deployment for this Phase 1 increment; mobile web and phone-browser acceptance are the current target. No Android package has been produced or device-certified. |
-| Hosting | Local development and configurable same-network phone preview are supported. There is no public production website URL recorded. |
+| Hosting | Local/LAN and managed temporary Cloudflare previews are supported. Real HTTPS loading/login/refresh/photos/manual-location checks passed; DNS failed before final logout confirmation. No permanent production deployment or uptime guarantee exists. |
 
 Phase 1 is **not complete**. Track acceptance criteria and demonstrated behavior rather than an estimated completion percentage.
 
@@ -600,6 +600,38 @@ The header logo now uses a bundled SVG following the supplied green bird emblem,
 
 **Checks:** TypeScript, all 80 automated tests and production build passed. Development/preview integration checks exercise localhost registration, exact tunnel login, accepted Host, rejected other tunnel Host and rejected other tunnel Origin. URL parsing/validation checks cover missing values and invalid origins. Actual cloudflared startup/public URL, browser cookies and shutdown still require a real tunnel rehearsal; no live tunnel-browser pass is claimed. This changes connectivity only and does not complete remaining Phase 1 requirements.
 
+### Entry 28 — Multiple reference evidence and concrete forecast preparation
+
+**Date/group:** 13 October 2026 IST; Phase 1 only. **Status:** implemented; automated/scoped browser checks passed; publication tracked in PHASE_1_ACCEPTANCE.md.
+
+**Review:** fetched live specification through Drive (modified 5 October); Phase 1 is external discovery/logistics, personal uploads Phase 2. Downloaded current six core embedded images; their hashes match repository originals. Reference freshness is confirmed, not exact application fidelity.
+
+**Changes:** hero lookup preserved; new session/catalogue-protected references endpoint loads up to three deduplicated licensed bitmaps via exact Wikidata P18 or Commons P180 identity. Bounded cache/concurrency/retry remains. On-demand ReferenceComparisons shows independent EXIF, complete credits, per-field counts/ranges and placeholders for failed images. Existing number/shutter formatting fixes decimal tails found in browser QA. Missing values never become zero or optimal presets.
+
+**Preparation:** dated local first/last daylight-hour windows are clamped to daylight; missing/invalid times give no window. Daylight forecasts with rain <=20% and wind <=15 km/h are explicit heuristic candidates, not activity predictions. Access remains separate. Difficulty stays Unrated and links to motion/light/gear demands; no reliable measured rating or historical photo-weather match is established.
+
+**Files:** server/photos.mjs/photos.test.mjs/discovery.mjs; src/lib/discovery.ts; new ReferenceComparisons.tsx; PhotoPlanning.tsx, SpeciesDetailScreen.tsx, HotspotWeatherPanel.tsx; frontend.test.mjs; shared docs. No dependency/schema/later-phase feature added.
+
+**Checks:** final TypeScript, 89 tests and build passed. Tests cover exact depicts/dedup/EXIF, cache/retry, empty/single samples, malformed metadata/session errors, daylight boundaries and sample denominators. Test chat checked Indian Roller 3 references (2 supplying comparison EXIF), Kingfisher 3/3, Dwarf Cassowary 2/1; full attribution, keyboard, species reset, rounded ranges and no overflow at 320/390px. Auth/saves/refresh/expired sessions passed; console clean. Empty/single and provider errors have fixture evidence only, not a genuine browser outage test.
+
+**Public preview:** managed tunnel on isolated ports 3300/3301 (no .env edits) passed real HTTPS page/login/refresh/search/three Kingfisher references/manual-location weather. Logout submitted; DNS failed before fresh-tab confirmation. Final public logout/GPS/device acceptance remains unverified. No production-hosting claim.
+
+### Entry 29 — Regional coverage, seasonal alternatives and reviewed access
+
+**Date/group:** 13 October 2026 IST; Phase 1 evidence/logistics. **Status:** implemented with explicit blocked criteria.
+
+**Seasonal investigation:** normal browser loaded Delhi 2021–2025 chart; official histogram export required Cornell Lab authentication. Direct HTTP received a bot check; no bypass or invented denominator. Annual statistics remain blocked pending a legitimately obtained export/source-format/data-use review. Dated UP Ecotourism narrative supports Northern Pintail/Gadwall at Okhla Oct–Mar with separate Nov–Mar destination advice, restricted by scientific name/Delhi-UP scope/90-day expiry. Other species remain unsupported. Narrative is not numerical frequency or a guarantee.
+
+**Search:** existing name/scientific-name matching now also uses taxonomy family and loaded recent-report locations; saved filters remain. Unsupported habitats and missing-value text are not treated as searchable evidence. GlobalSearchScreen.tsx and its regression checks are included.
+
+**Coverage:** live eBird lookup confirmed IN-UP-GB. Delhi runtime adds this adjacent district so design-reference Okhla is reachable; chart scope stays IN-DL, report/discovery coverage is explicitly combined, hotspot regions remain correct. Additional codes are bounded/validated; duplicate records removed. Required-region failure cannot quietly claim complete coverage.
+
+**Access:** live IDs/names/coordinates validated Yamuna I/II and three Okhla records. Conflicting official Yamuna hours plus operator contact are displayed without assumed dawn access/free entry/permissions. Okhla hours/Monday closure and published 2010-order tariffs are cited, with prices explicitly historical. Gate-labelled points remain unverified entrances. Per-record review dates/90-day withholding preserve Lodhi/Sunder history. Hospital entry does not inherit sanctuary access.
+
+**Files:** new server/seasonal.mjs; access.mjs/access.test.mjs, discovery.mjs/discovery.test.mjs, index.mjs; src/types.ts, App.tsx, lib/discovery.ts, HotspotAccess.tsx, PhotoPlanning.tsx, SpeciesDetailScreen.tsx; .env.example; shared docs.
+
+**Checks/limits:** 89 tests/type/build passed; scoped expiry, identity/bounds and region/dedup checks included. Browser seasonal/Yamuna/Okhla search/pins/details/reports/weather/three IDs/hospital separation passed at 320/390px; console clean. Full Phase 1 remains incomplete: imported annual data, measured difficulty, verified environment matching, operator-currentness/wider access, exact design approval and physical-phone/failure acceptance. APK remains deferred. Beginner explanations and Viva questions: PHASE_1_EVIDENCE_WALKTHROUGH.md.
+
 ## 4. How the current application fits together
 
 The interface is what the user sees and interacts with. The backend is the program that receives requests and checks account information. The database is where persistent account information is saved.
@@ -609,7 +641,8 @@ User's screen -> React interface -> account request -> Express backend -> SQLite
                                       |
                            session cookie returned
 
-Other current screens -> sample information and temporary React memory
+Discovery/planning screens -> Express source modules -> eBird / Wikimedia / Open-Meteo
+Later-phase prototypes -> sample information and temporary React memory
 ```
 
 In development, Vite serves the interface and forwards account requests to Express. SQLite currently stores users, sessions, authentication rate-limit records, per-account eBird saved references and bounded search history. There are no persistent sighting, journal, media, follow or alert tables. External discovery uses server-side eBird requests and a 15-minute memory cache; it does not add database tables.
@@ -629,7 +662,7 @@ React, TypeScript, Tailwind CSS, Vite, Express, Node.js 24 and SQLite remain the
 
 For demonstration, use disposable test accounts/passwords. Identify sample content honestly. An observation privacy switch is not proof that privacy is enforced by a server. A displayed photo is not proof of upload/EXIF processing. A notification card is not proof of automated delivery.
 
-Manual checks still include design comparison for all screens, mobile layout/touch behavior, the five sheets' keyboard/zoom behavior, bookmark/comment consistency, account refresh/logout in an actual browser and physical Android testing. See the Stage 1 walkthrough for the steps.
+Further acceptance includes exact final-design approval, full physical-phone touch/keyboard/orientation/permissions, genuine provider-outage recovery and production operation. Scoped core browser auth/refresh/logout, saves, maps and 320/390px checks have passed; these do not certify later-phase prototype screens or physical Android delivery.
 
 ## 6. Remaining work grouped by specification phase
 
@@ -643,7 +676,7 @@ Manual checks still include design comparison for all screens, mobile layout/tou
 
 Other incomplete existing controls include password recovery, sourced audio, entity-specific sharing/navigation and simulated messaging. Their final scope and priority should follow the specification. No additional feature should be assumed complete from its appearance in the interface.
 
-The next implementation step requires a plan that explicitly includes Android delivery.
+Android delivery remains required for final submission but is explicitly deferred from this Phase 1 increment. Follow PHASE_1_ACCEPTANCE.md for current evidence blockers and continuation dependencies.
 
 ### Known issues still requiring follow-up
 

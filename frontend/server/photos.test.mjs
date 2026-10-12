@@ -10,6 +10,37 @@ const file = () => ({ title: 'File:Indian Roller.jpg', imageinfo: [{ mime: 'imag
   descriptionurl: 'https://commons.wikimedia.org/wiki/File:Indian_Roller.jpg',
   extmetadata: { Artist: { value: '<a href="https://example.org">A &amp; B</a>' }, Credit: { value: 'Own work' }, Attribution: { value: 'A &amp; B' }, LicenseShortName: { value: 'CC BY-SA 4.0' }, LicenseUrl: { value: 'https://creativecommons.org/licenses/by-sa/4.0/' } } }] });
 
+test('reference comparisons use exact depicts matches, distinct files and individual EXIF without replacing the hero', async () => {
+  const calls = [];
+  const second = file(); second.title = 'File:Roller flight.jpg';
+  second.imageinfo[0] = { ...second.imageinfo[0], descriptionurl: 'https://commons.wikimedia.org/wiki/File:Roller_flight.jpg', metadata: [{ name: 'ISOSpeedRatings', value: 800 }] };
+  const service = createPhotoService({ fetchImpl: upstream(calls, (url) => {
+    if (url.searchParams.get('list') === 'search') {
+      assert.equal(url.searchParams.get('srsearch'), 'haswbstatement:P180=Q2 filetype:bitmap');
+      return { query: { search: [{ title: 'File:Roller flight.jpg' }, { title: 'File:Indian_Roller.jpg' }] } };
+    }
+    if (url.hostname === 'commons.wikimedia.org') return { query: { pages: [second, file()] } };
+  }) });
+  const result = await service.references('Coracias benghalensis');
+  assert.equal(result.references.length, 2);
+  assert.equal(result.references[0].title, 'File:Indian Roller.jpg');
+  assert.equal(result.references[1].exif.iso, 800);
+  assert.equal(result.references[0].exif.iso, null);
+  const requests = calls.length;
+  assert.equal((await service.references('Coracias benghalensis')).cached, true);
+  assert.equal(calls.length, requests);
+  assert.equal((await service.photo('Coracias benghalensis')).photo.title, 'File:Indian Roller.jpg');
+});
+
+test('reference lookups reject malformed search and retry provider failures instead of caching them', async () => {
+  let fail = true;
+  const service = createPhotoService({ fetchImpl: upstream([], (url) => url.searchParams.get('list') === 'search'
+    ? fail ? { query: {} } : { query: { search: [] } } : undefined) });
+  await assert.rejects(service.references('Coracias benghalensis'), { status: 502 });
+  fail = false;
+  assert.equal((await service.references('Coracias benghalensis')).references.length, 1);
+});
+
 function upstream(calls = [], override = () => undefined) {
   return async (url, options) => {
     calls.push({ url, options });

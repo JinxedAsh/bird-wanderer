@@ -1,12 +1,12 @@
 # Phase 1 presentation and acceptance
 
-Checkpoint: Tuesday, 6 October 2026. Updated 4 October 2026. Use this as a presentation script and a repeatable acceptance checklist, alongside the chronological Development Record.
+Original checkpoint: Tuesday, 6 October 2026. Updated 13 October 2026. Use this as a presentation script and repeatable checklist, alongside the Development Record and current PHASE_1_ACCEPTANCE.md.
 
 ## What this checkpoint demonstrates
 
 Real accounts, external eBird search/species/hotspots, maps and coordinate directions, Commons photos and camera EXIF, credited species information, forecasts, optional nearby discovery, persistent account saves/search history and reviewed access for two venues. The existing guide explains its photo examples and exposure calculations.
 
-This is not a claim that every Phase 1 specification item is complete. Imported seasonal statistics, measured species difficulty, multi-photo/similar-environment recommendations, wider access coverage and full device/design/failure acceptance remain unfinished. Historical seasonal charts open externally. Exact entrances and current operator arrangements are not established by the map.
+The latest increment adds multi-photo comparisons, dated forecast light windows, scoped seasonal narratives and Yamuna/Okhla access. This is not full Phase 1 certification: imported annual statistics, measured difficulty, verified historical environmental matching and final device/design/failure acceptance remain unresolved. External chart export requires sign-in. Exact entrances/current arrangements are not established by the map.
 
 Community, journal, uploads, alerts, messaging and quiz screens contain later-phase prototypes. Avoid presenting sample counts, privacy switches or simulated controls as persistent real services. The final Android APK remains mandatory; packaging is deferred for this checkpoint.
 

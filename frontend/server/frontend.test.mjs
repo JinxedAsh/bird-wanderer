@@ -16,23 +16,29 @@ let discoveryClient;
 let activityClient;
 let locationHelpers;
 let planningHelpers;
+let weatherHelpers;
+let referenceHelpers;
+let searchHelpers;
 
 before(async () => {
   temporaryDirectory = mkdtempSync(join(root, '.stage1-render-'));
   const screens = {};
-  const names = ['AuthScreen', 'GlobalSearchScreen', 'SettingsScreen', 'SpeciesDetailScreen', 'SpeciesPhoto', 'PhotoMetadata', 'PhotoPlanning', 'SpeciesInfoPanel', 'HotspotMap', 'HotspotWeatherPanel', 'HotspotDetailScreen', 'HotspotAccess', 'HotspotsScreen', 'ExploreScreen', 'LocationPicker', 'Header'];
+  const names = ['AuthScreen', 'GlobalSearchScreen', 'SettingsScreen', 'SpeciesDetailScreen', 'SpeciesPhoto', 'PhotoMetadata', 'PhotoPlanning', 'ReferenceComparisons', 'SpeciesInfoPanel', 'HotspotMap', 'HotspotWeatherPanel', 'HotspotDetailScreen', 'HotspotAccess', 'HotspotsScreen', 'ExploreScreen', 'LocationPicker', 'Header'];
   // Compile these existing TSX screens for Node rendering; no browser or new test framework.
   for (const relative of ['lib/useDialogFocus.ts', 'lib/maps.ts', 'lib/auth.ts', 'lib/discovery.ts', 'lib/activity.ts', 'lib/location.ts', ...names.map((name) => `components/${name}.tsx`)]) {
     const output = join(temporaryDirectory, relative.replace(/\.tsx?$/, '.mjs'));
     mkdirSync(dirname(output), { recursive: true });
     const source = readFileSync(join(root, 'src', relative), 'utf8');
     const { code } = transformSync(source, { loader: 'tsx', format: 'esm', jsx: 'automatic', target: 'es2022' });
-    writeFileSync(output, code.replace('../lib/useDialogFocus"', '../lib/useDialogFocus.mjs"').replace('../lib/maps"', '../lib/maps.mjs"').replace('./HotspotMap"', './HotspotMap.mjs"').replace('./HotspotAccess"', './HotspotAccess.mjs"').replace('./HotspotWeatherPanel"', './HotspotWeatherPanel.mjs"').replace('./SpeciesPhoto"', './SpeciesPhoto.mjs"').replace('./PhotoMetadata"', './PhotoMetadata.mjs"').replace('./PhotoPlanning"', './PhotoPlanning.mjs"').replace('./SpeciesInfoPanel"', './SpeciesInfoPanel.mjs"').replace('../lib/discovery"', '../lib/discovery.mjs"').replace('../lib/auth"', '../lib/auth.mjs"').replace('./auth"', './auth.mjs"').replace('./maps"', './maps.mjs"').replace('../lib/location"', '../lib/location.mjs"'));
+    writeFileSync(output, code.replace('../lib/useDialogFocus"', '../lib/useDialogFocus.mjs"').replace('../lib/maps"', '../lib/maps.mjs"').replace('./HotspotMap"', './HotspotMap.mjs"').replace('./HotspotAccess"', './HotspotAccess.mjs"').replace('./HotspotWeatherPanel"', './HotspotWeatherPanel.mjs"').replace('./SpeciesPhoto"', './SpeciesPhoto.mjs"').replace('./PhotoMetadata"', './PhotoMetadata.mjs"').replace('./PhotoPlanning"', './PhotoPlanning.mjs"').replace('./SpeciesInfoPanel"', './SpeciesInfoPanel.mjs"').replace('./ReferenceComparisons"', './ReferenceComparisons.mjs"').replace('../lib/discovery"', '../lib/discovery.mjs"').replace('../lib/auth"', '../lib/auth.mjs"').replace('./auth"', './auth.mjs"').replace('./maps"', './maps.mjs"').replace('../lib/location"', '../lib/location.mjs"'));
   }
   for (const name of names) {
     const module = await import(pathToFileURL(join(temporaryDirectory, 'components', `${name}.mjs`)).href);
     screens[name] = module[name];
     if (module.PhotoCredit) screens.PhotoCredit = module.PhotoCredit;
+    if (module.lightWindows) weatherHelpers = module;
+    if (module.referenceRanges) referenceHelpers = module;
+    if (module.birdMatchesQuery) searchHelpers = module;
     if (module.SpeciesInformationContent) screens.SpeciesInformationContent = module.SpeciesInformationContent;
   }
   render = (name, props) => renderToStaticMarkup(createElement(screens[name], props));
@@ -507,4 +513,48 @@ test('long compact photo credits disclose the complete source text without clipp
   const short = render('PhotoCredit', { photo: { ...photo, author: 'Short author' } });
   assert.match(short, /Photo: Short author/);
   assert.doesNotMatch(short, /<details/);
+});
+
+
+test('dated light windows preserve local date, clamp short days and reject missing/invalid times', () => {
+  assert.deepEqual(weatherHelpers.lightWindows({ date: '2026-10-13', sunrise: '2026-10-13T06:20', sunset: '2026-10-13T17:50' }), { morning: '06:20\u201307:20', evening: '16:50\u201317:50' });
+  assert.deepEqual(weatherHelpers.lightWindows({ date: '2026-10-13', sunrise: '2026-10-13T06:20', sunset: '2026-10-13T06:50' }), { morning: '06:20\u201306:50', evening: '06:20\u201306:50' });
+  for (const sunrise of [null, '2026-10-12T06:20', '2026-10-13T25:20', '2026-10-13T06:99']) assert.equal(weatherHelpers.lightWindows({ date: '2026-10-13', sunrise, sunset: '2026-10-13T17:50' }), null);
+});
+
+test('photo ranges use each field denominator and never turn missing data into zero', () => {
+  const result = referenceHelpers.referenceRanges([{ exif: { iso: 200, aperture: 4, exposureSeconds: null, focalLengthMm: 300 } }, { exif: { iso: 800, aperture: null, exposureSeconds: null, focalLengthMm: 500 } }]);
+  assert.deepEqual(result[0], { field: 'iso', count: 2, min: 200, max: 800 });
+  assert.equal(result[1].count, 1);
+  assert.deepEqual(result[3], { field: 'exposureSeconds', count: 0, min: null, max: null });
+});
+
+
+test('reference client accepts empty/single samples and rejects wrong species, malformed metadata and expired sessions', async () => {
+  const previous = globalThis.fetch;
+  const signal = new AbortController().signal;
+  const exif = { status: 'unavailable', cameraMake: null, cameraModel: null, lens: null, capturedAt: null, utcOffset: null, exposureSeconds: null, aperture: null, iso: null, focalLengthMm: null };
+  const photo = { source: 'Wikimedia Commons', exif, sourceUrl: 'https://commons.wikimedia.org/wiki/File:Bird.jpg', thumbnailUrl: 'https://upload.wikimedia.org/wikipedia/commons/bird.jpg', author: 'Creator', licenseUrl: 'https://creativecommons.org/licenses/by/4.0/', license: 'CC BY 4.0', scientificName: 'Alcedo atthis', matchUrl: 'https://www.wikidata.org/wiki/Q79915', title: 'File:Bird.jpg', credit: '', attribution: '', usageTerms: '', restrictions: '' };
+  try {
+    globalThis.fetch = async () => Response.json({ speciesId: 'comkin1', references: [] });
+    assert.equal((await discoveryClient.loadSpeciesReferences('comkin1', signal)).references.length, 0);
+    globalThis.fetch = async () => Response.json({ speciesId: 'comkin1', references: [photo] });
+    assert.equal((await discoveryClient.loadSpeciesReferences('comkin1', signal)).references.length, 1);
+    for (const payload of [{ speciesId: 'wrong', references: [] }, { speciesId: 'comkin1', references: [{ ...photo, exif: { ...exif, iso: -1 } }] }, { speciesId: 'comkin1', references: [{ ...photo, author: null }] }]) {
+      globalThis.fetch = async () => Response.json(payload);
+      await assert.rejects(discoveryClient.loadSpeciesReferences('comkin1', signal), /Unexpected/);
+    }
+    globalThis.fetch = async () => Response.json({ error: 'Please sign in.' }, { status: 401 });
+    await assert.rejects(discoveryClient.loadSpeciesReferences('comkin1', signal), { name: 'Error', message: 'Your session has ended. Please sign in again.' });
+    globalThis.fetch = async () => Response.json({ error: 'Provider unavailable' }, { status: 503 });
+    await assert.rejects(discoveryClient.loadSpeciesReferences('comkin1', signal), /Provider unavailable/);
+  } finally { globalThis.fetch = previous; }
+});
+
+
+test('discovery searches existing taxonomy interest and reported location without using missing-value text', () => {
+  const bird = { name: 'Indian Roller', scientificName: 'Coracias benghalensis', orderFamily: 'Rollers', recentObservations: [{ location: 'Yamuna Biodiversity Park' }] };
+  for (const query of ['', 'coracias', 'rollers', ' YAMUNA ']) assert.equal(searchHelpers.birdMatchesQuery(bird, query), true);
+  assert.equal(searchHelpers.birdMatchesQuery(bird, 'unreported place'), false);
+  assert.equal(searchHelpers.birdMatchesQuery({ ...bird, orderFamily: 'Not available from eBird' }, 'not available'), false);
 });

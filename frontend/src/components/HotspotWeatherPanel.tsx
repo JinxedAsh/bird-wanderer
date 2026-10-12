@@ -10,6 +10,18 @@ interface HotspotWeatherPanelProps {
 const measurement = (value: number | null, unit: string) => value === null ? 'Unavailable' : `${value}${unit}`;
 const clock = (time: string | null) => time ? time.slice(11, 16) : 'Unavailable';
 
+export function lightWindows(day: HotspotWeather['days'][number]) {
+  const minutes = (time: string | null) => {
+    if (!time || !time.startsWith(`${day.date}T`) || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(time)) return null;
+    const hour = Number(time.slice(11, 13)), minute = Number(time.slice(14, 16));
+    return hour < 24 && minute < 60 ? hour * 60 + minute : null;
+  };
+  const rise = minutes(day.sunrise), set = minutes(day.sunset);
+  if (rise === null || set === null || set <= rise) return null;
+  const format = (value: number) => `${String(Math.floor(value / 60)).padStart(2, '0')}:${String(value % 60).padStart(2, '0')}`;
+  return { morning: `${format(rise)}–${format(Math.min(rise + 60, set))}`, evening: `${format(Math.max(set - 60, rise))}–${format(set)}` };
+}
+
 export const HotspotWeatherPanel: React.FC<HotspotWeatherPanelProps> = ({ weather, error, onRetry }) => {
   if (error) return <div role="alert" className="text-[12px] text-[#42493e]"><p>{error}</p><button type="button" onClick={onRetry} className="mt-2 font-semibold text-[#154212] underline">Retry weather</button></div>;
   if (!weather) return <p role="status" className="text-[12px] text-[#42493e]">Loading hotspot weather...</p>;
@@ -24,7 +36,12 @@ export const HotspotWeatherPanel: React.FC<HotspotWeatherPanelProps> = ({ weathe
           ['Cloud cover', measurement(current.cloudCoverPercent, '%')], ['Conditions', current.condition],
         ].map(([label, value]) => <div key={label} className="rounded-xl bg-[#f1f4f9] p-2.5"><p className="text-[10px] font-semibold">{label}</p><p className="text-[14px] font-bold text-[#181c20]">{value}</p></div>)}
       </div>
-      {weather.days.map((day) => <div key={day.date} className="rounded-xl bg-[#f1f4f9] p-2.5"><p className="font-semibold text-[#181c20]">{day.date}</p><p>Sunrise: {clock(day.sunrise)} • Sunset: {clock(day.sunset)}</p></div>)}
+      {weather.days.map((day) => {
+        const windows = lightWindows(day);
+        return <div key={day.date} className="rounded-xl bg-[#f1f4f9] p-2.5"><p className="font-semibold text-[#181c20]">{day.date} • {weather.timezone}</p><p>Sunrise: {clock(day.sunrise)} • Sunset: {clock(day.sunset)}</p>
+          {windows ? <p>Approximate light-planning windows: {windows.morning} and {windows.evening}. Check opening hours before choosing either.</p> : <p>Light-planning windows unavailable for this date.</p>}
+        </div>;
+      })}
       <div className="overflow-x-auto">
         <p className="mb-1 font-semibold text-[#181c20]">Next hourly forecasts (up to 6 hours)</p>
         {weather.hourly.length ? <table className="w-full text-left text-[11px]"><thead><tr><th className="py-1">Local time</th><th>Temp</th><th>Rain chance</th><th>Wind</th></tr></thead><tbody>{weather.hourly.slice(0, 6).map((row) => <tr key={row.time} className="border-t border-[#e0e3e8]"><td className="py-1.5">{row.time.slice(5).replace('T', ' ')}</td><td>{measurement(row.temperatureC, '°C')}</td><td>{measurement(row.rainProbability, '%')}</td><td>{measurement(row.windKmh, ' km/h')}</td></tr>)}</tbody></table> : <p>No upcoming hourly forecast available.</p>}
@@ -36,6 +53,10 @@ export const HotspotWeatherPanel: React.FC<HotspotWeatherPanelProps> = ({ weathe
         {(current.precipitationMm !== null && current.precipitationMm > 0) && <p>Precipitation is forecast for the current interval: pack a rain cover and check upcoming rain chances.</p>}
         {(current.cloudCoverPercent !== null && current.cloudCoverPercent >= 80) && <p>Heavy cloud may soften light; be ready to raise ISO if shutter speed drops.</p>}
         <p>These tips do not predict bird activity or prescribe camera settings. Confirm opening hours and access locally before travelling.</p>
+        <p>For a practical forecast check, compare daylight hours with rain probability ≤20% and wind ≤15 km/h. These are conservative preparation heuristics, not optimal weather or a species-specific success model. Missing measurements cannot qualify.</p>
+        {weather.hourly.filter((row) => row.rainProbability !== null && row.windKmh !== null && row.rainProbability <= 20 && row.windKmh <= 15
+          && weather.days.some((day) => day.sunrise && day.sunset && row.time >= day.sunrise && row.time <= day.sunset)).slice(0, 6).map((row) => <p key={row.time}>Forecast to consider: {row.time.replace('T', ' ')} ({weather.timezone}) • rain {row.rainProbability}% • wind {row.windKmh} km/h. Confirm access and current conditions.</p>)}
+        <p>No matching row shown means no upcoming forecast meets all checks in the available data; it does not mean photography is impossible. Rain/cloud/wind can change exposure and handling, but do not justify matching current forecasts to a reference photograph's unknown historical conditions.</p>
       </div>
       <p><a className="underline" href="https://open-meteo.com/" target="_blank" rel="noreferrer">Weather data by Open-Meteo</a> • <a className="underline" href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer">CC BY 4.0</a>. Display adapted for trip planning. Retrieved {weather.fetchedAt} (UTC){weather.cached ? ' • cached' : ''}.</p>
     </div>

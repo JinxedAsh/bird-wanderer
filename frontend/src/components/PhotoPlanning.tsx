@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import type { PhotoLoadState } from './SpeciesPhoto';
 import { formatExifNumber, formatShutter } from './PhotoMetadata';
+import { ReferenceComparisons } from './ReferenceComparisons';
+import type { BirdSpecies } from '../types';
 
 interface PhotoPlanningProps {
   speciesId: string;
@@ -8,6 +10,8 @@ interface PhotoPlanningProps {
   speciesName?: string;
   state: PhotoLoadState;
   onChooseHotspot: () => void;
+  onSessionExpired?: () => void;
+  seasonalContext?: BirdSpecies['seasonalContext'];
 }
 
 export function seasonalChartUrl(region?: string) {
@@ -21,7 +25,7 @@ export function equivalentIso(iso: number | null, referenceSeconds: number | nul
   return Number.isFinite(value) && value >= 1 && value <= 1000000 ? Math.round(value) : null;
 }
 
-export const PhotoPlanning: React.FC<PhotoPlanningProps> = ({ speciesId, region, speciesName, state, onChooseHotspot }) => {
+export const PhotoPlanning: React.FC<PhotoPlanningProps> = ({ speciesId, region, speciesName, state, onChooseHotspot, onSessionExpired, seasonalContext }) => {
   const [motion, setMotion] = useState<'perched' | 'flight'>('perched');
   const [target, setTarget] = useState('');
   const chartUrl = seasonalChartUrl(region);
@@ -54,6 +58,7 @@ export const PhotoPlanning: React.FC<PhotoPlanningProps> = ({ speciesId, region,
         {exif.focalLengthMm !== null && <p>The reference used {formatExifNumber(exif.focalLengthMm)} mm{exif.lens ? ` with ${exif.lens}` : ''}. Compare reach with your own telephoto or zoom; distance and sensor/crop are unknown, so this is not a minimum lens requirement.</p>}
         {exif.aperture !== null && <p>The recorded f/{formatExifNumber(exif.aperture)} is an example to compare, not a fixed target. Check focus and depth of field in your test shots.</p>}
       </div>}
+      <ReferenceComparisons speciesId={speciesId} onSessionExpired={onSessionExpired} />
       <details className="rounded-xl bg-[#f1f4f9] p-3">
         <summary className="cursor-pointer font-semibold text-[#181c20]">Prepare for subject motion</summary>
         <div className="mt-2 space-y-2">
@@ -78,6 +83,8 @@ export const PhotoPlanning: React.FC<PhotoPlanningProps> = ({ speciesId, region,
         <summary className="cursor-pointer font-semibold text-[#181c20]">Check regional seasonal patterns</summary>
         <div className="mt-2 space-y-2">
           {chartUrl ? <p><a href={chartUrl} target="_blank" rel="noreferrer" className="font-semibold text-[#154212] underline">Open eBird seasonal chart for {region}</a>. Find {speciesName || 'this species'} and check the chart’s location and date range.</p> : <p>No valid eBird region is available for a seasonal chart.</p>}
+          {seasonalContext ? <div className="space-y-1"><p className="font-semibold">Local narrative evidence: {seasonalContext.location}</p><p>{seasonalContext.text}</p><p className="text-[11px]">Reviewed {seasonalContext.checkedAt} • <a href={seasonalContext.sourceUrl} target="_blank" rel="noreferrer" className="underline">{seasonalContext.sourceLabel}</a></p></div> : <p>No reviewed species-specific local seasonal narrative for this selection. Use the regional chart; missing evidence does not establish absence.</p>}
+          <p>Official histogram export currently requires Cornell Lab sign-in. Imported weekly frequency and complete-checklist sample counts are not available in this app; recent reports are not used as substitutes.</p>
           <p>Compare the weekly bars across months. They describe the share of complete checklists reporting a species, not bird counts, photography quality or a sighting guarantee. An empty bar means no reports in that dataset.</p>
           <p>Recent 14-day reports are separate evidence; they do not establish an annual season or best time of day. Historical seasonal values are not imported or scored in this app.</p>
           <a href="https://support.ebird.org/en/support/solutions/articles/48001255130-ebird-bar-charts-and-graphs" target="_blank" rel="noreferrer" className="text-[11px] underline">How eBird seasonal charts work</a>

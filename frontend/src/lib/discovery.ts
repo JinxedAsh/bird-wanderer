@@ -2,6 +2,8 @@ import type { BirdSpecies, Hotspot } from '../types';
 import { SessionExpiredError } from './auth';
 
 export interface DiscoveryCatalogue {
+  coverageLabel?: string;
+  regions?: string[];
   species: BirdSpecies[];
   hotspots: Hotspot[];
   region: string;
@@ -168,5 +170,19 @@ export async function loadSpeciesInformation(id: string, signal: AbortSignal): P
   if (profile !== null && (!profile || profile.source !== 'Wikipedia' || typeof profile.summary !== 'string' || !Number.isSafeInteger(profile.revisionId) || profile.revisionId <= 0
     || ['title', 'scientificName', 'sourceUrl', 'revisionUrl', 'historyUrl', 'matchUrl', 'license', 'licenseUrl'].some((key) => typeof profile[key] !== 'string')
     || ['identification', 'habitat', 'behaviour', 'seasonality'].some((key) => profile[key] !== null && (typeof profile[key]?.heading !== 'string' || typeof profile[key]?.text !== 'string')))) throw new Error('Unexpected species information response.');
+  return data;
+}
+
+export async function loadSpeciesReferences(id: string, signal: AbortSignal): Promise<{ speciesId: string; references: SpeciesPhoto[]; fetchedAt: string; cached: boolean }> {
+  const data = await request(`species/${encodeURIComponent(id)}/references`, signal);
+  if (data?.speciesId !== id || !Array.isArray(data.references) || data.references.length > 3
+    || data.references.some((photo: SpeciesPhoto) => !photo || photo.source !== 'Wikimedia Commons' || !photo.exif
+      || ['sourceUrl', 'thumbnailUrl', 'author', 'licenseUrl', 'license', 'scientificName', 'matchUrl', 'title', 'credit', 'attribution', 'usageTerms', 'restrictions'].some((field) => typeof photo[field as keyof SpeciesPhoto] !== 'string')
+      || !['available', 'unavailable'].includes(photo.exif.status)
+      || ['cameraMake', 'cameraModel', 'lens', 'capturedAt', 'utcOffset'].some((field) => photo.exif[field as keyof PhotoExif] !== null && typeof photo.exif[field as keyof PhotoExif] !== 'string')
+      || ['exposureSeconds', 'aperture', 'iso', 'focalLengthMm'].some((key) => {
+        const value = photo.exif[key as keyof PhotoExif];
+        return value !== null && (typeof value !== 'number' || !Number.isFinite(value) || value <= 0);
+      }))) throw new Error('Unexpected reference-photo response.');
   return data;
 }

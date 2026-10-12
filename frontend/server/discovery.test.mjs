@@ -10,6 +10,22 @@ const taxonomy = [
 const locations = [{ locId: 'L123', locName: 'Test Wetland', lat: 28.5, lng: 77.2, numSpeciesAllTime: 42 }];
 const observations = [{ speciesCode: 'indrol2', comName: 'Indian Roller', sciName: 'Coracias benghalensis', locId: 'L123', locName: 'Test Wetland', obsDt: '2026-10-04 07:15', howMany: 3 }];
 
+test('adjacent coverage is explicit, deduplicated and preserves primary chart scope', async () => {
+  const service = createDiscoveryService({ apiKey: 'test', additionalRegions: ['IN-UP-GB'], fetchImpl: async (url) => {
+    if (url.pathname.includes('/ref/taxonomy/')) return Response.json(taxonomy);
+    if (url.pathname.includes('/ref/hotspot/')) return Response.json(url.pathname.endsWith('IN-UP-GB') ? [...locations, { locId: 'L2362886', locName: 'Okhla Bird Sanctuary', lat: 28.5669, lng: 77.3064 }] : locations);
+    return Response.json(observations);
+  } });
+  const data = await service.catalogue();
+  assert.equal(data.region, 'IN-DL');
+  assert.equal(data.coverageLabel, 'IN-DL + IN-UP-GB');
+  assert.equal(data.hotspots.length, 2);
+  assert.equal(data.species[0].recentObservations.length, 1);
+  assert.equal(data.hotspots.find((row) => row.id === 'L2362886').region, 'IN-UP-GB');
+  assert.match(data.hotspots.find((row) => row.id === 'L2362886').access.openingHours.text, /Mondays/);
+  assert.throws(() => createDiscoveryService({ additionalRegions: ['https://evil.example'] }));
+});
+
 test('location forecast is protected, validates coordinates and rounds independently of eBird availability', async () => {
   const calls = [];
   const discovery = createDiscoveryService({ weather: { forecast: async (...coordinates) => { calls.push(coordinates); return { source: 'Open-Meteo' }; } } });

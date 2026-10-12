@@ -18,6 +18,12 @@ interface GlobalSearchScreenProps {
   posts: CommunityPost[];
 }
 
+export function birdMatchesQuery(bird: BirdSpecies, query: string) {
+  const q = query.trim().toLowerCase();
+  const values = [bird.name, bird.scientificName, bird.orderFamily, ...(bird.recentObservations || []).map((report) => report.location)];
+  return !q || values.some((value) => typeof value === 'string' && value !== 'Not available from eBird' && value.toLowerCase().includes(q));
+}
+
 export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
   recentSearches = [],
   savedSpeciesIds = [],
@@ -47,7 +53,7 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
 
   // Matched results
   const matchingBirds = speciesList.filter(
-    (b) => (!savedOnly || savedSpeciesIds.includes(b.id)) && (!q || b.name.toLowerCase().includes(q) || b.scientificName.toLowerCase().includes(q))
+    (b) => (!savedOnly || savedSpeciesIds.includes(b.id)) && birdMatchesQuery(b, q)
   );
   const matchedBirds = matchingBirds.slice(0, 60);
 

@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { hotspotAccess } from './access.mjs';
+import { localSeasonalContext } from './seasonal.mjs';
 import { createWeatherService, WeatherError } from './weather.mjs';
 import { createPhotoService, PhotoError } from './photos.mjs';
 import { createSpeciesInfoService, SpeciesInfoError } from './species-info.mjs';
@@ -13,8 +14,11 @@ export class DiscoveryError extends Error {
 
 // One regional catalogue, shared by all users. No credentials or private observations
 // are returned to the browser. Inject fetch/time in tests instead of contacting eBird.
-export function createDiscoveryService({ apiKey = '', region = 'IN-DL', fetchImpl = fetch, now = Date.now, ttl = 15 * 60 * 1000, weather = createWeatherService(), photos = createPhotoService(), information = createSpeciesInfoService() } = {}) {
+export function createDiscoveryService({ apiKey = '', region = 'IN-DL', additionalRegions = [], fetchImpl = fetch, now = Date.now, ttl = 15 * 60 * 1000, weather = createWeatherService(), photos = createPhotoService(), information = createSpeciesInfoService() } = {}) {
   if (!/^[A-Z]{2}(?:-[A-Z0-9]{1,8}){0,2}$/.test(region)) throw new Error('EBIRD_REGION must be an eBird region code, for example IN-DL.');
+  if (!Array.isArray(additionalRegions) || additionalRegions.length > 3 || additionalRegions.some((value) => typeof value !== 'string' || !/^[A-Z]{2}(?:-[A-Z0-9]{1,8}){0,2}$/.test(value))) throw new Error('Use at most three valid additional eBird region codes.');
+  const regions = [...new Set([region, ...additionalRegions])];
+  const coverageLabel = regions.join(' + ');
   let cached;
   let pending;
   const detailCache = new Map();
@@ -63,12 +67,13 @@ export function createDiscoveryService({ apiKey = '', region = 'IN-DL', fetchImp
     return data;
   }
   async function load() {
-    const [taxonomy, locations, rawObservations] = await Promise.all([
+    const [taxonomy, locationGroups, observationGroups] = await Promise.all([
       request('ref/taxonomy/ebird', { fmt: 'json', cat: 'species', locale: 'en' }),
-      request(`ref/hotspot/${region}`, { fmt: 'json' }),
-      request(`data/obs/${region}/recent`, { back: '14', hotspot: 'true', includeProvisional: 'false', maxResults: '10000' }),
+      Promise.all(regions.map(async (code) => (await request(`ref/hotspot/${code}`, { fmt: 'json' })).map((row) => ({ ...row, coverageRegion: code })))),
+      Promise.all(regions.map((code) => request(`data/obs/${code}/recent`, { back: '14', hotspot: 'true', includeProvisional: 'false', maxResults: '10000' }))),
     ]);
-    const observations = checkReports(rawObservations);
+    const locations = [...new Map(locationGroups.flat().map((row) => [row.locId, row])).values()];
+    const observations = [...new Map(checkReports(observationGroups.flat()).map((row) => [`${row.speciesCode}:${row.locId}:${row.obsDt}`, row])).values()];
     const reportsBySpecies = new Map();
     const reportsByHotspot = new Map();
     for (const obs of observations) {
@@ -81,7 +86,8 @@ export function createDiscoveryService({ apiKey = '', region = 'IN-DL', fetchImp
       id: row.speciesCode, name: row.comName, scientificName: row.sciName,
       orderFamily: row.familyComName || row.familySciName || unavailable,
       image: placeholder, source: 'eBird', sourceUrl: `https://ebird.org/species/${encodeURIComponent(row.speciesCode)}`,
-      region, habitat: unavailable, habitatDetail: unavailable, bestTime: unavailable, bestTimeDetail: unavailable,
+      region, coverageLabel, habitat: unavailable, habitatDetail: unavailable, bestTime: unavailable, bestTimeDetail: unavailable,
+      seasonalContext: localSeasonalContext(row.sciName, region, now()),
       fieldGuideNotes: unavailable, audioCallDuration: 'Unavailable', audioCallDesc: 'Recorded calls are not connected.',
       // Recent endpoint returns latest reports, not a total sightings count.
       recentObservations: (reportsBySpecies.get(row.speciesCode) || []).map((obs) => ({
@@ -91,7 +97,7 @@ export function createDiscoveryService({ apiKey = '', region = 'IN-DL', fetchImp
     const hotspots = locations.filter((row) => row && /^L\d+$/.test(row.locId) && typeof row.locName === 'string' && Number.isFinite(row.lat) && Math.abs(row.lat) <= 90 && Number.isFinite(row.lng) && Math.abs(row.lng) <= 180).map((row) => ({
       id: row.locId, name: row.locName, source: 'eBird', sourceUrl: `https://ebird.org/hotspot/${row.locId}`,
       latitude: row.lat, longitude: row.lng, speciesCount: Number.isFinite(row.numSpeciesAllTime) ? row.numSpeciesAllTime : null,
-      distanceKm: null, bestTime: unavailable, imageUrl: placeholder, region,
+      distanceKm: null, bestTime: unavailable, imageUrl: placeholder, region: row.coverageRegion,
       coordinates: `${row.lat.toFixed(4)}, ${row.lng.toFixed(4)}`, activeTodayCount: null,
       temp: unavailable, weatherCondition: unavailable, wind: unavailable, trailDifficulty: unavailable,
       recommendedGear: unavailable, openingHours: unavailable, entryFee: unavailable, cameraPass: unavailable, transitTip: unavailable,
@@ -100,11 +106,20 @@ export function createDiscoveryService({ apiKey = '', region = 'IN-DL', fetchImp
         species: obs.comName, scientific: obs.sciName, image: placeholder, count: Number.isFinite(obs.howMany) ? obs.howMany : null, timeAgo: obs.obsDt,
       })), photos: [], speciesList: [],
     }));
-    for (const hotspot of hotspots) hotspot.access = hotspotAccess(hotspot, now());
+    for (const hotspot of hotspots) {
+      hotspot.access = hotspotAccess(hotspot, now());
+    }
     if ((taxonomy.length && !species.length) || (locations.length && !hotspots.length)) throw new DiscoveryError(502, 'eBird returned unsupported discovery records.');
-    return { species, hotspots, region, source: 'eBird', fetchedAt: new Date(now()).toISOString(), observationDays: 14 };
+    return { species, hotspots, region, coverageLabel, regions, source: 'eBird', fetchedAt: new Date(now()).toISOString(), observationDays: 14 };
   }
   const service = {
+    async speciesReferences(speciesId) {
+      if (!/^[a-z0-9]{3,16}$/.test(speciesId)) throw new DiscoveryError(400, 'Invalid species ID.');
+      const catalogue = await service.catalogue();
+      const species = catalogue.species.find((bird) => bird.id === speciesId);
+      if (!species) throw new DiscoveryError(404, 'Species not found in the eBird catalogue.');
+      return { ...await photos.references(species.scientificName), speciesId };
+    },
     async locationWeather(latitude, longitude) {
       // Round on the server too; never persist an account's device coordinates.
       if (!Number.isFinite(latitude) || Math.abs(latitude) > 90 || !Number.isFinite(longitude) || Math.abs(longitude) > 180) throw new DiscoveryError(400, 'Valid location coordinates are required.');
@@ -141,7 +156,7 @@ export function createDiscoveryService({ apiKey = '', region = 'IN-DL', fetchImp
       const catalogue = await service.catalogue();
       if (!catalogue.species.some((bird) => bird.id === speciesId)) throw new DiscoveryError(404, 'Species not found in the eBird catalogue.');
       return detail(`species:${speciesId}`, async () => {
-        const reports = checkReports(await request(`data/obs/${region}/recent/${speciesId}`, { back: '14', hotspot: 'true', includeProvisional: 'false', maxResults: '10000' }));
+        const reports = checkReports((await Promise.all(regions.map((code) => request(`data/obs/${code}/recent/${speciesId}`, { back: '14', hotspot: 'true', includeProvisional: 'false', maxResults: '10000' })))).flat());
         const knownLocations = new Map(catalogue.hotspots.map((hotspot) => [hotspot.id, hotspot]));
         if (reports.some((obs) => obs.speciesCode !== speciesId)) throw new DiscoveryError(502, 'eBird returned reports for another species.');
         const locations = reports.filter((obs) => knownLocations.has(obs.locId)).map((obs) => {
@@ -192,6 +207,7 @@ export function discoveryRouter(service) {
   router.post('/weather', send((req) => service.locationWeather(req.body?.latitude, req.body?.longitude)));
   router.get('/species/:speciesId/locations', send((req) => service.speciesLocations(req.params.speciesId)));
   router.get('/species/:speciesId/photo', send((req) => service.speciesPhoto(req.params.speciesId)));
+  router.get('/species/:speciesId/references', send((req) => service.speciesReferences(req.params.speciesId)));
   router.get('/species/:speciesId/info', send((req) => service.speciesInformation(req.params.speciesId)));
   router.get('/hotspots/:hotspotId', send((req) => service.hotspotDetails(req.params.hotspotId)));
   router.get('/hotspots/:hotspotId/weather', send((req) => service.hotspotWeather(req.params.hotspotId)));
