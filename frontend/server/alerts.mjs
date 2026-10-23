@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { randomUUID } from 'node:crypto';
 import { createPush } from './push.mjs';
+import { createOpportunities } from './opportunities.mjs';
 
 // Alert rows store references, not copies of private sighting data.
 export function createAlerts(db, discovery, { observation, canRead }, now = Date.now, pushOptions = {}) {
@@ -21,7 +22,20 @@ export function createAlerts(db, discovery, { observation, canRead }, now = Date
       started_at INTEGER NOT NULL, attempts INTEGER NOT NULL
     );
   `);
-  const push = createPush(db, { observation, canRead }, pushOptions, now);
+  // Matching is invoked only after both services are initialized.
+  let push;
+  const opportunities = createOpportunities(
+    db,
+    discovery,
+    { enqueue: (id) => push.enqueueOpportunity(id) },
+    now,
+  );
+  push = createPush(
+    db,
+    { observation, canRead, opportunityCanRead: opportunities.canRead },
+    pushOptions,
+    now,
+  );
   const subscriptions = (user) =>
     db
       .prepare(
@@ -91,7 +105,24 @@ export function createAlerts(db, discovery, { observation, canRead }, now = Date
       .all(req.userId);
     res.json({
       subscriptions: subscriptions(req.userId),
-      notifications: rows.map((row) => visibleAlert(row, req.userId)).filter(Boolean),
+      notifications: [
+        ...rows.map((row) => visibleAlert(row, req.userId)),
+        ...db
+          .prepare('SELECT * FROM opportunity_alerts WHERE user_id=? ORDER BY created_at DESC LIMIT 200')
+          .all(req.userId)
+          .map((row) => opportunities.serialize(row, req.userId)),
+      ]
+        .filter(Boolean)
+        .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+        .slice(0, 200),
+      opportunity: {
+        enabled: opportunities.enabled(req.userId),
+        checks: db
+          .prepare(
+            `SELECT c.hotspot_id AS id,c.checked_at AS checkedAt,c.status FROM opportunity_checks c JOIN alert_subscriptions s ON s.item_id=c.hotspot_id AND s.kind='hotspot' WHERE s.user_id=?`,
+          )
+          .all(req.userId),
+      },
       push: {
         ...push.publicConfig(),
         deviceRegistered: !!db
@@ -99,6 +130,14 @@ export function createAlerts(db, discovery, { observation, canRead }, now = Date
           .get(req.userId, req.sessionHash),
       },
     });
+  });
+  router.put('/opportunity', (req, res) => {
+    if (typeof req.body?.enabled !== 'boolean')
+      return res.status(400).json({ error: 'Choose whether to receive forecast opportunities.' });
+    db.prepare(
+      'INSERT INTO opportunity_preferences VALUES (?,?) ON CONFLICT(user_id) DO UPDATE SET enabled=excluded.enabled',
+    ).run(req.userId, Number(req.body.enabled));
+    res.status(204).end();
   });
   router.get('/push/config', (_req, res) => res.json(push.publicConfig()));
   router.put('/push/device', (req, res) => {
@@ -168,13 +207,33 @@ export function createAlerts(db, discovery, { observation, canRead }, now = Date
     }
   });
   router.post('/read', (req, res) => {
-    db.prepare('UPDATE sighting_alerts SET read_at=? WHERE user_id=? AND read_at IS NULL').run(
-      now(),
-      req.userId,
-    );
+    db.exec('BEGIN');
+    try {
+      db.prepare('UPDATE sighting_alerts SET read_at=? WHERE user_id=? AND read_at IS NULL').run(
+        now(),
+        req.userId,
+      );
+      db.prepare('UPDATE opportunity_alerts SET read_at=? WHERE user_id=? AND read_at IS NULL').run(
+        now(),
+        req.userId,
+      );
+      db.exec('COMMIT');
+    } catch (error) {
+      db.exec('ROLLBACK');
+      throw error;
+    }
     res.status(204).end();
   });
   router.post('/:id/read', (req, res) => {
+    if (req.params.id.startsWith('opportunity:')) {
+      const row = db
+        .prepare('SELECT * FROM opportunity_alerts WHERE id=? AND user_id=?')
+        .get(req.params.id.slice(12), req.userId);
+      if (!opportunities.canRead(row, req.userId))
+        return res.status(404).json({ error: 'Forecast opportunity is no longer available.' });
+      db.prepare('UPDATE opportunity_alerts SET read_at=COALESCE(read_at,?) WHERE id=?').run(now(), row.id);
+      return res.status(204).end();
+    }
     const row = db
       .prepare('SELECT * FROM sighting_alerts WHERE id=? AND user_id=?')
       .get(req.params.id, req.userId);
@@ -187,5 +246,5 @@ export function createAlerts(db, discovery, { observation, canRead }, now = Date
     );
     res.status(204).end();
   });
-  return { router, queue, dispatchPush: push.dispatch };
+  return { router, queue, dispatchPush: push.dispatch, checkOpportunities: opportunities.check };
 }

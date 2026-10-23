@@ -3,6 +3,9 @@ import { AppNotification, ScreenType } from '../types';
 import type { AlertSubscription } from '../lib/alerts';
 
 interface NotificationsScreenProps {
+  opportunitiesEnabled?:boolean;
+  onToggleOpportunities?:()=>void;
+  opportunityChecks?:Array<{id:string;checkedAt:number;status:'ok'|'unavailable'}>;
   pushConfigured?:boolean;
   deviceRegistered?:boolean;
   pushBusy?:boolean;
@@ -21,6 +24,7 @@ interface NotificationsScreenProps {
 }
 
 export const NotificationsScreen: React.FC<NotificationsScreenProps> = ({
+  opportunitiesEnabled=false,onToggleOpportunities,opportunityChecks=[],
   pushConfigured=false,deviceRegistered=false,pushBusy=false,onTogglePush,
   enabled=false,onToggleEnabled,subscriptions=[],onRemoveSubscription,error,onRetry,pushStatus,
   notifications,
@@ -43,6 +47,12 @@ export const NotificationsScreen: React.FC<NotificationsScreenProps> = ({
         <label className="flex min-h-11 items-center justify-between gap-2 font-semibold">Sighting alerts enabled<input type="checkbox" aria-label="Sighting alerts enabled" checked={enabled} onChange={onToggleEnabled} className="h-6 w-6" /></label>
         <p>Subscribe on species or hotspot pages. Alerts cover future visible user reports, not guaranteed sightings. Checked every 15 seconds while this app is visible.</p>
         <p className="mt-2">{pushStatus}</p>
+        <label className="mt-2 flex min-h-11 items-center justify-between gap-2 font-semibold">Photography forecast alerts<input type="checkbox" aria-label="Photography forecast alerts" checked={opportunitiesEnabled} onChange={onToggleOpportunities} className="h-6 w-6" /></label>
+        <p>Opt in for subscribed hotspots: forecast rain ≤20%, wind ≤15 km/h within the first hour after sunrise or last hour before sunset. General preparation rules, not bird activity or guaranteed light. Sighting alerts must also be enabled. At most one opportunity per hotspot/local day.</p>
+        {opportunitiesEnabled&&<details className="mt-2"><summary className="min-h-11 cursor-pointer">Forecast checks (at most hourly per hotspot)</summary>
+          {opportunityChecks.length===0&&<p>Checks pending. Subscribe to a hotspot first; weather results may be unavailable.</p>}
+          {opportunityChecks.map(check=><p key={check.id} className="my-2 break-words">{subscriptions.find(row=>row.kind==='hotspot'&&row.id===check.id)?.label||check.id}: {check.status==='ok'?'Checked; alerts require a qualifying future forecast':'Weather unavailable; other sites still checked'} · {new Date(check.checkedAt).toLocaleString()}</p>)}
+        </details>}
         {pushConfigured&&<button type="button" disabled={pushBusy} onClick={onTogglePush} className="mt-2 min-h-11 rounded-lg bg-[#2d5a27] px-3 text-white">{pushBusy?'Updating push…':deviceRegistered?'Disable push on this browser':'Enable push on this browser'}</button>}
         <details className="mt-2"><summary className="min-h-11 cursor-pointer">Manage subscriptions ({subscriptions.length})</summary>
           {subscriptions.length===0&&<p>No subscriptions yet.</p>}

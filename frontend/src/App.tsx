@@ -79,6 +79,8 @@ export default function App() {
   useEffect(() => {
     if (currentScreen !== 'community') setAlertPost(null);
   }, [currentScreen]);
+  const [opportunitiesEnabled,setOpportunitiesEnabled]=useState(false);
+  const [opportunityChecks,setOpportunityChecks]=useState<Array<{id:string;checkedAt:number;status:'ok'|'unavailable'}>>([]);
   const [deviceRegistered, setDeviceRegistered] = useState(false);
   const [pushConfigured, setPushConfigured] = useState(false);
   const [pushBusy, setPushBusy] = useState(false);
@@ -99,6 +101,7 @@ export default function App() {
         if (!controller.signal.aborted && recordsOwner.current === owner) {
           setSubscriptions(state.subscriptions);
           setNotifications(state.notifications);
+          setOpportunitiesEnabled(state.opportunity?.enabled||false);setOpportunityChecks(state.opportunity?.checks||[]);
           setPushStatus(state.push.message);
           setDeviceRegistered(state.push.deviceRegistered || false);
           setPushConfigured(state.push.configured);
@@ -232,7 +235,7 @@ export default function App() {
     setUserProfile({ ...INITIAL_USER_PROFILE, name: user.name, handle: '',bio:'',primaryRig:'',location:'',title:'Birder',avatarUrl:'/bird-wanderer-logo.svg',birdsCount:0,photosCount:0,tripsCount:0 });
     setPosts([]);
     setJournalEntries([]);
-    setNotifications([]);setSubscriptions([]);setAlertsError('');setAlertPost(null);setDeviceRegistered(false);setPushConfigured(false);setPushBusy(false);
+    setNotifications([]);setSubscriptions([]);setAlertsError('');setAlertPost(null);setDeviceRegistered(false);setPushConfigured(false);setPushBusy(false);setOpportunitiesEnabled(false);setOpportunityChecks([]);
     setSpeciesList(SPECIES_DATABASE);
     setHotspotsList(HOTSPOTS_DATA);
     setNavigationHistory([{ screen: 'explore' }]);
@@ -544,6 +547,7 @@ export default function App() {
   const handleSelectNotification = (notif: AppNotification) => {
     void changeAlert(async (signal) => {
       await alerts.read(notif.id, signal);
+      if(notif.opportunityId&&notif.hotspotId){handleSelectHotspotById(notif.hotspotId);return;}
       if (!notif.observationId) return;
       const row = await observations.get(notif.observationId, signal);
       if (signal.aborted) return;
@@ -580,7 +584,7 @@ export default function App() {
     setUserProfile(INITIAL_USER_PROFILE);
     setPosts([]);
     setJournalEntries([]);
-    setNotifications([]);setSubscriptions([]);setAlertsError('');setAlertPost(null);setDeviceRegistered(false);setPushConfigured(false);setPushBusy(false);
+    setNotifications([]);setSubscriptions([]);setAlertsError('');setAlertPost(null);setDeviceRegistered(false);setPushConfigured(false);setPushBusy(false);setOpportunitiesEnabled(false);setOpportunityChecks([]);
     setSpeciesList(SPECIES_DATABASE);
     setHotspotsList(HOTSPOTS_DATA);
     setDiscovery(null);
@@ -823,6 +827,9 @@ export default function App() {
 
           {currentScreen === 'notifications' && (
             <NotificationsScreen
+              opportunitiesEnabled={opportunitiesEnabled}
+              onToggleOpportunities={()=>void changeAlert(signal=>alerts.opportunity(!opportunitiesEnabled,signal))}
+              opportunityChecks={opportunityChecks}
               enabled={userProfile.pushAlertsEnabled}
               onToggleEnabled={()=>void handleUpdateProfile({pushAlertsEnabled:!userProfile.pushAlertsEnabled})}
               subscriptions={subscriptions}

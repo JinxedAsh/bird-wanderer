@@ -7,6 +7,10 @@ export interface AlertSubscription {
   label: string;
 }
 export interface AlertState {
+  opportunity?: {
+    enabled: boolean;
+    checks: Array<{ id: string; checkedAt: number; status: 'ok' | 'unavailable' }>;
+  };
   subscriptions: AlertSubscription[];
   notifications: AppNotification[];
   push: { configured: boolean; message: string; deviceRegistered?: boolean };
@@ -32,6 +36,7 @@ async function request(path: string, signal: AbortSignal, method = 'GET', body?:
   return data;
 }
 export const alerts = {
+  opportunity: (enabled: boolean, signal: AbortSignal) => request('/opportunity', signal, 'PUT', { enabled }),
   pushConfig: (
     signal: AbortSignal,
   ): Promise<{ configured: boolean; webConfig?: Record<string, string>; vapidKey?: string }> =>

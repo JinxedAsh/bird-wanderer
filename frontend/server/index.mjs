@@ -24,7 +24,7 @@ for (const origin of additionalOrigins) {
 if (production && !process.env.APP_ORIGIN?.startsWith('https://')) {
   throw new Error('Production requires an HTTPS APP_ORIGIN.');
 }
-const { app, db, dispatchPush } = createApp({
+const { app, db, dispatchPush,checkOpportunities } = createApp({
   push: await configuredPush(),
   dbPath: process.env.DATABASE_PATH || resolve(root, 'data/bird-wanderer.sqlite'),
   mediaPath: process.env.MEDIA_PATH || resolve(root, 'data/media'),
@@ -40,7 +40,7 @@ if (production) {
 const server = app.listen(Number(process.env.PORT || 3001), process.env.HOST || '127.0.0.1', () => {
   console.log(`Bird Wanderer API listening on port ${server.address().port}`);
 });
-const pushTimer=setInterval(()=>{void dispatchPush().catch(()=>console.error('Push dispatch failed; queued records remain retryable.'));},15000);
+const pushTimer=setInterval(()=>{void checkOpportunities().then(()=>dispatchPush()).catch(()=>console.error('Alert processing failed; queued records remain retryable.'));},15000);
 pushTimer.unref();
 for (const signal of ['SIGINT', 'SIGTERM']) process.on(signal, () => {
   clearInterval(pushTimer);
