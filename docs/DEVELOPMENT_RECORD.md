@@ -652,7 +652,7 @@ The header logo now uses a bundled SVG following the supplied green bird emblem,
 
 ### Entry 32 — Persistent community interactions and shared visibility
 
-**Date/group:** 24 October 2026 IST; Phase 2 community. **Status:** implemented locally; 94 tests/type/build pass; browser QA and GitHub delivery in progress.
+**Date/group:** 24 October 2026 IST; Phase 2 community. **Status:** implemented in PR #25 (not yet merged); 94 tests/type/build pass; browser QA and exact-head delivery in progress.
 
 **What changed and why:** connected the existing feed, Following/People/Near You filters, photographer sheet, likes/bookmarks, field-note comments and reports to SQLite. Refresh no longer resets these actions. Real profile information replaces sample photographer biographies/counts. Unsupported post weather defaults now say Unverified. Follow/unfollow uses the same authorization policy as media and records, so it grants/revokes follower-only access rather than just changing a button.
 
@@ -660,7 +660,7 @@ The header logo now uses a bundled SVG following the supplied green bird emblem,
 
 **Files/concepts:** community.mjs/community.test.mjs, observations router/client mapping, App, CommunityScreen, shared types and package test command. No new runtime dependency. See COMMUNITY_WALKTHROUGH.md for endpoints, beginner explanations and six Viva questions on persistence, idempotency, composite keys, authorization and evidence.
 
-**Verification:** 94/94 local tests pass; TypeScript and production build pass. Three-account HTTP test covers follow grants/revocation, private media denial, retry-safe likes/saves, validation/deletion/reporting, database restart, cascade cleanup, 60-write rate limit and next-window recovery. Test chat has confirmed browser People following, persisted likes/bookmarks/comments, own-comment deletion and reporting; remaining scoped checks are in progress and will be recorded before delivery.
+**Verification:** 94/94 local tests pass; TypeScript and production build pass. Three-account HTTP test covers follow grants/revocation, private media denial, retry-safe likes/saves, validation/deletion/reporting, database restart, cascade cleanup, 60-write rate limit and next-window recovery. Test chat confirmed browser People follow/unfollow, persisted likes/bookmarks/comments, both commenter/post-owner deletion, unrelated delete rejection, report state and Keep Private. HTTP checks separately confirmed media grant/revocation and third-account denial. Nearby inclusion/exclusion passed with manual points. It found 24–32px social touch targets; a scoped 44px minimum and comment input spacing fix were applied, with responsive recheck pending.
 
 **Limits:** bounded lists (50 people, 500 profile records/100 displayed records, 100 comment rows); no pagination/live sockets/moderator console yet. Native file-picker, physical-phone and real provider-outage acceptance are not proven by these tests. Alerts, retention, messages and Android remain separate upcoming work.
 

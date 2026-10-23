@@ -148,7 +148,7 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
   };
 
   return (
-    <div className="flex flex-col w-full pb-28 pt-1">
+    <div className="community-screen flex flex-col w-full pb-28 pt-1">
       {/* Search and Action Hub */}
       <div className="px-4 pt-2 pb-2 flex flex-col gap-2.5 bg-[#f7f9ff] sticky top-16 z-20">
         <div className="flex items-center gap-2">
@@ -619,7 +619,7 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
                     value={newCommentInput}
                     onChange={(e) => setNewCommentInput(e.target.value)}
                     placeholder="Add observation note..."
-                    className="w-full h-10 pl-3 pr-10 bg-[#ebeef3] text-[#181c20] placeholder:text-[#42493e]/60 text-[13px] rounded-lg focus:outline-none focus:bg-white shadow-xs transition-colors"
+                    className="w-full h-11 pl-3 pr-14 bg-[#ebeef3] text-[#181c20] placeholder:text-[#42493e]/60 text-[13px] rounded-lg focus:outline-none focus:bg-white shadow-xs transition-colors"
                   />
                   <button
                     aria-label="Submit observation note"

@@ -55,3 +55,6 @@
 }
 .hotspot-map-pin span { width: 8px; height: 8px; border-radius: 50%; background: white; }
 .hotspot-map-pin.is-selected { outline: 3px solid #fe932c; outline-offset: 2px; }
+
+/* Keep compact community icons usable as touch targets on a phone. */
+.community-screen button { min-width: 44px; min-height: 44px; }
