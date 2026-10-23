@@ -5,7 +5,7 @@ import { UserProfile, ScreenType } from '../types';
 interface SettingsScreenProps {
   email: string;
   userProfile: UserProfile;
-  onUpdateProfile: (updated: Partial<UserProfile>) => void;
+  onUpdateProfile: (updated: Partial<UserProfile>) => Promise<boolean | undefined> | void;
   onLogout: () => void;
   onNavigate: (screen: ScreenType) => void;
   showToast: (message: string) => void;
@@ -39,21 +39,21 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
     private: 'Keep private',
   };
 
-  const handleSavePrivacy = () => {
-    onUpdateProfile({ locationPrivacy: selectedOption });
+  const handleSavePrivacy = async () => {
+    if(await onUpdateProfile({ locationPrivacy: selectedOption }) === false)return;
     setIsSheetOpen(false);
     showToast('Preferences saved to field log');
   };
 
-  const handleToggleSensitive = (val: boolean) => {
+  const handleToggleSensitive = async (val: boolean) => {
+    if(await onUpdateProfile({ sensitiveSpeciesProtection: val }) === false)return;
     setSensitiveProtection(val);
-    onUpdateProfile({ sensitiveSpeciesProtection: val });
-    showToast(val ? 'Sensitive species protection enabled' : 'Protection disabled');
+    showToast('Preference saved. Exact shared locations remain protected for all species.');
   };
 
-  const handleSetVisibility = (mode: 'public' | 'followers') => {
+  const handleSetVisibility = async (mode: 'public' | 'followers') => {
+    if(await onUpdateProfile({ profileVisibility: mode }) === false)return;
     setProfileVis(mode);
-    onUpdateProfile({ profileVisibility: mode });
     showToast(`Profile visibility set to ${mode}`);
   };
 
@@ -409,7 +409,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                     </span>
                   </div>
                   <span className="text-[12px] text-[#42493e] mt-0.5 leading-snug">
-                    Recommended. Obfuscates coordinates within a 5km naturalist grid block.
+                    Recommended. Share the selected hotspot only; exact photo coordinates stay private.
                   </span>
                 </div>
               </div>
@@ -446,7 +446,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                 <div className="flex flex-col min-w-0 flex-1">
                   <span className="text-[14px] font-bold text-[#181c20]">Hide exact location</span>
                   <span className="text-[12px] text-[#42493e] mt-0.5 leading-snug">
-                    Pins report to county or district level only.
+                    Withhold the observation location from other viewers; photographs keep their visibility rules.
                   </span>
                 </div>
               </div>
@@ -483,7 +483,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                 <div className="flex flex-col min-w-0 flex-1">
                   <span className="text-[14px] font-bold text-[#181c20]">Keep private</span>
                   <span className="text-[12px] text-[#42493e] mt-0.5 leading-snug">
-                    Observations visible only to your personal life list and research exports.
+                    Observations and their photographs are visible only to your account.
                   </span>
                 </div>
               </div>

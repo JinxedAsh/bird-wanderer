@@ -25,6 +25,7 @@ if (production && !process.env.APP_ORIGIN?.startsWith('https://')) {
 }
 const { app, db } = createApp({
   dbPath: process.env.DATABASE_PATH || resolve(root, 'data/bird-wanderer.sqlite'),
+  mediaPath: process.env.MEDIA_PATH || resolve(root, 'data/media'),
   origin: process.env.APP_ORIGIN || 'http://localhost:3000',
   additionalOrigins,
   secureCookies: production,

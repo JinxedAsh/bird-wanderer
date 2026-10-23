@@ -44,7 +44,7 @@ export const LifeListScreen: React.FC<LifeListScreenProps> = ({
       <section className="px-4 pt-2 pb-2 flex flex-col gap-1">
         <div className="flex items-center justify-between">
           <div className="flex items-baseline gap-2">
-            <span className="text-[32px] font-bold text-[#181c20] tracking-tight">47</span>
+            <span className="text-[32px] font-bold text-[#181c20] tracking-tight">{speciesList.filter(item => item.isLogged).length}</span>
             <span className="text-[14px] text-[#42493e] font-semibold">species logged</span>
           </div>
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#ebeef3] text-[#154212]">
@@ -54,7 +54,7 @@ export const LifeListScreen: React.FC<LifeListScreenProps> = ({
             >
               eco
             </span>
-            <span className="text-[10px] font-bold tracking-wide uppercase">Tier III Birder</span>
+            <span className="text-[10px] font-bold tracking-wide uppercase">Personal records</span>
           </div>
         </div>
         <p className="text-[12px] text-[#42493e]">
@@ -96,7 +96,7 @@ export const LifeListScreen: React.FC<LifeListScreenProps> = ({
                 : 'bg-[#f1f4f9] text-[#181c20] hover:bg-[#ebeef3]'
             }`}
           >
-            All (47)
+            All ({speciesList.length})
           </button>
           <button
             onClick={() => setActiveFilter('photographed')}
@@ -106,7 +106,7 @@ export const LifeListScreen: React.FC<LifeListScreenProps> = ({
                 : 'bg-[#f1f4f9] text-[#181c20] hover:bg-[#ebeef3]'
             }`}
           >
-            Photographed (41)
+            Photographed ({speciesList.filter(item => item.isLogged && (item.photosCount || 0) > 0).length})
           </button>
           <button
             onClick={() => setActiveFilter('wishlist')}
@@ -116,7 +116,7 @@ export const LifeListScreen: React.FC<LifeListScreenProps> = ({
                 : 'bg-[#f1f4f9] text-[#181c20] hover:bg-[#ebeef3]'
             }`}
           >
-            Not photographed (6)
+            Not photographed ({speciesList.filter(item => item.isWishlist || (item.photosCount || 0) === 0).length})
           </button>
         </div>
       </section>
