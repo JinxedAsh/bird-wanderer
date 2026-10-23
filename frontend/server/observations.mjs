@@ -6,6 +6,7 @@ import sharp from 'sharp';
 import exifr from 'exifr';
 import { normalizeExif } from './exif.mjs';
 import { communityRouter, communityStats } from './community.mjs';
+import { createAlerts } from './alerts.mjs';
 
 const maxBytes = 10 * 1024 * 1024;
 const clean = (value, max) => (typeof value === 'string' && value.trim().length <= max ? value.trim() : null);
@@ -42,7 +43,7 @@ async function sanitizeImage(bytes) {
 export function observationsRouter(
   db,
   discovery,
-  { mediaPath = resolve('data/media'), now = Date.now, processImage = sanitizeImage } = {},
+  { mediaPath = resolve('data/media'), now = Date.now, processImage = sanitizeImage, push } = {},
 ) {
   db.exec(`
     CREATE TABLE IF NOT EXISTS profiles (
@@ -167,6 +168,9 @@ export function observationsRouter(
     };
   };
   router.use('/social',communityRouter(db,{observation,canRead,serialize},now));
+  const alerts = createAlerts(db, discovery, { observation, canRead }, now, push);
+  router.dispatchPush = alerts.dispatchPush;
+  router.use('/alerts', alerts.router);
   router.get(
     '/profile',
     route((req, res) => res.json({ profile: profile(req.userId) })),
@@ -471,22 +475,33 @@ export function observationsRouter(
       if (!species || !hotspot)
         throw fail(400, 'Choose a species and hotspot from the current discovery catalogue.');
       const id = randomUUID();
-      db.prepare('INSERT INTO observations VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)').run(
-        id,
-        req.userId,
-        body.mediaId,
-        species.id,
-        species.name,
-        species.scientificName,
-        hotspot.id,
-        hotspot.name,
-        body.observedAt,
-        body.notes.trim(),
-        body.visibility,
-        Number(body.hideExactLocation),
-        1,
-        now(),
-      );
+      // No await inside this transaction: the sighting and its matched alerts commit together.
+      db.exec('BEGIN');
+      try {
+        db.prepare('INSERT INTO observations VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)').run(
+          id,
+          req.userId,
+          body.mediaId,
+          species.id,
+          species.name,
+          species.scientificName,
+          hotspot.id,
+          hotspot.name,
+          body.observedAt,
+          body.notes.trim(),
+          body.visibility,
+          Number(body.hideExactLocation),
+          1,
+          now(),
+        );
+        alerts.queue(observation(id));
+        db.exec('COMMIT');
+      } catch (error) {
+        db.exec('ROLLBACK');
+        if (db.prepare('SELECT 1 FROM observations WHERE media_id=?').get(body.mediaId))
+          throw fail(409, 'This photograph is already attached to an observation. Refresh your journal before retrying.');
+        throw error;
+      }
       res
         .status(201)
         .json({ observation: serialize(observation(id), req.userId), profile: profile(req.userId) });

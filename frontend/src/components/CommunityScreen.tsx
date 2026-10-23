@@ -4,6 +4,7 @@ import { useDialogFocus } from '../lib/useDialogFocus';
 import type { PublicBirder } from '../lib/observations';
 
 interface CommunityScreenProps {
+  openPost?: {id:string;request:number}|null;
   people?: PublicBirder[];
   onToggleFollow?: (id: string, following: boolean) => Promise<boolean | undefined>;
   onPersonDetails?: (id: string) => Promise<PublicBirder>;
@@ -21,6 +22,7 @@ interface CommunityScreenProps {
 }
 
 export const CommunityScreen: React.FC<CommunityScreenProps> = ({
+  openPost,
   people = [],
   onToggleFollow,
   onPersonDetails,
@@ -43,6 +45,7 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
 
   // Selected post for details sheet
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+  useEffect(()=>{if(openPost)setSelectedPostId(openPost.id);},[openPost]);
   const selectedPostForDetails = posts.find((post) => post.id === selectedPostId);
   const [newCommentInput, setNewCommentInput] = useState('');
   const [reportReason, setReportReason] = useState('identification');
@@ -451,7 +454,7 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
           </span>
           <p className="text-[13px] leading-snug">
             <span className="font-bold text-[#154212] uppercase text-[11px] mr-1">Field Etiquette:</span>
-            Keep a respectful 20m distance from active nesting perches across wetlands. Happy wandering!
+            Keep a respectful distance, avoid disturbing nests, follow local guidance and keep precise nesting locations private.
           </p>
         </div>
       </div>
@@ -470,21 +473,14 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
             className="relative w-full max-w-md bg-white rounded-t-3xl shadow-xl flex flex-col max-h-[85dvh] overflow-hidden z-10 animate-in slide-in-from-bottom duration-300"
           >
             {/* Handle */}
-            <div
-              role="button"
-              tabIndex={0}
+            <button
+              type="button"
               aria-label="Close sighting details"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  setSelectedPostId(null);
-                }
-              }}
-              className="pt-3 pb-2 flex justify-center cursor-pointer"
+              className="min-h-11 w-full pt-3 pb-2 flex items-center justify-center cursor-pointer"
               onClick={() => setSelectedPostId(null)}
             >
-              <div className="w-10 h-1.5 rounded-full bg-[#e0e3e8]"></div>
-            </div>
+              <span className="w-10 h-1.5 rounded-full bg-[#e0e3e8]"></span>
+            </button>
 
             {/* Header */}
             <div className="px-4 pb-3 flex items-center justify-between border-b border-[#f1f4f9]">

@@ -6,6 +6,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { auth, SessionExpiredError, type AuthUser } from './lib/auth';
 import { observations, observationEntry, observationPost, type PublicBirder } from './lib/observations';
+import { alerts, type AlertSubscription } from './lib/alerts';
 import { activity, type DiscoveryActivity, type SaveKind } from './lib/activity';
 import { distanceKm, nearbyRadiusKm, type LocationPoint } from './lib/location';
 import { loadLocationWeather } from './lib/discovery';
@@ -23,10 +24,7 @@ import {
 import {
   INITIAL_USER_PROFILE,
   SPECIES_DATABASE,
-  COMMUNITY_POSTS,
   HOTSPOTS_DATA,
-  JOURNAL_ENTRIES,
-  APP_NOTIFICATIONS,
 } from './data/mockData';
 
 import { Header } from './components/Header';
@@ -73,7 +71,62 @@ export default function App() {
   const recordsOwner = useRef<string|null>(null);
   const recordsController = useRef<AbortController|null>(null);
   const recordMutation = useRef(false);
-  const [notifications, setNotifications] = useState<AppNotification[]>(APP_NOTIFICATIONS);
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
+  const [subscriptions, setSubscriptions] = useState<AlertSubscription[]>([]);
+  const [alertsError, setAlertsError] = useState('');
+  const [alertsAttempt, setAlertsAttempt] = useState(0);
+  const [alertPost, setAlertPost] = useState<{ id: string; request: number } | null>(null);
+  useEffect(() => {
+    if (currentScreen !== 'community') setAlertPost(null);
+  }, [currentScreen]);
+  const [deviceRegistered, setDeviceRegistered] = useState(false);
+  const [pushConfigured, setPushConfigured] = useState(false);
+  const [pushBusy, setPushBusy] = useState(false);
+  const [pushStatus, setPushStatus] = useState('Firebase push is not configured.');
+  const alertsController = useRef<AbortController | null>(null);
+  const alertMutation = useRef(false);
+  useEffect(() => {
+    if (!sessionUser) return;
+    const owner = sessionUser.id,
+      controller = new AbortController();
+    alertsController.current = controller;
+    let loading = false;
+    const load = async () => {
+      if (loading || document.hidden) return;
+      loading = true;
+      try {
+        const state = await alerts.load(controller.signal);
+        if (!controller.signal.aborted && recordsOwner.current === owner) {
+          setSubscriptions(state.subscriptions);
+          setNotifications(state.notifications);
+          setPushStatus(state.push.message);
+          setDeviceRegistered(state.push.deviceRegistered || false);
+          setPushConfigured(state.push.configured);
+          setAlertsError('');
+        }
+      } catch (error) {
+        if (!controller.signal.aborted && recordsOwner.current === owner) {
+          if (error instanceof SessionExpiredError) resetSession();
+          else setAlertsError(error instanceof Error ? error.message : 'Alerts are unavailable.');
+        }
+      } finally {
+        loading = false;
+      }
+    };
+    void load();
+    const timer = window.setInterval(() => void load(), 15000);
+    const visible = () => {
+      if (!document.hidden) void load();
+    };
+    document.addEventListener('visibilitychange', visible);
+    window.addEventListener('bird-push', visible);
+    return () => {
+      controller.abort();
+      window.clearInterval(timer);
+      document.removeEventListener('visibilitychange', visible);
+      window.removeEventListener('bird-push', visible);
+    };
+  }, [sessionUser?.id, alertsAttempt]);
   const [discovery, setDiscovery] = useState<DiscoveryCatalogue | null>(null);
   const [discoveryError, setDiscoveryError] = useState('');
   const [discoveryLoading, setDiscoveryLoading] = useState(false);
@@ -164,7 +217,7 @@ export default function App() {
   },[sessionUser?.id,recordsAttempt]);
 
   const acceptSession = (user: AuthUser) => {
-    recordsController.current?.abort();recordsOwner.current=user.id;setBirders([]);recordMutation.current=false;setRecordsError('');
+    alertsController.current?.abort();alertMutation.current=false;recordsController.current?.abort();recordsOwner.current=user.id;setBirders([]);recordMutation.current=false;setRecordsError('');
     setLocation(null);
     setLocationPickerOpen(false);
     setExploreWeather({ key: '' });
@@ -179,11 +232,11 @@ export default function App() {
     setUserProfile({ ...INITIAL_USER_PROFILE, name: user.name, handle: '',bio:'',primaryRig:'',location:'',title:'Birder',avatarUrl:'/bird-wanderer-logo.svg',birdsCount:0,photosCount:0,tripsCount:0 });
     setPosts([]);
     setJournalEntries([]);
-    setNotifications(APP_NOTIFICATIONS);
+    setNotifications([]);setSubscriptions([]);setAlertsError('');setAlertPost(null);setDeviceRegistered(false);setPushConfigured(false);setPushBusy(false);
     setSpeciesList(SPECIES_DATABASE);
     setHotspotsList(HOTSPOTS_DATA);
     setNavigationHistory([{ screen: 'explore' }]);
-    setCurrentScreen('explore');
+    setCurrentScreen(new URLSearchParams(window.location.search).has('notifications')?'notifications':'explore');
   };
 
   useEffect(() => {
@@ -452,22 +505,52 @@ export default function App() {
   const handleDeleteJournalEntry = (entryId: string) => {void changeRecord(signal=>observations.remove(entryId,signal));};
   const handlePostObservation = () => {setRecordsAttempt(value=>value+1);};
 
-  const handleMarkAllNotificationsRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, isUnread: false })));
-    showToast('All field alerts marked as read');
-  };
-
-  const handleSelectNotification = (notif: AppNotification) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === notif.id ? { ...n, isUnread: false } : n))
-    );
-    if (notif.category === 'mentions' && notif.title.includes('Maya')) {
-      navigateTo('community');
-    } else if (notif.title.includes('Nisha')) {
-      navigateTo('messages');
-    } else {
-      navigateTo('species-detail');
+  const changeAlert = async (change: (signal: AbortSignal) => Promise<unknown>) => {
+    const owner = recordsOwner.current,
+      controller = alertsController.current;
+    if (!owner || !controller || controller.signal.aborted || alertMutation.current) return false;
+    alertMutation.current = true;
+    try {
+      await change(controller.signal);
+      if (recordsOwner.current !== owner || controller.signal.aborted) return false;
+      setAlertsAttempt((value) => value + 1);
+      return true;
+    } catch (error) {
+      if (!controller.signal.aborted && recordsOwner.current === owner) {
+        if (error instanceof SessionExpiredError) resetSession();
+        else showToast(error instanceof Error ? error.message : 'Alert change failed.');
+      }
+      return false;
+    } finally {
+      if (recordsOwner.current === owner) alertMutation.current = false;
     }
+  };
+  const isSubscribed = (kind: AlertSubscription['kind'], id: string) =>
+    subscriptions.some((row) => row.kind === kind && row.id === id);
+  const toggleSubscription = async (kind: AlertSubscription['kind'], id: string) => {
+    const enabled = !isSubscribed(kind, id);
+    if (await changeAlert((signal) => alerts.subscribe(kind, id, enabled, signal)))
+      showToast(
+        enabled
+          ? userProfile.pushAlertsEnabled
+            ? 'Subscription saved for future sightings.'
+            : 'Subscription saved. Enable sighting alerts in Notifications.'
+          : 'Subscription removed.',
+      );
+  };
+  const handleMarkAllNotificationsRead = () => {
+    void changeAlert((signal) => alerts.read(null, signal));
+  };
+  const handleSelectNotification = (notif: AppNotification) => {
+    void changeAlert(async (signal) => {
+      await alerts.read(notif.id, signal);
+      if (!notif.observationId) return;
+      const row = await observations.get(notif.observationId, signal);
+      if (signal.aborted) return;
+      setPosts((previous) => [observationPost(row), ...previous.filter((post) => post.id !== row.id)]);
+      setAlertPost({ id: row.id, request: Date.now() });
+      navigateTo('community');
+    });
   };
 
   const handleUpdateProfile = (updated: Partial<UserProfile>) => {
@@ -481,7 +564,7 @@ export default function App() {
   const unreadNotifsCount = notifications.filter((n) => n.isUnread).length;
 
   function resetSession() {
-    recordsController.current?.abort();recordsOwner.current=null;setBirders([]);recordMutation.current=false;setRecordsError('');setRecordsLoading(false);
+    alertsController.current?.abort();alertMutation.current=false;recordsController.current?.abort();recordsOwner.current=null;setBirders([]);recordMutation.current=false;setRecordsError('');setRecordsLoading(false);
     setLocation(null);
     setLocationPickerOpen(false);
     setExploreWeather({ key: '' });
@@ -497,7 +580,7 @@ export default function App() {
     setUserProfile(INITIAL_USER_PROFILE);
     setPosts([]);
     setJournalEntries([]);
-    setNotifications(APP_NOTIFICATIONS);
+    setNotifications([]);setSubscriptions([]);setAlertsError('');setAlertPost(null);setDeviceRegistered(false);setPushConfigured(false);setPushBusy(false);
     setSpeciesList(SPECIES_DATABASE);
     setHotspotsList(HOTSPOTS_DATA);
     setDiscovery(null);
@@ -598,6 +681,7 @@ export default function App() {
 
           {currentScreen === 'community' && (
             <CommunityScreen
+              openPost={alertPost}
               people={birders}
               onToggleFollow={(id,following)=>changeRecord(signal=>observations.follow(id,following,signal))}
               onPersonDetails={loadPublicBirder}
@@ -650,6 +734,8 @@ export default function App() {
 
           {currentScreen === 'species-detail' && (
             <SpeciesDetailScreen
+              subscribed={isSubscribed('species',selectedSpecies.id)}
+              onToggleSubscription={()=>void toggleSubscription('species',selectedSpecies.id)}
               saved={selectedSpecies.source ? isDiscoverySaved('species', selectedSpecies.id) : undefined}
               saveDisabled={Boolean(selectedSpecies.source) && saveDisabled}
               onToggleBookmark={selectedSpecies.source ? () => handleToggleDiscoverySave('species', selectedSpecies.id, selectedSpecies.name) : undefined}
@@ -682,6 +768,8 @@ export default function App() {
 
           {currentScreen === 'hotspot-detail' && (
             <HotspotDetailScreen
+              subscribed={isSubscribed('hotspot',selectedHotspot.id)}
+              onToggleSubscription={()=>void toggleSubscription('hotspot',selectedHotspot.id)}
               saveDisabled={Boolean(selectedHotspot.source) && saveDisabled}
               key={selectedHotspot.id}
               hotspot={externalHotspots.find((h) => h.id === selectedHotspot.id) || hotspotsList.find((h) => h.id === selectedHotspot.id) || { ...selectedHotspot, isSaved: selectedHotspot.source ? isDiscoverySaved('hotspot', selectedHotspot.id) : selectedHotspot.isSaved }}
@@ -735,6 +823,27 @@ export default function App() {
 
           {currentScreen === 'notifications' && (
             <NotificationsScreen
+              enabled={userProfile.pushAlertsEnabled}
+              onToggleEnabled={()=>void handleUpdateProfile({pushAlertsEnabled:!userProfile.pushAlertsEnabled})}
+              subscriptions={subscriptions}
+              onRemoveSubscription={(kind,id)=>void toggleSubscription(kind,id)}
+              error={alertsError}
+              onRetry={()=>setAlertsAttempt(value=>value+1)}
+              pushConfigured={pushConfigured}
+              deviceRegistered={deviceRegistered}
+              pushBusy={pushBusy}
+              onTogglePush={()=>{
+                if(pushBusy)return;
+                // Ask during the actual click, before imports/network lose the browser's user gesture.
+                const permission=!deviceRegistered&&typeof Notification!=='undefined'?Notification.requestPermission().catch(()=>'denied' as const):Promise.resolve('granted' as const);
+                setPushBusy(true);
+                void changeAlert(async signal=>{
+                  const client=await import('./lib/push');
+                  if(signal.aborted)return;
+                  if(deviceRegistered)await client.disablePush(signal);else await client.enablePush(signal,permission);
+                }).finally(()=>setPushBusy(false));
+              }}
+              pushStatus={pushStatus}
               notifications={notifications}
               onMarkAllRead={handleMarkAllNotificationsRead}
               onSelectNotification={handleSelectNotification}

@@ -67,6 +67,7 @@ async function request(path: string, signal: AbortSignal, method = 'GET', body?:
   return data;
 }
 export const observations = {
+  get: async (id:string,signal:AbortSignal):Promise<Observation> => (await request(`/${encodeURIComponent(id)}`,signal)).observation,
   people: async (signal: AbortSignal): Promise<PublicBirder[]> =>
     (await request('/social/people', signal)).people,
   person: async (id: string, signal: AbortSignal): Promise<PublicBirder> =>

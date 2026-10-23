@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { createApp } from './auth.mjs';
 import { createDiscoveryService } from './discovery.mjs';
 import { tunnelOrigin } from '../scripts/tunnel-config.mjs';
+import { configuredPush } from './push.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const production = process.env.NODE_ENV === 'production';
@@ -23,7 +24,8 @@ for (const origin of additionalOrigins) {
 if (production && !process.env.APP_ORIGIN?.startsWith('https://')) {
   throw new Error('Production requires an HTTPS APP_ORIGIN.');
 }
-const { app, db } = createApp({
+const { app, db, dispatchPush } = createApp({
+  push: await configuredPush(),
   dbPath: process.env.DATABASE_PATH || resolve(root, 'data/bird-wanderer.sqlite'),
   mediaPath: process.env.MEDIA_PATH || resolve(root, 'data/media'),
   origin: process.env.APP_ORIGIN || 'http://localhost:3000',
@@ -38,6 +40,9 @@ if (production) {
 const server = app.listen(Number(process.env.PORT || 3001), process.env.HOST || '127.0.0.1', () => {
   console.log(`Bird Wanderer API listening on port ${server.address().port}`);
 });
+const pushTimer=setInterval(()=>{void dispatchPush().catch(()=>console.error('Push dispatch failed; queued records remain retryable.'));},15000);
+pushTimer.unref();
 for (const signal of ['SIGINT', 'SIGTERM']) process.on(signal, () => {
+  clearInterval(pushTimer);
   server.close(() => { db.close(); process.exit(0); });
 });

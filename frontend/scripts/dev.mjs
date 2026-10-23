@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process';
+import './build-push-worker.mjs';
 
 const children = [
   spawn(process.execPath, ['--watch', 'server/index.mjs'], { stdio: 'inherit' }),

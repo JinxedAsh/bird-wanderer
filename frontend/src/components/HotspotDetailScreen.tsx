@@ -7,6 +7,8 @@ import { HotspotAccess } from './HotspotAccess';
 import { HotspotWeatherPanel } from './HotspotWeatherPanel';
 
 interface HotspotDetailScreenProps {
+  subscribed?: boolean;
+  onToggleSubscription?: () => void;
   saveDisabled?: boolean;
   weather?: HotspotWeather;
   weatherError?: string;
@@ -23,6 +25,7 @@ interface HotspotDetailScreenProps {
 }
 
 export const HotspotDetailScreen: React.FC<HotspotDetailScreenProps> = ({
+  subscribed=false,onToggleSubscription,
   saveDisabled = false,
   weather,
   weatherError,
@@ -60,6 +63,7 @@ export const HotspotDetailScreen: React.FC<HotspotDetailScreenProps> = ({
 
   return (
     <div className="flex flex-col w-full pb-28 pt-0">
+      {hotspot.source&&onToggleSubscription&&<button type="button" aria-pressed={subscribed} onClick={onToggleSubscription} className="mx-4 my-2 min-h-11 rounded-xl bg-white text-[#154212] text-[13px] font-semibold">{subscribed?'Unsubscribe from hotspot alerts':'Subscribe to hotspot alerts'}</button>}
       {/* Top Location Hero Banner */}
       <div className="relative w-full h-56 overflow-hidden bg-[#ebeef3]">
         <img

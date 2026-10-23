@@ -16,7 +16,7 @@ Start with the [current completion plan](docs/PROJECT_COMPLETION_PLAN.md), [Deve
 - Express authentication API with SQLite persistence, salted password hashes and server-managed sessions.
 - Input validation, authentication rate limiting, origin checks and session invalidation on logout.
 - Automated authentication integration tests, TypeScript checks and a production build.
-- Real account-owned JPEG/PNG uploads and source EXIF, metadata-free shared images, persisted observations/journal/life-list membership and profile/privacy preferences are implemented in the current vertical slice. Private/followers/profile restrictions are enforced on records and media. See [upload walkthrough and acceptance limits](docs/OBSERVATIONS_WALKTHROUGH.md). Social interactions, alerts and retention remain separate unfinished slices.
+- Real account-owned JPEG/PNG uploads and source EXIF, metadata-free shared images, persisted observations/journal/life-list membership and profile/privacy preferences are implemented in the current vertical slice. Private/followers/profile restrictions are enforced on records and media. See [upload walkthrough and acceptance limits](docs/OBSERVATIONS_WALKTHROUGH.md). Community follows/reactions/comments/reports are delivered; see [community walkthrough](docs/COMMUNITY_WALKTHROUGH.md). Sighting subscriptions/readstate and optional Firebase source are implemented in the current increment; real provider/device delivery and forecast-opportunity scheduling remain incomplete. See [alerts setup and limits](docs/ALERTS_WALKTHROUGH.md). Retention and messaging still need their persistence slices.
 - Stage 1 frontend fixes: complete local search results, shared hotspot bookmarks, live comment-panel updates, account identity, keyboard-accessible sheets and configurable API proxying.
 
 - External discovery: worldwide species taxonomy, regional hotspots and latest regional reports from eBird, with stable source IDs, server-side key handling, a short cache and explicit error/unavailable states. Species pages link to matching hotspots, and hotspot-specific reports/all-time lists link back by species ID. Live checks passed with a local key; each installation must configure its own key.
@@ -96,8 +96,8 @@ The frontend and backend currently share one package under `frontend/`. Keeping 
 | Phase | Scope | Status |
 | --- | --- | --- |
 | 1 — Core | Refined UI, authentication, species discovery, hotspots, photography logistics | In progress; checkpoint 6 October 2026 |
-| 2 — Community | Persistent profiles, photo uploads, EXIF extraction, community interactions | Planned |
-| 3 — Alerts | Subscriptions, sighting notifications, conservation privacy filters | Planned |
+| 2 — Community | Persistent profiles, photo uploads, EXIF extraction, community interactions | Delivered core; native upload/device and list pagination checks remain |
+| 3 — Alerts | Subscriptions, sighting notifications, conservation privacy filters | Sighting/in-app/Firebase source implemented; real push and forecast-opportunity acceptance pending |
 | 4 — Retention | Quiz and engagement features, remaining required interactions | Planned |
 
 All four phases are required by **20 October 2026**. Password recovery, verified local seasonality/difficulty, persistent trip records, verified site access logistics, production hosting and complete visual acceptance remain unfinished. Photography guidance currently uses one source-photo example and general rules; environmental matching and multi-photo recommendations are not implemented. Android packaging is deferred for this phase; the final APK is still required. Prototype content and statistics must not be mistaken for live observations.
