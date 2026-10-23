@@ -15,7 +15,7 @@ const digest = (value) => createHash('sha256').update(value).digest('hex');
 const publicUser = (row) => ({ id: row.id, name: row.name, email: row.email });
 const passwordOptions = { N: 32768, r: 8, p: 3, maxmem: 64 * 1024 * 1024 };
 
-export function createApp({ dbPath = ':memory:', origin = 'http://localhost:3000', additionalOrigins = [], secureCookies = false, now = Date.now, rateLimit = 30, discovery = createDiscoveryService(), mediaPath, imageProcessor } = {}) {
+export function createApp({ dbPath = ':memory:', origin = 'http://localhost:3000', additionalOrigins = [], secureCookies = false, now = Date.now, rateLimit = 30, discovery = createDiscoveryService(), mediaPath, imageProcessor, push } = {}) {
   const allowedOrigins = new Set([origin, ...additionalOrigins]);
   if (dbPath !== ':memory:') mkdirSync(dirname(dbPath), { recursive: true });
   const db = new DatabaseSync(dbPath);
@@ -131,10 +131,12 @@ export function createApp({ dbPath = ':memory:', origin = 'http://localhost:3000
     const session = token && db.prepare('SELECT user_id FROM sessions WHERE token_hash = ? AND expires_at > ?').get(digest(token), now());
     if (!session) return res.status(401).json({ error: 'Please sign in to discover birds and hotspots.' });
     req.userId = session.user_id;
+    req.sessionHash = digest(token);
     next();
   };
   app.use('/api/activity', requireSession, activityRouter(db, discovery, now));
-  app.use('/api/observations', requireSession, observationsRouter(db, discovery, { mediaPath, now, processImage: imageProcessor }));
+  const observations = observationsRouter(db, discovery, { mediaPath, now, processImage: imageProcessor, push });
+  app.use('/api/observations', requireSession, observations);
   app.use('/api/discovery', requireSession, discoveryRouter(discovery));
   app.use('/api', (_req, res) => res.status(404).json({ error: 'API endpoint not found.' }));
   app.use((error, _req, res, _next) => {
@@ -144,5 +146,5 @@ export function createApp({ dbPath = ':memory:', origin = 'http://localhost:3000
     console.error('API error:', error.code || error.name);
     res.status(500).json({ error: 'Something went wrong. Please try again.' });
   });
-  return { app, db };
+  return { app, db, dispatchPush:observations.dispatchPush };
 }

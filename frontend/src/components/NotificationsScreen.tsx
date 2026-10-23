@@ -1,7 +1,19 @@
 import React, { useState } from 'react';
 import { AppNotification, ScreenType } from '../types';
+import type { AlertSubscription } from '../lib/alerts';
 
 interface NotificationsScreenProps {
+  pushConfigured?:boolean;
+  deviceRegistered?:boolean;
+  pushBusy?:boolean;
+  onTogglePush?:()=>void;
+  enabled?:boolean;
+  onToggleEnabled?:()=>void;
+  subscriptions?:AlertSubscription[];
+  onRemoveSubscription?:(kind:AlertSubscription['kind'],id:string)=>void;
+  error?:string;
+  onRetry?:()=>void;
+  pushStatus?:string;
   notifications: AppNotification[];
   onMarkAllRead: () => void;
   onSelectNotification: (notif: AppNotification) => void;
@@ -9,6 +21,8 @@ interface NotificationsScreenProps {
 }
 
 export const NotificationsScreen: React.FC<NotificationsScreenProps> = ({
+  pushConfigured=false,deviceRegistered=false,pushBusy=false,onTogglePush,
+  enabled=false,onToggleEnabled,subscriptions=[],onRemoveSubscription,error,onRetry,pushStatus,
   notifications,
   onMarkAllRead,
   onSelectNotification,
@@ -25,6 +39,17 @@ export const NotificationsScreen: React.FC<NotificationsScreenProps> = ({
 
   return (
     <div className="flex flex-col w-full pb-28 pt-1">
+      <section className="mx-4 my-2 rounded-xl bg-white p-3 text-[12px] text-[#42493e]">
+        <label className="flex min-h-11 items-center justify-between gap-2 font-semibold">Sighting alerts enabled<input type="checkbox" aria-label="Sighting alerts enabled" checked={enabled} onChange={onToggleEnabled} className="h-6 w-6" /></label>
+        <p>Subscribe on species or hotspot pages. Alerts cover future visible user reports, not guaranteed sightings. Checked every 15 seconds while this app is visible.</p>
+        <p className="mt-2">{pushStatus}</p>
+        {pushConfigured&&<button type="button" disabled={pushBusy} onClick={onTogglePush} className="mt-2 min-h-11 rounded-lg bg-[#2d5a27] px-3 text-white">{pushBusy?'Updating push…':deviceRegistered?'Disable push on this browser':'Enable push on this browser'}</button>}
+        <details className="mt-2"><summary className="min-h-11 cursor-pointer">Manage subscriptions ({subscriptions.length})</summary>
+          {subscriptions.length===0&&<p>No subscriptions yet.</p>}
+          {subscriptions.map(row=><div key={`${row.kind}:${row.id}`} className="flex items-center justify-between gap-2"><span className="min-w-0 break-words">{row.label} · {row.kind}</span><button type="button" onClick={()=>onRemoveSubscription?.(row.kind,row.id)} className="min-h-11 shrink-0 px-2 underline" aria-label={`Remove ${row.label} subscription`}>Remove</button></div>)}
+        </details>
+        {error&&<div role="alert" className="mt-2"><p>{error}</p><button type="button" onClick={onRetry} className="min-h-11 underline">Retry alerts</button></div>}
+      </section>
       {/* Content Header & Action Bar */}
       <section className="px-4 pt-2 pb-2 flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -42,7 +67,7 @@ export const NotificationsScreen: React.FC<NotificationsScreenProps> = ({
 
         <button
           onClick={onMarkAllRead}
-          className="text-[13px] font-semibold text-[#154212] hover:text-[#2d5a27] transition-colors py-1 px-1 focus:outline-none"
+          className="min-h-11 text-[13px] font-semibold text-[#154212] hover:text-[#2d5a27] transition-colors py-1 px-1 focus:outline-none"
         >
           Mark all read
         </button>
@@ -57,7 +82,7 @@ export const NotificationsScreen: React.FC<NotificationsScreenProps> = ({
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`flex-1 py-1.5 px-3 rounded-lg text-[13px] text-center capitalize transition-all ${
+                className={`min-h-11 flex-1 py-1.5 px-3 rounded-lg text-[13px] text-center capitalize transition-all ${
                   isActive
                     ? 'bg-white text-[#154212] font-bold shadow-xs'
                     : 'text-[#42493e] hover:text-[#181c20]'
@@ -75,6 +100,9 @@ export const NotificationsScreen: React.FC<NotificationsScreenProps> = ({
         {filteredNotifications.map((notif) => (
           <article
             key={notif.id}
+            role="button"
+            tabIndex={0}
+            onKeyDown={event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();onSelectNotification(notif);}}}
             onClick={() => onSelectNotification(notif)}
             className={`relative flex items-start gap-3 p-3.5 rounded-2xl shadow-xs transition-all cursor-pointer border ${
               notif.isUnread
@@ -91,8 +119,8 @@ export const NotificationsScreen: React.FC<NotificationsScreenProps> = ({
             </div>
 
             <div className="flex-1 min-w-0 pr-2">
-              <div className="flex items-baseline justify-between gap-1 mb-0.5">
-                <h2 className="text-[13px] font-bold text-[#181c20] truncate">{notif.title}</h2>
+              <div className="flex flex-col items-start gap-1 mb-0.5">
+                <h2 className="text-[13px] font-bold text-[#181c20] break-words leading-snug">{notif.title}</h2>
                 <time className="text-[11px] text-[#72796e] flex-shrink-0">{notif.timeAgo}</time>
               </div>
 

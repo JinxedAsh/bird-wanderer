@@ -263,11 +263,11 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                 </span>
                 <div className="flex flex-col">
                   <span className="text-[13px] font-bold text-[#181c20]">Bird alerts</span>
-                  <span className="text-[11px] text-[#42493e]">Rare vagrant sightings nearby</span>
+                  <span className="text-[11px] text-[#42493e]">Manage species/hotspot subscriptions in Notifications</span>
                 </div>
               </div>
               <span className="bg-[#ebeef3] text-[#154212] text-[10px] font-bold px-2 py-1 rounded">
-                Push enabled
+                {userProfile.pushAlertsEnabled?'In-app enabled':'In-app off'}
               </span>
             </div>
 
@@ -276,10 +276,10 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                 <span className="material-symbols-outlined text-[#42493e] text-[20px]">forum</span>
                 <div className="flex flex-col">
                   <span className="text-[13px] font-bold text-[#181c20]">Community activity</span>
-                  <span className="text-[11px] text-[#42493e]">Weekly sightings digest</span>
+                  <span className="text-[11px] text-[#42493e]">Likes and field notes are available in Community</span>
                 </div>
               </div>
-              <span className="text-[12px] text-[#42493e]">Digest weekly</span>
+              <span className="text-[12px] text-[#42493e]">In app</span>
             </div>
           </div>
         </div>

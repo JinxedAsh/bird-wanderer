@@ -14,6 +14,7 @@ let mapHelpers;
 let authClient;
 let discoveryClient;
 let activityClient;
+let alertsClient;
 let locationHelpers;
 let planningHelpers;
 let weatherHelpers;
@@ -25,7 +26,7 @@ before(async () => {
   const screens = {};
   const names = ['AuthScreen', 'LogObservationScreen', 'ProfileScreen', 'JournalScreen', 'LifeListScreen', 'GlobalSearchScreen', 'SettingsScreen', 'SpeciesDetailScreen', 'SpeciesPhoto', 'PhotoMetadata', 'PhotoPlanning', 'ReferenceComparisons', 'SpeciesInfoPanel', 'HotspotMap', 'HotspotWeatherPanel', 'HotspotDetailScreen', 'HotspotAccess', 'HotspotsScreen', 'ExploreScreen', 'LocationPicker', 'Header'];
   // Compile these existing TSX screens for Node rendering; no browser or new test framework.
-  for (const relative of ['lib/useDialogFocus.ts', 'lib/maps.ts', 'lib/auth.ts', 'lib/discovery.ts', 'lib/activity.ts', 'lib/location.ts', 'lib/observations.ts', ...names.map((name) => `components/${name}.tsx`)]) {
+  for (const relative of ['lib/useDialogFocus.ts', 'lib/maps.ts', 'lib/auth.ts', 'lib/discovery.ts', 'lib/activity.ts', 'lib/location.ts', 'lib/observations.ts', 'lib/alerts.ts', ...names.map((name) => `components/${name}.tsx`)]) {
     const output = join(temporaryDirectory, relative.replace(/\.tsx?$/, '.mjs'));
     mkdirSync(dirname(output), { recursive: true });
     const source = readFileSync(join(root, 'src', relative), 'utf8');
@@ -46,6 +47,7 @@ before(async () => {
   mapHelpers = await import(pathToFileURL(join(temporaryDirectory, 'lib/maps.mjs')).href);
   authClient = await import(pathToFileURL(join(temporaryDirectory, 'lib/auth.mjs')).href);
   locationHelpers = await import(pathToFileURL(join(temporaryDirectory, 'lib/location.mjs')).href);
+  alertsClient = await import(pathToFileURL(join(temporaryDirectory, 'lib/alerts.mjs')).href);
   activityClient = await import(pathToFileURL(join(temporaryDirectory, 'lib/activity.mjs')).href);
   discoveryClient = await import(pathToFileURL(join(temporaryDirectory, 'lib/discovery.mjs')).href);
 });
@@ -568,4 +570,20 @@ test('new-account observation screens have real upload controls and no fabricate
   assert.match(upload, /type="file"/);
   assert.match(upload, /not automatic verification/);
   assert.doesNotMatch(upload, /Nikon Z8|EXIF Synced|22°C|Sultanpur/);
+});
+
+
+test('alert client distinguishes expired sessions, unavailable network and malformed inbox responses', async () => {
+  const originalFetch=globalThis.fetch;
+  const controller=new AbortController();
+  try {
+    globalThis.fetch=async()=>new Response('{}',{status:401});
+    await assert.rejects(alertsClient.alerts.load(controller.signal),error=>error instanceof authClient.SessionExpiredError);
+    globalThis.fetch=async()=>{throw new Error('fixture network failure');};
+    await assert.rejects(alertsClient.alerts.load(controller.signal),/Cannot reach your alerts/);
+    globalThis.fetch=async()=>new Response('<html>not JSON</html>',{status:200});
+    await assert.rejects(alertsClient.alerts.load(controller.signal),/Alert response is unreadable/);
+    globalThis.fetch=async()=>new Response(JSON.stringify({subscriptions:[],notifications:[],push:{configured:false,message:'Not configured'}}),{status:200});
+    assert.equal((await alertsClient.alerts.load(controller.signal)).push.configured,false);
+  } finally { globalThis.fetch=originalFetch; }
 });

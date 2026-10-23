@@ -12,6 +12,9 @@ coverage/
 *.db
 *.pem
 *.key
+**/*firebase-adminsdk*.json
+**/*service-account*.json
+/secrets/
 .DS_Store
 Thumbs.db
 

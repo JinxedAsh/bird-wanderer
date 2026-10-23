@@ -6,6 +6,8 @@ import { PhotoPlanning } from './PhotoPlanning';
 import { SpeciesInfoPanel } from './SpeciesInfoPanel';
 
 interface SpeciesDetailScreenProps {
+  subscribed?: boolean;
+  onToggleSubscription?: () => void;
   saved?: boolean;
   saveDisabled?: boolean;
   onToggleBookmark?: () => void;
@@ -21,6 +23,7 @@ interface SpeciesDetailScreenProps {
 }
 
 export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
+  subscribed=false,onToggleSubscription,
   saved,
   saveDisabled = false,
   onToggleBookmark,
@@ -79,6 +82,7 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
 
   return (
     <div className="flex flex-col w-full pb-28 pt-1">
+      {species.source&&onToggleSubscription&&<button type="button" aria-pressed={subscribed} onClick={onToggleSubscription} className="mx-4 mt-2 min-h-11 rounded-xl bg-white text-[#154212] text-[13px] font-semibold">{subscribed?'Unsubscribe from species alerts':'Subscribe to species alerts'}</button>}
       {/* Top Action Rail */}
       <div className="px-4 py-2 flex items-center justify-between">
         <div className="flex items-center gap-2">
