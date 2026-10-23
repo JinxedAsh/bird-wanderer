@@ -1,6 +1,6 @@
 # Phase 1 acceptance and continuation checklist
 
-Reviewed 13 October 2026 against the live specification (Drive modified 5 October): search species, detailed pages, hotspot maps and externally derived photography logistics. Phase 2 uploads/community, alerts, gamification and APK packaging are outside this increment.
+Requirements re-read 23 October 2026; live specification still modified 5 October. Implementation/browser evidence below is from 13 October unless explicitly dated otherwise. This file tracks Phase 1; the user's 23 October full-development instruction now covers all phases and Android delivery in PROJECT_COMPLETION_PLAN.md.
 
 | Criterion | Starting status | Acceptance evidence needed |
 | --- | --- | --- |
@@ -45,7 +45,15 @@ The most useful next input is a legitimately downloaded eBird histogram export f
 
 Measured difficulty and verified environment matching require new trustworthy evidence or explicit requirement reconciliation. Investigate published evidence when available; do not convert general advice into an ordinal rating or attach a future forecast to historical EXIF. Remaining manual checks: full Oppo flow, genuine weak-network/provider failure, tunnel logout/recovery, operator-currentness/entrance confirmation and final design approval. Android stays deferred.
 
-Git branch: phase1-evidence-planning. Delivery: [PR #22](https://github.com/JinxedAsh/bird-wanderer/pull/22); browser checks passed and merge is gated on exact final-head CI. The PR provides authoritative merge/commit status. User's Start-Dev.ps1 deletion/Test.ps1 rename stays untouched/unpublished. Read Git status and this checklist before resumed work; do not duplicate delivered work or use stale LAN/tunnel addresses.
+Delivered: [PR #22](https://github.com/JinxedAsh/bird-wanderer/pull/22) is merged at a9902396a9f932b9192c22d15765c232ac156336, confirmed against GitHub on 23 October. Merged-commit CI passed; the merge occurred on 13 October IST (12 October UTC). No new test/browser result is implied by this status refresh. User's Start-Dev.ps1 deletion/Test.ps1 rename remains untouched/unpublished. Read Git status before resumed work; do not duplicate delivery or use stale LAN/tunnel addresses.
+
+## Finite Phase 1 closure queue, 23 October
+
+1. Correct stale delivery/current-state documentation (in progress; no new feature claim).
+2. Exercise empty/single/missing/provider-error/retry through a controlled browser fixture and fix verified defects. Label fixtures separately from real outages.
+3. Fresh managed tunnel: login, refresh, logout verification and reconnect/recovery. Do not reuse old URLs or claim physical-device acceptance.
+4. One bounded check of legitimate seasonal/difficulty/historical-environment alternatives; record minimum missing input once. Do not repeat speculative searches or guess import formats.
+5. Deliver focused fixes with exact-head CI; retain irreducible evidence/manual gaps. Continue the full-project queue independently rather than treating Phase 1 data access as a blocker for all development.
 
 ## Files in this increment (25)
 

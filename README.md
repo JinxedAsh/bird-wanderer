@@ -8,7 +8,7 @@ Bird Wanderer brings species discovery, hotspots, photography logistics, persona
 
 **Required delivery:** an Android app/APK. The current runtime is a React mobile web interface; Android packaging and device testing are still pending. Stage 1 frontend stabilization does not produce an APK.
 
-For the Tuesday checkpoint, use the [presentation script and Oppo K13 acceptance checklist](docs/PHASE_1_PRESENTATION.md). Browser checks and physical-device acceptance are recorded separately; remaining Phase 1 specification gaps are explicit.
+Start with the [current completion plan](docs/PROJECT_COMPLETION_PLAN.md), [Development Record](docs/DEVELOPMENT_RECORD.md) and [Phase 1 acceptance evidence](docs/PHASE_1_ACCEPTANCE.md). The [presentation script](docs/PHASE_1_PRESENTATION.md) retains the original 6 October checkpoint context. Historical checks are dated; they are not automatically fresh verification.
 
 ## Current functionality
 
@@ -27,8 +27,8 @@ For the Tuesday checkpoint, use the [presentation script and Oppo K13 acceptance
 - Per-account eBird bird/hotspot bookmarks and the latest ten real searches persist in SQLite. Search has a Saved birds only control; Hotspots retains its existing Saved filter. New saves require a valid provider record, while viewing/removing saved references and history do not call eBird.
 - Optional one-time device/manual location adds nearest-first straight-line distances and 50-km discovery within the configured eBird region. Explore shows an attributed Open-Meteo forecast for the rounded selected point. Clear location restores regional browsing; location is not saved to the account.
 
-- The existing photography guide adds regional eBird seasonal-chart references, shot-motion preparation and a transparent same-light/aperture shutter-to-ISO comparison from current photo EXIF. Seasonal statistics are not imported, and species difficulty/environment matching remain unverified. See [Planning extension](docs/SEASONAL_PLANNING_WALKTHROUGH.md).
-- Official-source access snapshots cover Lodhi Gardens and both reviewed Sunder Nursery eBird records in the existing visit disclosure, with field-specific links, review date, conflicts and unavailable permissions. Other sites remain unverified; overdue values are withheld after 90 days. See [Access walkthrough](docs/HOTSPOT_ACCESS_WALKTHROUGH.md).
+- The photography guide compares up to three exact-species licensed reference photographs, per-field EXIF sample counts and readable ranges; it preserves single-photo exposure comparisons. Dated forecast light windows and explicit rain/wind preparation heuristics are separate from historical photo conditions. Imported seasonal statistics and measured difficulty/environment matching remain unverified. See [Evidence walkthrough](docs/PHASE_1_EVIDENCE_WALKTHROUGH.md).
+- Official-source access snapshots cover four venues/eight records: Lodhi, Sunder, Yamuna I/II and Okhla. Sources, conflicts, historical fees and unknown permissions remain explicit; overdue values are withheld after 90 days. Delhi runtime includes adjacent Gautam Buddha Nagar with accurate coverage labels. See [acceptance details](docs/PHASE_1_ACCEPTANCE.md).
 
 ## Technology
 
