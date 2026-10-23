@@ -5,6 +5,7 @@ import { resolve } from 'node:path';
 import sharp from 'sharp';
 import exifr from 'exifr';
 import { normalizeExif } from './exif.mjs';
+import { communityRouter, communityStats } from './community.mjs';
 
 const maxBytes = 10 * 1024 * 1024;
 const clean = (value, max) => (typeof value === 'string' && value.trim().length <= max ? value.trim() : null);
@@ -152,6 +153,8 @@ export function observationsRouter(
       imageUrl: `/api/observations/media/${row.media_id}`,
       exif: JSON.parse(row.exif),
       createdAt: new Date(row.created_at).toISOString(),
+      ...communityStats(db,row.id,viewer),
+      isFollowing: !!db.prepare('SELECT 1 FROM follows WHERE follower_id=? AND followed_id=?').get(viewer,row.user_id),
       isOwner: own,
       ...(own
         ? {
@@ -163,6 +166,7 @@ export function observationsRouter(
         'Shared records use hotspot-level location only; exact EXIF coordinates are never published. This conservative protection applies to all species, without claiming a verified sensitivity classification.',
     };
   };
+  router.use('/social',communityRouter(db,{observation,canRead,serialize},now));
   router.get(
     '/profile',
     route((req, res) => res.json({ profile: profile(req.userId) })),

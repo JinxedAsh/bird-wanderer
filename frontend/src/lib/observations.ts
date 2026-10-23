@@ -3,6 +3,12 @@ import type { UserProfile, JournalEntry, CommunityPost } from '../types';
 import type { PhotoExif } from './discovery';
 
 export interface Observation {
+  likes?: number;
+  isLiked?: boolean;
+  isSaved?: boolean;
+  isFollowing?: boolean;
+  commentsCount?: number;
+  comments?: CommunityPost['comments'];
   id: string;
   ownerId: string;
   authorName: string;
@@ -61,6 +67,22 @@ async function request(path: string, signal: AbortSignal, method = 'GET', body?:
   return data;
 }
 export const observations = {
+  people: async (signal: AbortSignal): Promise<PublicBirder[]> =>
+    (await request('/social/people', signal)).people,
+  person: async (id: string, signal: AbortSignal): Promise<PublicBirder> =>
+    (await request(`/social/people/${encodeURIComponent(id)}`, signal)).person,
+  follow: (id: string, following: boolean, signal: AbortSignal) =>
+    request(`/social/follows/${encodeURIComponent(id)}`, signal, 'PUT', { following }),
+  like: (id: string, liked: boolean, signal: AbortSignal) =>
+    request(`/social/posts/${encodeURIComponent(id)}/like`, signal, 'PUT', { liked }),
+  savePost: (id: string, saved: boolean, signal: AbortSignal) =>
+    request(`/social/posts/${encodeURIComponent(id)}/save`, signal, 'PUT', { saved }),
+  comment: (id: string, text: string, signal: AbortSignal) =>
+    request(`/social/posts/${encodeURIComponent(id)}/comments`, signal, 'POST', { text }),
+  deleteComment: (id: string, signal: AbortSignal) =>
+    request(`/social/comments/${encodeURIComponent(id)}`, signal, 'DELETE'),
+  report: (id: string, reason: string, detail: string, signal: AbortSignal) =>
+    request(`/social/posts/${encodeURIComponent(id)}/reports`, signal, 'POST', { reason, detail }),
   load: (signal: AbortSignal, feed = false): Promise<{ observations: Observation[]; profile: UserProfile }> =>
     request(feed ? '?scope=feed' : '', signal),
   upload: async (file: File, signal: AbortSignal): Promise<UploadedPhoto> =>
@@ -94,6 +116,8 @@ export const observationEntry = (row: Observation): JournalEntry => ({
   inLifeList: row.inLifeList,
 });
 export const observationPost = (row: Observation): CommunityPost => ({
+  authorId: row.ownerId,
+  isFollowing: row.isFollowing,
   id: row.id,
   authorName: row.authorName,
   authorHandle: row.authorHandle,
@@ -113,9 +137,25 @@ export const observationPost = (row: Observation): CommunityPost => ({
     shutter: row.exif.exposureSeconds === null ? 'Unavailable' : `${row.exif.exposureSeconds} s`,
     iso: row.exif.iso === null ? 'Unavailable' : String(row.exif.iso),
   },
-  likes: 0,
-  commentsCount: 0,
-  isLiked: false,
-  isSaved: false,
-  comments: [],
+  likes: row.likes ?? 0,
+  commentsCount: row.commentsCount ?? 0,
+  isLiked: row.isLiked ?? false,
+  isSaved: row.isSaved ?? false,
+  comments: row.comments || [],
 });
+
+export interface PublicBirder {
+  id: string;
+  name: string;
+  handle: string;
+  avatarUrl: string;
+  bio: string;
+  primaryRig: string;
+  location: string;
+  following: boolean;
+  isSelf: boolean;
+  photosCount: number;
+  birdsCount: number;
+  followersCount: number;
+  visibility: 'public' | 'followers';
+}

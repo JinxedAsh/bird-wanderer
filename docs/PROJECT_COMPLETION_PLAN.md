@@ -4,15 +4,15 @@ Updated 24 October 2026. The user authorized the full development cycle in Conti
 
 ## Current delivery
 
-PR #22 merged at a990239 with passing merged CI, confirmed 23 October. Its 89-test/type/build and scoped browser evidence is dated 13 October; verification is being refreshed, not silently re-dated. Accounts, external discovery, maps, forecast preparation, source photos/EXIF and per-account saves/searches work. Later-phase profiles/uploads/journal/social/alerts/quiz remain mostly prototypes. No APK exists.
+PR #22 merged at a990239 with passing merged CI, confirmed 23 October; its Phase 1 evidence remains dated 13 October. Documentation refresh #23/bef622e is merged. First persistent slice #24/28218af is now merged: actual photo upload/EXIF, metadata-free images, owned observations, journal/life-list/profile/settings storage and server media privacy. Its 93 tests/type/build and scoped browser/live HTTP checks passed; native file-picker, positive follow UI and physical device acceptance remain pending. Community interactions, alerts, quiz/challenges/messaging and Android are not yet delivered. No APK exists.
 
 ## Acceptance matrix and execution order
 
 | Order / vertical slice | Starting state | Completion criteria / dependencies |
 | --- | --- | --- |
 | 0. Phase 1 closure | Delivered core; evidence/manual gaps | Correct documentation; controlled missing/error/retry browser checks; tunnel logout/recovery. Seasonal export needs legitimate authenticated data; difficulty/historical conditions stay unsupported unless proven. |
-| 1. Profiles and observation/media foundation | Prototype, missing persistence | Real profile/settings storage; validated bounded photo upload; actual EXIF, correct species/hotspot IDs; private storage; metadata-free shared derivatives; persisted observation ownership/visibility. Auth and discovery reused. |
-| 2. Journal/life list/profile statistics | Prototype/sample totals | Own observations populate journal/life list/photos and computed totals, survive reload/restart; delete/update enforced by owner; no fabricated verification badge. Depends on 1. |
+| 1. Profiles and observation/media foundation | Delivered #24/28218af; native chooser/device manual | Validated bounded upload/EXIF; source IDs; private disk and authorized metadata-free derivatives; profile/privacy and ownership. 93-test suite and live two-account HTTP checks passed. |
+| 2. Journal/life list/profile statistics | Delivered #24/28218af; newest-500 pagination outstanding | Owned records replace samples, survive reload/restart, support owner deletion/life-list changes and computed totals; user-reported rather than fabricated verification. |
 | 3. Community | Prototype | Real visibility-filtered feed, follows, likes/comments/tips, reports and saved posts; two-account authorization; private/follower/sensitive media not bypassable by URL. Depends on 1. |
 | 4. Alerts/conservation | Prototype | Persist species/hotspot subscriptions and preferences; sighting-triggered matching; deduplicated in-app alerts/read state; protected location generalization; actual push integration where provider configuration permits. Distinguish in-app/push/device evidence. Depends on 1/3. |
 | 5. Quiz/challenges | Sample interface | Complete question sessions/scoring/progress/streak; documented photography challenge completion/progress without disrupting discovery. Depends on species/media and account state. |
@@ -28,7 +28,16 @@ Screen -> request -> backend -> storage -> result examples will accompany each s
 
 ## Immediate slice in progress
 
-Documentation refresh delivered in PR #23. Profile/media/observation persistence and journal integration are implemented on observations-persistence, with 93 tests/type/build and scoped live API/browser checks passing before final refinements. See [upload/ownership walkthrough](OBSERVATIONS_WALKTHROUGH.md) and Development Record Entry 31. Browser file selection is manual because the documented chooser tool timed out; seeded-follower HTTP evidence is separate from the future follow UI. Next after delivery: real community interactions/follows/reports and alerts. No speculative seasonal importer without a supported export.
+Community slice is active on community-persistence after #24 delivery. Backend social tables/routes are being added using the existing observation visibility policy; frontend controls and multi-account social tests are implemented; 94 tests, TypeScript and production build pass locally. Browser QA and GitHub delivery remain pending. See the exact continuation below. Browser file selection remains manual because the documented chooser timed out; seeded-follower server evidence is separate from a future real follow UI. No speculative seasonal importer without a supported export.
+
+## Exact continuation checkpoint — 24 October
+
+- Current branch community-persistence, base merged #24/28218af. Do not redo #24. Unrelated deleted Start-Dev.ps1/untracked Test.ps1 remain preserved.
+- Uncommitted: new frontend/server/community.mjs and observations.mjs integration, plus current documentation update. Also uncommitted: community.test.mjs, package test command, client Observation/API mapping, App state and CommunityScreen controls. New social tables: post_likes, post_saves, comments, reports, community_limits; existing follows reused. /api/observations/social routes cover people, follows, likes/saves, comments/deletion and reports. Visibility helpers are shared; 94 local tests/type/build pass, including rate-limit window recovery; exact-head CI has not run and this must not be called delivered.
+- Next: finish Test chat browser checks (resumed after quota reset), fix verified defects, append Entry 32/community walkthrough, secret/diff check, focused PR/exact-head CI/merge. Real follow/like/save/comment/report UI is connected; profile sample biographies and fabricated post weather were removed. Test chat ID below.
+- Latest verified source baseline #24: 93 tests, TypeScript, production build; browser empty journal/profile/settings/account switch and 320/390px; live HTTP uploads/privacy/reversal. Native chooser timed out twice; no false browser-upload claim. Publication PR #24 already merged.
+- Test chat: 01a103be-0001-7ef1-9a60-60deff2537e5, host local; authorized testing only, no shared-file writes. Parent supervisor Continue Project Build 2 is read-only and has an active 15-minute recovery heartbeat for the full scope and five-hour reset. The old Phase1 worker automation was deleted; do not recreate/duplicate it. If execution is interrupted, inspect actual quota/Git state and resume this queue rather than mark completion or pause.
+- After community: real subscriptions/in-app and configured push/conservation policy, retention quiz/challenges, necessary messaging, Android toolchain/build/backend connectivity and release checks. No Java/adb/Gradle/sdkmanager found on PATH in the first probe; do not claim all filesystem locations were searched or an APK built.
 
 ## External/manual inputs
 
