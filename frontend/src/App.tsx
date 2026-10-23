@@ -5,6 +5,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { auth, SessionExpiredError, type AuthUser } from './lib/auth';
+import { observations, observationEntry, observationPost } from './lib/observations';
 import { activity, type DiscoveryActivity, type SaveKind } from './lib/activity';
 import { distanceKm, nearbyRadiusKm, type LocationPoint } from './lib/location';
 import { loadLocationWeather } from './lib/discovery';
@@ -63,8 +64,14 @@ export default function App() {
   const [userProfile, setUserProfile] = useState<UserProfile>(INITIAL_USER_PROFILE);
   const [speciesList, setSpeciesList] = useState<BirdSpecies[]>(SPECIES_DATABASE);
   const [hotspotsList, setHotspotsList] = useState<Hotspot[]>(HOTSPOTS_DATA);
-  const [posts, setPosts] = useState<CommunityPost[]>(COMMUNITY_POSTS);
-  const [journalEntries, setJournalEntries] = useState<JournalEntry[]>(JOURNAL_ENTRIES);
+  const [posts, setPosts] = useState<CommunityPost[]>([]);
+  const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
+  const [recordsAttempt, setRecordsAttempt] = useState(0);
+  const [recordsLoading, setRecordsLoading] = useState(false);
+  const [recordsError, setRecordsError] = useState('');
+  const recordsOwner = useRef<string|null>(null);
+  const recordsController = useRef<AbortController|null>(null);
+  const recordMutation = useRef(false);
   const [notifications, setNotifications] = useState<AppNotification[]>(APP_NOTIFICATIONS);
   const [discovery, setDiscovery] = useState<DiscoveryCatalogue | null>(null);
   const [discoveryError, setDiscoveryError] = useState('');
@@ -140,7 +147,23 @@ export default function App() {
     return () => controller.abort();
   }, [sessionUser?.id, discoveryAttempt]);
 
+  useEffect(() => {
+    if (!sessionUser) return;
+    const owner=sessionUser.id, controller=new AbortController();
+    recordsController.current?.abort(); recordsController.current=controller;
+    setRecordsLoading(true); setRecordsError('');
+    Promise.all([observations.load(controller.signal),observations.load(controller.signal,true)]).then(([own,feed])=>{
+      if(controller.signal.aborted||recordsOwner.current!==owner)return;
+      setUserProfile(own.profile);setJournalEntries(own.observations.map(observationEntry));setPosts(feed.observations.map(observationPost));
+    }).catch(error=>{
+      if(controller.signal.aborted||recordsOwner.current!==owner)return;
+      if(error instanceof SessionExpiredError)resetSession();else setRecordsError(error.message||'Field records could not load.');
+    }).finally(()=>{if(!controller.signal.aborted&&recordsOwner.current===owner)setRecordsLoading(false);});
+    return()=>controller.abort();
+  },[sessionUser?.id,recordsAttempt]);
+
   const acceptSession = (user: AuthUser) => {
+    recordsController.current?.abort();recordsOwner.current=user.id;recordMutation.current=false;setRecordsError('');
     setLocation(null);
     setLocationPickerOpen(false);
     setExploreWeather({ key: '' });
@@ -152,9 +175,9 @@ export default function App() {
     setDiscoveryActivity({ saves: [], searches: [] });
     setActivityError('');
     setSessionUser(user);
-    setUserProfile({ ...INITIAL_USER_PROFILE, name: user.name, handle: `@${user.name.toLowerCase().replace(/\s+/g, '')}` });
-    setPosts(COMMUNITY_POSTS);
-    setJournalEntries(JOURNAL_ENTRIES);
+    setUserProfile({ ...INITIAL_USER_PROFILE, name: user.name, handle: '',bio:'',primaryRig:'',location:'',title:'Birder',avatarUrl:'/bird-wanderer-logo.svg',birdsCount:0,photosCount:0,tripsCount:0 });
+    setPosts([]);
+    setJournalEntries([]);
     setNotifications(APP_NOTIFICATIONS);
     setSpeciesList(SPECIES_DATABASE);
     setHotspotsList(HOTSPOTS_DATA);
@@ -451,29 +474,21 @@ export default function App() {
     );
   };
 
+  const changeRecord = async (change:(signal:AbortSignal)=>Promise<unknown>) => {
+    const owner=recordsOwner.current,controller=recordsController.current;
+    if(!owner||!controller||controller.signal.aborted)return;
+    if(recordMutation.current){showToast('Please wait for your current field-record change.');return false;}
+    recordMutation.current=true;
+    try {await change(controller.signal);if(recordsOwner.current===owner&&!controller.signal.aborted){setRecordsAttempt(value=>value+1);return true;}return false;}
+    catch(error){if(controller.signal.aborted||recordsOwner.current!==owner)return false;if(error instanceof SessionExpiredError)resetSession();else showToast(error instanceof Error?error.message:'Could not save your change.');return false;}
+    finally{if(recordsOwner.current===owner)recordMutation.current=false;}
+  };
   const handleToggleJournalLifeList = (entryId: string) => {
-    setJournalEntries((prev) =>
-      prev.map((e) => {
-        if (e.id === entryId) {
-          return { ...e, inLifeList: !e.inLifeList };
-        }
-        return e;
-      })
-    );
+    const entry=journalEntries.find(row=>row.id===entryId);
+    if(entry)void changeRecord(signal=>observations.update(entryId,{inLifeList:!entry.inLifeList},signal));
   };
-
-  const handleDeleteJournalEntry = (entryId: string) => {
-    setJournalEntries((prev) => prev.filter((e) => e.id !== entryId));
-  };
-
-  const handlePostObservation = (newPost: CommunityPost, newEntry: JournalEntry) => {
-    setPosts((prev) => [newPost, ...prev]);
-    setJournalEntries((prev) => [newEntry, ...prev]);
-    setUserProfile((prev) => ({
-      ...prev,
-      photosCount: prev.photosCount + 1,
-    }));
-  };
+  const handleDeleteJournalEntry = (entryId: string) => {void changeRecord(signal=>observations.remove(entryId,signal));};
+  const handlePostObservation = () => {setRecordsAttempt(value=>value+1);};
 
   const handleMarkAllNotificationsRead = () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, isUnread: false })));
@@ -494,7 +509,7 @@ export default function App() {
   };
 
   const handleUpdateProfile = (updated: Partial<UserProfile>) => {
-    setUserProfile((prev) => ({ ...prev, ...updated }));
+    return changeRecord(signal=>observations.profile(updated,signal));
   };
 
   const isMainTab = ['explore', 'community', 'hotspots', 'journal', 'profile'].includes(
@@ -504,6 +519,7 @@ export default function App() {
   const unreadNotifsCount = notifications.filter((n) => n.isUnread).length;
 
   function resetSession() {
+    recordsController.current?.abort();recordsOwner.current=null;recordMutation.current=false;setRecordsError('');setRecordsLoading(false);
     setLocation(null);
     setLocationPickerOpen(false);
     setExploreWeather({ key: '' });
@@ -517,8 +533,8 @@ export default function App() {
     setSessionUser(null);
     setSessionError('');
     setUserProfile(INITIAL_USER_PROFILE);
-    setPosts(COMMUNITY_POSTS);
-    setJournalEntries(JOURNAL_ENTRIES);
+    setPosts([]);
+    setJournalEntries([]);
     setNotifications(APP_NOTIFICATIONS);
     setSpeciesList(SPECIES_DATABASE);
     setHotspotsList(HOTSPOTS_DATA);
@@ -586,6 +602,7 @@ export default function App() {
               {activityError && <button type="button" className="ml-2 font-semibold text-[#154212] underline" onClick={() => setActivityAttempt((prev) => prev + 1)}>Try again</button>}
             </div>
           )}
+          {sessionUser && (recordsLoading || recordsError) && <div role={recordsError?'alert':'status'} className="mx-4 mt-2 rounded-xl bg-[#f1f4f9] p-3 text-[12px] text-[#42493e]">{recordsError||'Loading your field records…'}{recordsError&&<button type="button" onClick={()=>setRecordsAttempt(value=>value+1)} className="min-h-11 ml-2 underline">Retry field records</button>}</div>}
           {['explore', 'search', 'hotspots'].includes(currentScreen) && (
             <div role="status" className="mx-4 mt-2 rounded-xl bg-[#f1f4f9] p-3 text-[12px] text-[#42493e]">
               {discoveryLoading ? 'Loading birds and hotspots from eBird...' : discoveryError || (discovery ? `eBird - ${discovery.coverageLabel || discovery.region}. Retrieved ${new Date(discovery.fetchedAt).toLocaleString()}. Recent reports: past 14 days. ${discovery.cached ? 'Using server cache.' : ''}` : 'External discovery has not loaded.')}
@@ -653,6 +670,7 @@ export default function App() {
 
           {currentScreen === 'profile' && (
             <ProfileScreen
+              entries={journalEntries}
               userProfile={userProfile}
               onUpdateProfile={handleUpdateProfile}
               onNavigate={navigateTo}
@@ -681,6 +699,10 @@ export default function App() {
 
           {currentScreen === 'log-observation' && (
             <LogObservationScreen
+              key={sessionUser?.id}
+              speciesList={discovery?.species || []}
+              hotspots={discovery?.hotspots || []}
+              onSessionExpired={resetSession}
               initialSpecies={selectedSpecies}
               userProfile={userProfile}
               onPostObservation={handlePostObservation}
@@ -710,7 +732,7 @@ export default function App() {
 
           {currentScreen === 'life-list' && (
             <LifeListScreen
-              speciesList={speciesList}
+              speciesList={(discovery?.species || []).filter(bird=>journalEntries.some(entry=>entry.inLifeList&&entry.scientificName===bird.scientificName)||isDiscoverySaved('species',bird.id)).map(bird=>({ ...bird,isLogged:journalEntries.some(entry=>entry.inLifeList&&entry.scientificName===bird.scientificName),isWishlist:isDiscoverySaved('species',bird.id),photosCount:journalEntries.filter(entry=>entry.scientificName===bird.scientificName).length,firstSightingLocation:journalEntries.find(entry=>entry.scientificName===bird.scientificName)?.location }))}
               onSelectSpecies={handleSelectSpecies}
               onNavigate={navigateTo}
             />

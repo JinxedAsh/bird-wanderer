@@ -10,7 +10,7 @@
     "dev:client": "vite",
     "dev:server": "node --watch server/index.mjs",
     "start": "node server/index.mjs",
-    "test": "node --test server/auth.test.mjs server/activity.test.mjs server/access.test.mjs server/discovery.test.mjs server/weather.test.mjs server/photos.test.mjs server/exif.test.mjs server/species-info.test.mjs server/frontend.test.mjs server/proxy.test.mjs",
+    "test": "node --test server/observations.test.mjs server/auth.test.mjs server/activity.test.mjs server/access.test.mjs server/discovery.test.mjs server/weather.test.mjs server/photos.test.mjs server/exif.test.mjs server/species-info.test.mjs server/frontend.test.mjs server/proxy.test.mjs",
     "build": "vite build",
     "preview": "vite preview",
     "lint": "tsc --noEmit"
@@ -19,12 +19,14 @@
     "@tailwindcss/vite": "^4.3.3",
     "@vitejs/plugin-react": "^6.1.1",
     "dotenv": "^17.2.3",
+    "exifr": "^7.1.3",
     "express": "^4.21.2",
     "leaflet": "1.9.4",
     "lucide-react": "^0.546.0",
     "motion": "^12.23.24",
     "react": "^19.0.1",
     "react-dom": "^19.0.1",
+    "sharp": "^0.35.5",
     "vite": "^8.3.0"
   },
   "engines": {

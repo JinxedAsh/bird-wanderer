@@ -1,6 +1,6 @@
 # Bird Wanderer — Development Record
 
-- **Last updated:** 23 October 2026, India Standard Time (Asia/Kolkata).
+- **Last updated:** 24 October 2026, India Standard Time (Asia/Kolkata).
 - **Current project phase:** Phase 1 delivered foundation; full-project completion now authorized across Phases 1–4 and Android.
 - **Required final deliverable:** an Android application/APK.
 - **Audience:** team members, evaluators and the developer; no code knowledge is required for the main sections.
@@ -50,9 +50,9 @@ Bird Wanderer helps birdwatchers and wildlife photographers discover species and
 | Species photographs and planning | Credited Commons photos and same-file EXIF are connected. The hero example remains; an on-demand disclosure compares up to three exact-species references with independent sample counts/ranges/credits. Forecast light windows and explicit condition heuristics support preparation. Imported annual statistics, measured difficulty and verified historical environment matching remain unsupported; limited seasonal narratives are scoped/cited. See Entries 28–29. |
 | Nearby discovery and Explore weather | Optional one-time GPS/manual point enables 50-km filtering and nearest-first straight-line hotspot distances within the configured region. Explore uses the rounded selected point for attributed forecasts; no account location is persisted. See Entry 22. |
 | Maps and logistics | Maps/directions/forecasts are implemented. Delhi also covers Gautam Buddha Nagar, explicitly labelled. Reviewed access covers four venues (Lodhi, Sunder, Yamuna I/II and three Okhla records). Conflicting hours, historical fees and unknown entrances/permissions are explicit. 320/390px browser checks passed; phone/outage acceptance remains pending. |
-| Journal, profiles and social activity | Many interactions work temporarily within the running app. Most changes are not stored for later use. |
+| Journal, profiles and social activity | First persistent slice implemented locally: real uploads/EXIF, owned observations, profile/privacy preferences, journal/life-list membership and computed statistics. Private/follower/profile media access is server-enforced. Community likes/comments/follows UI, messages and alerts still await their own persistence slices. See Entry 31 for exact checks/delivery limits. |
 | Alerts and quizzes | Demonstration screens exist. Automated alerts, complete quiz progress and challenges are not delivered. |
-| Android delivery | The final APK remains required. The user deferred packaging/deployment for this Phase 1 increment; mobile web and phone-browser acceptance are the current target. No Android package has been produced or device-certified. |
+| Android delivery | Packaging is now in scope under the 23 October full-cycle instruction. No APK exists yet; Java/adb/Gradle/sdkmanager were not found on PATH during the initial toolchain probe. Build/toolchain setup and actual device/emulator evidence remain planned. Historical Phase 1 deferrals are preserved in old entries. |
 | Hosting | Local/LAN and managed temporary Cloudflare previews are supported. Real HTTPS loading/login/refresh/photos/manual-location checks passed; DNS failed before final logout confirmation. No permanent production deployment or uptime guarantee exists. |
 
 Phase 1 is **not certified complete** against every detailed evidence/manual criterion. PR #22 is verified merged at a990239 with passing merged CI; its tests/browser checks remain dated 13 October. On 23 October the user expanded execution to the full development cycle including Android. Current code still has later-phase prototypes; the new authorization is not an implementation claim. See PROJECT_COMPLETION_PLAN.md for the finite queue.
@@ -632,6 +632,24 @@ The header logo now uses a bundled SVG following the supplied green bird emblem,
 
 **Checks/limits:** 89 tests/type/build passed; scoped expiry, identity/bounds and region/dedup checks included. Browser seasonal/Yamuna/Okhla search/pins/details/reports/weather/three IDs/hospital separation passed at 320/390px; console clean. Full Phase 1 remains incomplete: imported annual data, measured difficulty, verified environment matching, operator-currentness/wider access, exact design approval and physical-phone/failure acceptance. APK remains deferred. Beginner explanations and Viva questions: PHASE_1_EVIDENCE_WALKTHROUGH.md.
 
+### Entry 30 — Delivery status refresh and full-cycle scope
+
+**Date/group:** 23 October 2026 IST; requirements/documentation. **Status:** delivered in PR #23 (bef622e). Verified PR #22 merge and its exact merged-commit passing CI; corrected stale merge gating and README entry points without re-dating October 13 evidence. Re-fetched the live SRS (still modified October 5). User broadened work to all four phases plus Android, superseding the prior Phase-1-only increment. PROJECT_COMPLETION_PLAN.md records the finite acceptance/dependency queue. No runtime change or unrelated launcher rename was included.
+
+### Entry 31 — Real photo upload, owned observations and persistent journal
+
+**Date/group:** 23–24 October 2026 IST; first Phase 2 vertical slice. **Status:** implemented locally; final checks/browser review and focused delivery follow below. This is not a completed community/alerts/retention/Android claim.
+
+**What changed:** replaced sample-photo cycling/fabricated EXIF with actual JPEG/PNG input, source metadata and validated catalogue selections. Added authenticated staged media and observations, profile/privacy storage, owner journal/life-list changes/deletion and real profile photos/statistics. New accounts start empty; account changes abort requests and clear the previous account's records. Images are validated/decoded, re-encoded without metadata and stored privately; originals are not retained. Limits/format/4096px conversion are shown in the upload flow.
+
+**Security/data:** private/follower/profile visibility is checked for feed/detail/media, not merely hidden by React. Keep private globally makes records/media owner-only, corrected after a live two-account review found a mismatch. Exact GPS is owner-only; shared locations are hotspot-level/withheld for all species pending a reviewed classification policy. Fake 5km-grid/verification claims are removed. Disconnects retain processing slots until decoding finishes; parser errors release slots. Same-media identical retries are safe and altered privacy conflicts. Failed persistence removes new files; unused staged files expire on next owner's upload after 24 hours. SQLite tables preserve existing accounts/sessions/discovery activity.
+
+**Implementation:** server/observations.mjs + observations.test.mjs, auth/index registration, src/lib/observations.ts, existing upload/App/journal/life-list/profile/settings components, package/lockfile and env example. sharp validates/sanitizes images; exifr reads real metadata. No service split or replacement frontend. See OBSERVATIONS_WALKTHROUGH.md for APIs, storage, limits and Viva Notes.
+
+**Verification so far:** Final 93 automated tests/type/build passed, including actual EXIF/GPS, metadata removal, malformed/type/size rejection, two-account privacy, seeded positive follower access, database restart, failure cleanup and controlled disconnect concurrency. Test chat's live HTTP upload/privacy/reversal tests passed; browser empty records/profile/settings refresh/account switching and 320/390px layout passed with clean console. Native browser file chooser timed out twice, so file-picker end-to-end acceptance remains manual; HTTP uploads are not misrepresented as browser uploads. Final source refinement checks and exact delivery are recorded with the PR.
+
+**Remaining:** positive follow UI, real social/alert/retention/messaging slices, upload chooser/device acceptance, newest-500 list pagination and production backup/storage. No Java/SDK build tool was found in the first read-only Android probe. Android stays in scope; no build/device pass is claimed.
+
 ## 4. How the current application fits together
 
 The interface is what the user sees and interacts with. The backend is the program that receives requests and checks account information. The database is where persistent account information is saved.
@@ -676,7 +694,7 @@ Further acceptance includes exact final-design approval, full physical-phone tou
 
 Other incomplete existing controls include password recovery, sourced audio, entity-specific sharing/navigation and simulated messaging. Their final scope and priority should follow the specification. No additional feature should be assumed complete from its appearance in the interface.
 
-Android delivery remains required for final submission but is explicitly deferred from this Phase 1 increment. Follow PHASE_1_ACCEPTANCE.md for current evidence blockers and continuation dependencies.
+Android delivery is now in scope for full-project completion. Follow PROJECT_COMPLETION_PLAN.md for all phases and PHASE_1_ACCEPTANCE.md for the unresolved Phase 1 evidence/manual criteria. Historical deferrals describe their original increments only.
 
 ### Known issues still requiring follow-up
 

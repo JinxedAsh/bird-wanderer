@@ -1,6 +1,6 @@
 # Bird Wanderer — full-project completion plan
 
-Updated 23 October 2026. The user authorized the full development cycle in Continue Project Build 2; this supersedes the previous Phase-1-only increment and Android deferral. Live SRS re-read through Drive; last modified 5 October. Preserve final designs and React/Express/SQLite architecture. No paid services or invented evidence. Original 20 October deadline is historical; no new deadline is assumed.
+Updated 24 October 2026. The user authorized the full development cycle in Continue Project Build 2; this supersedes the previous Phase-1-only increment and Android deferral. Live SRS re-read through Drive on 23 October; last modified 5 October. Preserve final designs and React/Express/SQLite architecture. No paid services or invented evidence. Original 20 October deadline is historical; no new deadline is assumed.
 
 ## Current delivery
 
@@ -28,7 +28,7 @@ Screen -> request -> backend -> storage -> result examples will accompany each s
 
 ## Immediate slice in progress
 
-Documentation refresh is first. Next: profile + media/observation persistence, followed by journal integration. Binary image parsing and sanitized shared images may require small purpose-built libraries; any dependency must have a concrete function and bounded input/resource limits. No speculative seasonal importer without an actual supported export.
+Documentation refresh delivered in PR #23. Profile/media/observation persistence and journal integration are implemented on observations-persistence, with 93 tests/type/build and scoped live API/browser checks passing before final refinements. See [upload/ownership walkthrough](OBSERVATIONS_WALKTHROUGH.md) and Development Record Entry 31. Browser file selection is manual because the documented chooser tool timed out; seeded-follower HTTP evidence is separate from the future follow UI. Next after delivery: real community interactions/follows/reports and alerts. No speculative seasonal importer without a supported export.
 
 ## External/manual inputs
 

@@ -1,16 +1,18 @@
 import React, { useState } from 'react';
 import { useDialogFocus } from '../lib/useDialogFocus';
-import { UserProfile, ScreenType, BirdSpecies } from '../types';
+import { UserProfile, ScreenType, BirdSpecies, JournalEntry } from '../types';
 
 interface ProfileScreenProps {
+  entries?: JournalEntry[];
   userProfile: UserProfile;
-  onUpdateProfile: (updated: Partial<UserProfile>) => void;
+  onUpdateProfile: (updated: Partial<UserProfile>) => Promise<boolean | undefined> | void;
   onNavigate: (screen: ScreenType) => void;
   onSelectSpeciesByName: (name: string) => void;
   showToast: (message: string) => void;
 }
 
 export const ProfileScreen: React.FC<ProfileScreenProps> = ({
+  entries = [],
   userProfile,
   onUpdateProfile,
   onNavigate,
@@ -27,51 +29,22 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   const [bioInput, setBioInput] = useState(userProfile.bio);
   const [gearInput, setGearInput] = useState(userProfile.primaryRig);
 
-  const photoGrid = [
-    {
-      name: 'Indian Roller',
-      image:
-        'https://lh3.googleusercontent.com/aida-public/AB6AXuBkShM7AHwEWnKOARwX6EjkonYacalNPd_unyxJmN2NGztwMl2-MZYHR-pi5-4dQOB8wnykrB56ll7RG74M6EJxBwG4yv1PVjalaryATPXvRo9bt1DG2Kp-SPKdIuv5Nrgf9RaMPbaABFPJYPokGXqnDCWD0BeRTUV_Ifs9j4DI8G2vqgLMCTnn6uKE_2gob6vIloi8FKzN3zZa-i6uSQO3vKQ45nhg9sNuz2UZ8bUfr3TToxFVf_zj0g',
-    },
-    {
-      name: 'White-throated Kingfisher',
-      image:
-        'https://lh3.googleusercontent.com/aida-public/AB6AXuBUaF8RSGv3ncYIkcsMAIxXAssz-HxDPDFzmVewr1kcBeolqM7I7gMYAUIehhuY10xjGOpERFTfCxP-GaYpMvmBwHmQeVb5eF7bdjubb26SjxCFn-UqDq1KLoEBontqRUFUqazl5IwOi8Ky3yPcHww4jT8VgabBYo8DBgdseN-zpZSyCn3hEKVVTtP7h-ZsDJIp-n5DnlCmi1Mg9KckoCFy_ANhn5mWioMYgQEE5HEHDGvxXDkZMU_XYA',
-    },
-    {
-      name: 'Rose-ringed Parakeet',
-      image:
-        'https://lh3.googleusercontent.com/aida-public/AB6AXuDiRRsPUP6iiro4zV8A9yhcX1mCZ7uXgCGY4pYFaZvOtfDX9MsrSYzUCLoZFPu35eYFRQ1LLO9JhKa5rcAKjjLObtbVv0R_04mmqHRIIkJRju86-LLgGwCRLWlTMFmUj_xLZd4rjvO0d4-UcW-JOC3Aop64A57NkUZrqmZHJYt9q5yanqAWn3e-dkyThvE8kMxU99F6Io1cmRbovMXaS7krqsCysDk5uRbM6nWm0bTeZmRekmEfxS-a3A',
-    },
-    {
-      name: 'Indian Grey Hornbill',
-      image:
-        'https://lh3.googleusercontent.com/aida-public/AB6AXuCo49Fn5pKObFQ9KovIS9xbZQFGxwplq3KFIviNyUrEuBIRS67IAOnpEwk3moojY0XH-Dl8SX_GclgSp-jQNlyUiOeWCZhl7r5nHsFsf2H2t6eLyLovMS5SgcSbQMOT1oojjpV_9ydZJHWAgN-_uWaO0ZrMsSstJbibXCXCEBNcjkU44V1RL7Ya1daD0Hc5ys-fPzAx32REnTmGQCNgMwhq4qKbdJO9z-3GLMloL-BD_PXlN5n5Z7D0WQ',
-    },
-    {
-      name: 'Little Egret',
-      image:
-        'https://lh3.googleusercontent.com/aida-public/AB6AXuCD-IYrJ9ExEt3_bK3lLxZOuDyUcGVPAHMePSb5SFr3xwTRRG_rGOTwu-8yCP0xBoJ6VNt1cURhnAFSJBx_5wNQXG63Uz7PNZ1Z1ee8qqFRuDr4tPlhiQTtI6Aex6wvthfSocDJK4PQOw-MjTlfRiHszs3kqJO-gwu2fjb1SDF-4OOzQcOWdJ_y2wNeQJZ-e6LTdiqtIgHwQw2VQsdXN2k758ypgS4XvsPing_69WQKQ-NWtda4ZrshuQ',
-    },
-    {
-      name: 'Spotted Owlet',
-      image:
-        'https://lh3.googleusercontent.com/aida-public/AB6AXuDD-Sdzw7effmxbUQyJTRGW0gvTCv-Af1kJrvGZrtrOnyP6cxl3dNoeYS6UYpL1fhyx1lMcndixUzRoakdmGmVer2Qa39RdJ0OuWFjbM7I3k4XDl3_3saPfXl2_HptlVV1sWUAt--wwoGrzDzWA5OdEqvG8uxI0sqhQRl8alGCXz79Lnb3ZXYDQ8PujLWoXeIwe3-ikKer_xZvKa7AtRTCjecAMyUreLThlRlilsTY7nqRyocNnsO7fJw',
-    },
-  ];
+  const photoGrid = entries.map(entry => ({ name: entry.speciesName, image: entry.imageUrl }));
+  const logged = entries.filter((entry,index,all) => entry.inLifeList && all.findIndex(other => other.inLifeList && other.scientificName === entry.scientificName) === index);
 
-  const handleSaveProfile = () => {
+  const handleSaveProfile = async () => {
     if (nameInput.trim().length < 2 || nameInput.trim().length > 80) {
       showToast('Display name must be between 2 and 80 characters.');
       return;
     }
-    onUpdateProfile({
+    const saved = await onUpdateProfile({
       name: nameInput.trim(),
       bio: bioInput,
       primaryRig: gearInput,
     });
+    if(saved === false)return;
     setIsEditDrawerOpen(false);
-    showToast('Profile updated for this session');
+    showToast('Profile saved');
   };
 
   return (
@@ -272,6 +245,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
             ))}
           </div>
 
+          {!photoGrid.length && <p className="text-[13px]">Your uploaded photographs will appear here.</p>}
           {/* Field Rig Card */}
           <div className="mt-4 p-4 bg-white rounded-2xl shadow-xs flex items-center justify-between border border-[#f1f4f9]">
             <div className="flex items-center gap-3 min-w-0">
@@ -290,86 +264,18 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
         </div>
       )}
 
-      {/* Tab 2: Life List Snippet */}
-      {activeTab === 'lifelist' && (
-        <div className="px-4 space-y-2">
-          <div className="p-3 bg-white rounded-xl shadow-xs flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-[#bcf0ae] flex items-center justify-center text-[#002201] font-bold text-xs">
-                #47
-              </div>
-              <div>
-                <p className="text-[13px] font-bold text-[#181c20]">Black-winged Kite</p>
-                <p className="text-[11px] italic text-[#42493e]">Elanus caeruleus</p>
-              </div>
-            </div>
-            <span className="text-[11px] text-[#42493e]">Yesterday</span>
-          </div>
-
-          <div className="p-3 bg-white rounded-xl shadow-xs flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-[#bcf0ae] flex items-center justify-center text-[#002201] font-bold text-xs">
-                #46
-              </div>
-              <div>
-                <p className="text-[13px] font-bold text-[#181c20]">Spotted Owlet</p>
-                <p className="text-[11px] italic text-[#42493e]">Athene brama</p>
-              </div>
-            </div>
-            <span className="text-[11px] text-[#42493e]">3d ago</span>
-          </div>
-
-          <div className="p-3 bg-white rounded-xl shadow-xs flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-[#bcf0ae] flex items-center justify-center text-[#002201] font-bold text-xs">
-                #45
-              </div>
-              <div>
-                <p className="text-[13px] font-bold text-[#181c20]">Indian Grey Hornbill</p>
-                <p className="text-[11px] italic text-[#42493e]">Ocyceros birostris</p>
-              </div>
-            </div>
-            <span className="text-[11px] text-[#42493e]">1w ago</span>
-          </div>
-
-          <button
-            onClick={() => onNavigate('life-list')}
-            className="w-full py-2.5 mt-2 rounded-xl bg-[#ebeef3] hover:bg-[#e0e3e8] text-[#154212] font-bold text-[12px] flex items-center justify-center gap-1.5 transition-colors"
-          >
-            <span>View Full 47 Life List</span>
-            <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
-          </button>
-        </div>
-      )}
-
-      {/* Tab 3: Activity */}
-      {activeTab === 'activity' && (
-        <div className="px-4 space-y-2.5">
-          <div className="p-4 bg-white rounded-2xl shadow-xs border border-[#f1f4f9]">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-[13px] font-bold text-[#154212]">
-                Sultanpur Bird Sanctuary
-              </span>
-              <span className="text-[11px] text-[#72796e]">2 days ago</span>
-            </div>
-            <p className="text-[12px] text-[#42493e]">
-              Logged 14 distinct sightings across shallow wetland trail.
-            </p>
-          </div>
-
-          <div className="p-4 bg-white rounded-2xl shadow-xs border border-[#f1f4f9]">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-[13px] font-bold text-[#154212]">
-                Okhla Bird Sanctuary
-              </span>
-              <span className="text-[11px] text-[#72796e]">Last weekend</span>
-            </div>
-            <p className="text-[12px] text-[#42493e]">
-              Uploaded 8 high-res frames to Delhi NCR Hotspot Checklist.
-            </p>
-          </div>
-        </div>
-      )}
+      {/* Life list and activity use the same persisted observations as Journal. */}
+      {activeTab === 'lifelist' && <div className="px-4 space-y-2">
+        {logged.slice(0,3).map(entry => <div key={entry.id} className="p-3 bg-white rounded-xl shadow-xs flex items-center justify-between gap-2">
+          <div><p className="text-[13px] font-bold">{entry.speciesName}</p><p className="text-[11px] italic">{entry.scientificName}</p></div><span className="text-[11px]">{entry.date.slice(0,10)}</span>
+        </div>)}
+        {!logged.length && <p className="text-[13px]">No life-list entries yet.</p>}
+        <button type="button" onClick={() => onNavigate('life-list')} className="w-full min-h-11 rounded-xl bg-[#ebeef3] text-[#154212] font-bold text-[12px]">View Full Life List ({logged.length})</button>
+      </div>}
+      {activeTab === 'activity' && <div className="px-4 space-y-2">
+        {entries.slice(0,10).map(entry => <div key={entry.id} className="p-4 bg-white rounded-2xl border border-[#f1f4f9]"><p className="font-bold text-[13px]">{entry.speciesName}</p><p className="text-[12px]">{entry.location} - {entry.date}</p></div>)}
+        {!entries.length && <p className="text-[13px]">No field activity yet.</p>}
+      </div>}
 
       {/* Quick Edit Profile Bottom Sheet Drawer */}
       {isEditDrawerOpen && (

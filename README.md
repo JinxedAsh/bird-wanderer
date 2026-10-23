@@ -16,6 +16,7 @@ Start with the [current completion plan](docs/PROJECT_COMPLETION_PLAN.md), [Deve
 - Express authentication API with SQLite persistence, salted password hashes and server-managed sessions.
 - Input validation, authentication rate limiting, origin checks and session invalidation on logout.
 - Automated authentication integration tests, TypeScript checks and a production build.
+- Real account-owned JPEG/PNG uploads and source EXIF, metadata-free shared images, persisted observations/journal/life-list membership and profile/privacy preferences are implemented in the current vertical slice. Private/followers/profile restrictions are enforced on records and media. See [upload walkthrough and acceptance limits](docs/OBSERVATIONS_WALKTHROUGH.md). Social interactions, alerts and retention remain separate unfinished slices.
 - Stage 1 frontend fixes: complete local search results, shared hotspot bookmarks, live comment-panel updates, account identity, keyboard-accessible sheets and configurable API proxying.
 
 - External discovery: worldwide species taxonomy, regional hotspots and latest regional reports from eBird, with stable source IDs, server-side key handling, a short cache and explicit error/unavailable states. Species pages link to matching hotspots, and hotspot-specific reports/all-time lists link back by species ID. Live checks passed with a local key; each installation must configure its own key.

@@ -6,6 +6,7 @@ import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { discoveryRouter, createDiscoveryService } from './discovery.mjs';
 import { activityRouter } from './activity.mjs';
+import { observationsRouter } from './observations.mjs';
 
 const scrypt = promisify(scryptCallback);
 const cookieName = 'bw_session';
@@ -14,7 +15,7 @@ const digest = (value) => createHash('sha256').update(value).digest('hex');
 const publicUser = (row) => ({ id: row.id, name: row.name, email: row.email });
 const passwordOptions = { N: 32768, r: 8, p: 3, maxmem: 64 * 1024 * 1024 };
 
-export function createApp({ dbPath = ':memory:', origin = 'http://localhost:3000', additionalOrigins = [], secureCookies = false, now = Date.now, rateLimit = 30, discovery = createDiscoveryService() } = {}) {
+export function createApp({ dbPath = ':memory:', origin = 'http://localhost:3000', additionalOrigins = [], secureCookies = false, now = Date.now, rateLimit = 30, discovery = createDiscoveryService(), mediaPath, imageProcessor } = {}) {
   const allowedOrigins = new Set([origin, ...additionalOrigins]);
   if (dbPath !== ':memory:') mkdirSync(dirname(dbPath), { recursive: true });
   const db = new DatabaseSync(dbPath);
@@ -133,6 +134,7 @@ export function createApp({ dbPath = ':memory:', origin = 'http://localhost:3000
     next();
   };
   app.use('/api/activity', requireSession, activityRouter(db, discovery, now));
+  app.use('/api/observations', requireSession, observationsRouter(db, discovery, { mediaPath, now, processImage: imageProcessor }));
   app.use('/api/discovery', requireSession, discoveryRouter(discovery));
   app.use('/api', (_req, res) => res.status(404).json({ error: 'API endpoint not found.' }));
   app.use((error, _req, res, _next) => {

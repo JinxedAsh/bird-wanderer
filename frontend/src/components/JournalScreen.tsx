@@ -28,7 +28,7 @@ export const JournalScreen: React.FC<JournalScreenProps> = ({
             Field Log
           </span>
           <span className="w-1.5 h-1.5 rounded-full bg-[#fe932c]"></span>
-          <span className="text-[13px] text-[#42493e]">Autumn Session</span>
+          <span className="text-[13px] text-[#42493e]">Your field records</span>
         </div>
         <div className="flex items-center gap-1 bg-[#e0e3e8] px-2.5 py-1 rounded-full text-[#42493e] text-[11px] font-semibold">
           <span className="material-symbols-outlined text-[15px] text-[#154212]">filter_list</span>
@@ -41,7 +41,7 @@ export const JournalScreen: React.FC<JournalScreenProps> = ({
         <div className="grid grid-cols-3 gap-2 text-center">
           <div className="flex flex-col items-center">
             <div className="flex items-center gap-1">
-              <span className="text-[32px] font-bold text-[#181c20] leading-none">47</span>
+              <span className="text-[32px] font-bold text-[#181c20] leading-none">{new Set(entries.filter(entry => entry.inLifeList).map(entry => entry.scientificName)).size}</span>
               <span
                 className="material-symbols-outlined text-[#154212] text-[18px]"
                 style={{ fontVariationSettings: "'FILL' 1" }}
@@ -54,7 +54,7 @@ export const JournalScreen: React.FC<JournalScreenProps> = ({
 
           <div className="flex flex-col items-center border-x border-[#e0e3e8]">
             <div className="flex items-center gap-1">
-              <span className="text-[32px] font-bold text-[#181c20] leading-none">128</span>
+              <span className="text-[32px] font-bold text-[#181c20] leading-none">{entries.length}</span>
               <span className="material-symbols-outlined text-[#904d00] text-[18px]">
                 photo_camera
               </span>
@@ -64,7 +64,7 @@ export const JournalScreen: React.FC<JournalScreenProps> = ({
 
           <div className="flex flex-col items-center">
             <div className="flex items-center gap-1">
-              <span className="text-[32px] font-bold text-[#181c20] leading-none">23</span>
+              <span className="text-[32px] font-bold text-[#181c20] leading-none">{new Set(entries.map(entry => entry.date.slice(0,10) + ':' + entry.location)).size}</span>
               <span className="material-symbols-outlined text-[#20402b] text-[18px]">explore</span>
             </div>
             <span className="text-[12px] font-semibold text-[#42493e] mt-1">Trips</span>
@@ -90,6 +90,7 @@ export const JournalScreen: React.FC<JournalScreenProps> = ({
         </button>
       </div>
 
+      {!entries.length && <p className="mb-4 text-[13px]">No observations yet. Add your first photograph to start your journal.</p>}
       {/* 2x2 Grid of Cards */}
       <div className="grid grid-cols-2 gap-3 mb-6">
         {entries.map((entry) => {
@@ -177,7 +178,7 @@ export const JournalScreen: React.FC<JournalScreenProps> = ({
                 </span>
               </div>
               <span className="bg-white/20 backdrop-blur-md text-white px-2 py-0.5 rounded text-[10px] font-semibold flex items-center gap-1">
-                <span className="material-symbols-outlined text-[13px]">verified</span> Verified
+                <span className="material-symbols-outlined text-[13px]">person</span> User reported
               </span>
             </div>
           </div>
