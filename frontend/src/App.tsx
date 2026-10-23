@@ -5,7 +5,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { auth, SessionExpiredError, type AuthUser } from './lib/auth';
-import { observations, observationEntry, observationPost } from './lib/observations';
+import { observations, observationEntry, observationPost, type PublicBirder } from './lib/observations';
 import { activity, type DiscoveryActivity, type SaveKind } from './lib/activity';
 import { distanceKm, nearbyRadiusKm, type LocationPoint } from './lib/location';
 import { loadLocationWeather } from './lib/discovery';
@@ -66,6 +66,7 @@ export default function App() {
   const [hotspotsList, setHotspotsList] = useState<Hotspot[]>(HOTSPOTS_DATA);
   const [posts, setPosts] = useState<CommunityPost[]>([]);
   const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
+  const [birders,setBirders] = useState<PublicBirder[]>([]);
   const [recordsAttempt, setRecordsAttempt] = useState(0);
   const [recordsLoading, setRecordsLoading] = useState(false);
   const [recordsError, setRecordsError] = useState('');
@@ -152,9 +153,9 @@ export default function App() {
     const owner=sessionUser.id, controller=new AbortController();
     recordsController.current?.abort(); recordsController.current=controller;
     setRecordsLoading(true); setRecordsError('');
-    Promise.all([observations.load(controller.signal),observations.load(controller.signal,true)]).then(([own,feed])=>{
+    Promise.all([observations.load(controller.signal),observations.load(controller.signal,true),observations.people(controller.signal)]).then(([own,feed,people])=>{
       if(controller.signal.aborted||recordsOwner.current!==owner)return;
-      setUserProfile(own.profile);setJournalEntries(own.observations.map(observationEntry));setPosts(feed.observations.map(observationPost));
+      setBirders(people);setUserProfile(own.profile);setJournalEntries(own.observations.map(observationEntry));setPosts(feed.observations.map(observationPost));
     }).catch(error=>{
       if(controller.signal.aborted||recordsOwner.current!==owner)return;
       if(error instanceof SessionExpiredError)resetSession();else setRecordsError(error.message||'Field records could not load.');
@@ -163,7 +164,7 @@ export default function App() {
   },[sessionUser?.id,recordsAttempt]);
 
   const acceptSession = (user: AuthUser) => {
-    recordsController.current?.abort();recordsOwner.current=user.id;recordMutation.current=false;setRecordsError('');
+    recordsController.current?.abort();recordsOwner.current=user.id;setBirders([]);recordMutation.current=false;setRecordsError('');
     setLocation(null);
     setLocationPickerOpen(false);
     setExploreWeather({ key: '' });
@@ -365,38 +366,13 @@ export default function App() {
   };
 
   // Interactions
-  const handleToggleLike = (postId: string) => {
-    const post = posts.find((p) => p.id === postId);
-    if (!post) return;
-    showToast(post.isLiked ? 'Unliked sighting' : 'Liked sighting');
-    setPosts((prev) =>
-      prev.map((p) => {
-        if (p.id === postId) {
-          const isLiked = !p.isLiked;
-          return {
-            ...p,
-            isLiked,
-            likes: isLiked ? p.likes + 1 : p.likes - 1,
-          };
-        }
-        return p;
-      })
-    );
+  const handleToggleLike = (postId:string) => {
+    const post=posts.find(row=>row.id===postId);
+    if(post)void changeRecord(signal=>observations.like(postId,!post.isLiked,signal));
   };
-
-  const handleToggleSavePost = (postId: string) => {
-    const post = posts.find((p) => p.id === postId);
-    if (!post) return;
-    showToast(post.isSaved ? 'Removed from bookmarks' : 'Saved to field bookmarks');
-    setPosts((prev) =>
-      prev.map((p) => {
-        if (p.id === postId) {
-          const isSaved = !p.isSaved;
-          return { ...p, isSaved };
-        }
-        return p;
-      })
-    );
+  const handleToggleSavePost = (postId:string) => {
+    const post=posts.find(row=>row.id===postId);
+    if(post)void changeRecord(signal=>observations.savePost(postId,!post.isSaved,signal));
   };
 
   const handleToggleSaveHotspot = (hotspotId: string) => {
@@ -449,30 +425,7 @@ export default function App() {
     void updateActivity((signal) => activity.save(kind, id, saved, signal), saved ? `Saved ${name} to your ${kind === 'species' ? 'field target list' : 'field bookmarks'}` : 'Removed from bookmarks');
   };
 
-  const handleAddComment = (postId: string, text: string) => {
-    const commentText = text.trim();
-    if (!commentText || !posts.some((p) => p.id === postId)) return;
-    const newComment = {
-      id: crypto.randomUUID(),
-      author: userProfile.name,
-      avatarInitials: userProfile.name.slice(0, 2).toUpperCase(),
-      time: 'Just now',
-      text: commentText,
-      color: 'bg-[#2d5a27] text-white',
-    };
-    setPosts((prev) =>
-      prev.map((p) => {
-        if (p.id === postId) {
-          return {
-            ...p,
-            commentsCount: p.commentsCount + 1,
-            comments: [...(p.comments || []), newComment],
-          };
-        }
-        return p;
-      })
-    );
-  };
+  const handleAddComment = (postId:string,text:string) => changeRecord(signal=>observations.comment(postId,text,signal));
 
   const changeRecord = async (change:(signal:AbortSignal)=>Promise<unknown>) => {
     const owner=recordsOwner.current,controller=recordsController.current;
@@ -482,6 +435,15 @@ export default function App() {
     try {await change(controller.signal);if(recordsOwner.current===owner&&!controller.signal.aborted){setRecordsAttempt(value=>value+1);return true;}return false;}
     catch(error){if(controller.signal.aborted||recordsOwner.current!==owner)return false;if(error instanceof SessionExpiredError)resetSession();else showToast(error instanceof Error?error.message:'Could not save your change.');return false;}
     finally{if(recordsOwner.current===owner)recordMutation.current=false;}
+  };
+  const loadPublicBirder = async(id:string) => {
+    const controller=recordsController.current,owner=recordsOwner.current;
+    if(!controller||!owner||controller.signal.aborted)throw new DOMException('Aborted','AbortError');
+    try {
+      const person=await observations.person(id,controller.signal);
+      if(controller.signal.aborted||recordsOwner.current!==owner)throw new DOMException('Aborted','AbortError');
+      return person;
+    } catch(error){if(!controller.signal.aborted&&recordsOwner.current===owner&&error instanceof SessionExpiredError)resetSession();throw error;}
   };
   const handleToggleJournalLifeList = (entryId: string) => {
     const entry=journalEntries.find(row=>row.id===entryId);
@@ -519,7 +481,7 @@ export default function App() {
   const unreadNotifsCount = notifications.filter((n) => n.isUnread).length;
 
   function resetSession() {
-    recordsController.current?.abort();recordsOwner.current=null;recordMutation.current=false;setRecordsError('');setRecordsLoading(false);
+    recordsController.current?.abort();recordsOwner.current=null;setBirders([]);recordMutation.current=false;setRecordsError('');setRecordsLoading(false);
     setLocation(null);
     setLocationPickerOpen(false);
     setExploreWeather({ key: '' });
@@ -636,7 +598,14 @@ export default function App() {
 
           {currentScreen === 'community' && (
             <CommunityScreen
-              posts={posts}
+              people={birders}
+              onToggleFollow={(id,following)=>changeRecord(signal=>observations.follow(id,following,signal))}
+              onPersonDetails={loadPublicBirder}
+              onReport={(id,reason,detail)=>changeRecord(signal=>observations.report(id,reason,detail,signal))}
+              onDeleteComment={id=>changeRecord(signal=>observations.deleteComment(id,signal))}
+              nearbyEnabled={Boolean(location)}
+              onChooseLocation={()=>{navigateTo('explore');setLocationPickerOpen(true);}}
+              posts={posts.map(post=>{const point=discovery?.hotspots.find(h=>h.name===post.location);return {...post,isNearby:Boolean(location&&point&&(distanceKm(location,point)??Infinity)<=nearbyRadiusKm)};})}
               onNavigate={navigateTo}
               onSelectSpeciesById={handleSelectSpeciesById}
               onToggleLike={handleToggleLike}

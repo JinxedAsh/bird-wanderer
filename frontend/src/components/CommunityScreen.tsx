@@ -1,18 +1,33 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { CommunityPost, ScreenType } from '../types';
 import { useDialogFocus } from '../lib/useDialogFocus';
+import type { PublicBirder } from '../lib/observations';
 
 interface CommunityScreenProps {
+  people?: PublicBirder[];
+  onToggleFollow?: (id: string, following: boolean) => Promise<boolean | undefined>;
+  onPersonDetails?: (id: string) => Promise<PublicBirder>;
+  onReport?: (id: string, reason: string, detail: string) => Promise<boolean | undefined>;
+  onDeleteComment?: (id: string) => Promise<boolean | undefined>;
+  nearbyEnabled?: boolean;
+  onChooseLocation?: () => void;
   posts: CommunityPost[];
   onNavigate: (screen: ScreenType) => void;
   onSelectSpeciesById: (speciesId: string) => void;
   onToggleLike: (postId: string) => void;
   onToggleSave: (postId: string) => void;
-  onAddComment: (postId: string, commentText: string) => void;
+  onAddComment: (postId: string, commentText: string) => Promise<boolean | undefined> | void;
   showToast: (message: string) => void;
 }
 
 export const CommunityScreen: React.FC<CommunityScreenProps> = ({
+  people = [],
+  onToggleFollow,
+  onPersonDetails,
+  onReport,
+  onDeleteComment,
+  nearbyEnabled = false,
+  onChooseLocation,
   posts,
   onNavigate,
   onSelectSpeciesById,
@@ -21,16 +36,27 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
   onAddComment,
   showToast,
 }) => {
-  const [activeFilter, setActiveFilter] = useState<'all' | 'following' | 'birds' | 'people' | 'near-you'>('all');
+  const [activeFilter, setActiveFilter] = useState<'all' | 'following' | 'birds' | 'people' | 'near-you'>(
+    'all',
+  );
   const [searchQuery, setSearchQuery] = useState('');
 
   // Selected post for details sheet
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
   const selectedPostForDetails = posts.find((post) => post.id === selectedPostId);
   const [newCommentInput, setNewCommentInput] = useState('');
+  const [reportReason, setReportReason] = useState('identification');
+  const [reportDetail, setReportDetail] = useState('');
+  useEffect(() => {
+    setNewCommentInput('');
+    setReportDetail('');
+    setReportReason('identification');
+  }, [selectedPostId]);
 
   // Selected photographer for bio sheet
   const [selectedPhotographer, setSelectedPhotographer] = useState<{
+    id?: string;
+    isSelf?: boolean;
     name: string;
     handle: string;
     avatar: string;
@@ -42,11 +68,13 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
     isFollowing?: boolean;
   } | null>(null);
 
-  const [followingMap, setFollowingMap] = useState<Record<string, boolean>>({});
-
   const postDialogRef = useDialogFocus(Boolean(selectedPostForDetails), () => setSelectedPostId(null));
-  const photographerDialogRef = useDialogFocus(Boolean(selectedPhotographer), () => setSelectedPhotographer(null));
-  const isFollowing = (handle: string) => followingMap[handle] ?? posts.some((post) => post.authorHandle === handle && post.authorBadge === 'Pro');
+  const photographerDialogRef = useDialogFocus(Boolean(selectedPhotographer), () =>
+    setSelectedPhotographer(null),
+  );
+  const isFollowing = (handle: string) =>
+    people.find((person) => person.handle === handle)?.following ??
+    posts.some((post) => post.authorHandle === handle && post.isFollowing);
 
   const filterOptions: Array<{ id: typeof activeFilter; label: string }> = [
     { id: 'all', label: 'All' },
@@ -69,65 +97,58 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
     if (activeFilter === 'following') {
       return isFollowing(post.authorHandle);
     }
+    if (activeFilter === 'near-you') return nearbyEnabled && post.isNearby;
     return true;
   });
 
-  const openPhotographerBio = (post: CommunityPost) => {
-    if (post.authorHandle === '@sourabh') {
-      setSelectedPhotographer({
-        name: 'Sourabh',
-        handle: '@sourabh',
-        avatar: post.authorAvatar,
-        location: 'Delhi Ridge & Northern Wetlands, India',
-        sightings: 342,
-        lifers: 189,
-        followers: '2.4k',
-        bio: 'Naturalist and field researcher. Tracking resident and migratory species along the Yamuna floodplain.',
-        isFollowing: followingMap['@sourabh'],
-      });
-    } else if (post.authorHandle === '@mayasingh') {
-      setSelectedPhotographer({
-        name: 'Maya Singh',
-        handle: '@mayasingh',
-        avatar: post.authorAvatar,
-        location: 'Okhla Sanctuary, New Delhi',
-        sightings: 512,
-        lifers: 264,
-        followers: '4.1k',
-        bio: 'Ornithology enthusiast and wetland conservationist. Specializes in kingfishers, waders, and raptor migrations.',
-        isFollowing: followingMap['@mayasingh'],
-      });
-    } else {
-      const authorPosts = posts.filter((item) => item.authorHandle === post.authorHandle);
-      setSelectedPhotographer({
-        name: post.authorName,
-        handle: post.authorHandle,
-        avatar: post.authorAvatar,
-        location: post.location,
-        sightings: authorPosts.length,
-        lifers: new Set(authorPosts.map((item) => item.speciesId)).size,
-        followers: '—',
-        bio: 'Community observer. Profile details are not available in this prototype.',
-      });
+  const showPerson = (person: PublicBirder) =>
+    setSelectedPhotographer({
+      id: person.id,
+      isSelf: person.isSelf,
+      name: person.name,
+      handle: person.handle,
+      avatar: person.avatarUrl,
+      location: person.location || 'Location not shared',
+      sightings: person.photosCount,
+      lifers: person.birdsCount,
+      followers: String(person.followersCount),
+      bio: person.bio || 'No biography shared.',
+      isFollowing: person.following,
+    });
+  const openPhotographerBio = async (post: CommunityPost) => {
+    if (!post.authorId || !onPersonDetails) {
+      showToast('This photographer profile is unavailable.');
+      return;
+    }
+    try {
+      showPerson(await onPersonDetails(post.authorId));
+    } catch (error) {
+      if (error instanceof Error && error.name !== 'AbortError') showToast(error.message);
+    }
+  };
+  const handleToggleFollow = async (handle: string) => {
+    const id =
+      people.find((person) => person.handle === handle)?.id ||
+      posts.find((post) => post.authorHandle === handle)?.authorId ||
+      selectedPhotographer?.id;
+    if (!id || !onToggleFollow) return;
+    const next = !isFollowing(handle);
+    if (await onToggleFollow(id, next)) {
+      setSelectedPhotographer((previous) => (previous ? { ...previous, isFollowing: next } : null));
+      showToast(next ? 'Following saved' : 'Unfollowed');
     }
   };
 
-  const handleToggleFollow = (handle: string) => {
-    const next = !isFollowing(handle);
-    setFollowingMap((prev) => ({ ...prev, [handle]: next }));
-    showToast(next ? `Following ${handle}` : `Unfollowed ${handle}`);
-  };
-
-  const handlePostCommentSubmit = (e: React.FormEvent) => {
+  const handlePostCommentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedPostForDetails || !newCommentInput.trim()) return;
-    onAddComment(selectedPostForDetails.id, newCommentInput.trim());
+    if ((await onAddComment(selectedPostForDetails.id, newCommentInput.trim())) === false) return;
     setNewCommentInput('');
     showToast('Observation note added');
   };
 
   return (
-    <div className="flex flex-col w-full pb-28 pt-1">
+    <div className="community-screen flex flex-col w-full pb-28 pt-1">
       {/* Search and Action Hub */}
       <div className="px-4 pt-2 pb-2 flex flex-col gap-2.5 bg-[#f7f9ff] sticky top-16 z-20">
         <div className="flex items-center gap-2">
@@ -187,188 +208,240 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
 
       {/* Feed Container */}
       <div className="flex flex-col gap-5 px-4 mt-2">
-        {filteredPosts.map((post) => (
-          <article
-            key={post.id}
-            className="bg-white rounded-2xl shadow-sm overflow-hidden flex flex-col transition-all hover:shadow-md"
+        {activeFilter === 'people' &&
+          people
+            .filter(
+              (person) =>
+                !searchQuery.trim() ||
+                [person.name, person.handle].some((value) =>
+                  value.toLowerCase().includes(searchQuery.toLowerCase().trim()),
+                ),
+            )
+            .map((person) => (
+              <div
+                key={person.id}
+                className="rounded-2xl bg-white p-4 flex items-center justify-between gap-2"
+              >
+                <button
+                  type="button"
+                  onClick={() => showPerson(person)}
+                  className="text-left min-h-11 min-w-0"
+                >
+                  <span className="block font-bold text-[14px] truncate">{person.name}</span>
+                  <span className="text-[12px]">{person.handle}</span>
+                </button>
+                {!person.isSelf && (
+                  <button
+                    type="button"
+                    onClick={() => void handleToggleFollow(person.handle)}
+                    className="min-h-11 px-3 rounded-xl bg-[#2d5a27] text-white text-[12px]"
+                  >
+                    {person.following ? 'Following' : 'Follow'}
+                  </button>
+                )}
+              </div>
+            ))}
+        {activeFilter === 'near-you' && !nearbyEnabled && (
+          <button
+            type="button"
+            onClick={onChooseLocation}
+            className="min-h-11 rounded-xl bg-white p-3 text-[13px]"
           >
-            {/* Author Bar */}
-            <div className="p-3.5 flex items-center justify-between">
-              <button
-                type="button"
-                onClick={() => openPhotographerBio(post)}
-                className="flex items-center gap-2.5 text-left group"
-              >
-                <div className="relative">
-                  <img
-                    src={post.authorAvatar}
-                    alt={post.authorName}
-                    className="w-10 h-10 rounded-full object-cover shadow-sm group-hover:scale-105 transition-transform"
-                  />
-                  <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-[#a1d494] rounded-full flex items-center justify-center">
-                    <span
-                      className="material-symbols-outlined text-[#154212] text-[10px]"
-                      style={{ fontVariationSettings: "'FILL' 1" }}
-                    >
-                      eco
-                    </span>
-                  </span>
-                </div>
-
-                <div className="flex flex-col min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[14px] font-bold text-[#181c20] group-hover:text-[#154212] transition-colors truncate">
-                      {post.authorName}
-                    </span>
-                    {post.authorBadge && (
-                      <span className="px-1.5 py-0.5 rounded bg-[#c7ecce] text-[#01210f] text-[9px] font-bold uppercase tracking-wider">
-                        {post.authorBadge}
-                      </span>
-                    )}
-                  </div>
-                  <span className="text-[12px] text-[#42493e] flex items-center gap-0.5 truncate">
-                    <span className="material-symbols-outlined text-[13px]">location_on</span>
-                    {post.location}
-                  </span>
-                </div>
-              </button>
-
-              <button
-                aria-label="Post options"
-                onClick={() => setSelectedPostId(post.id)}
-                className="w-8 h-8 rounded-full flex items-center justify-center text-[#42493e] hover:bg-[#ebeef3] transition-colors"
-              >
-                <span className="material-symbols-outlined text-[18px]">more_horiz</span>
-              </button>
-            </div>
-
-            {/* Bird Image with Tap to Open Details */}
-            <div
-              className="relative w-full aspect-[4/3] bg-[#ebeef3] cursor-pointer overflow-hidden group"
-              onClick={() => setSelectedPostId(post.id)}
+            Choose a location to find posts at loaded hotspots within 50 km
+          </button>
+        )}
+        {activeFilter !== 'people' &&
+          filteredPosts.map((post) => (
+            <article
+              key={post.id}
+              className="bg-white rounded-2xl shadow-sm overflow-hidden flex flex-col transition-all hover:shadow-md"
             >
-              <button type="button" aria-label={`View ${post.speciesName} post details`} className="block w-full h-full">
-                <img
-                  src={post.imageUrl}
-                  alt={post.speciesName}
-                  className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500"
-                />
-              </button>
-
-              {/* Species Badge */}
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onSelectSpeciesById(post.speciesId);
-                }}
-                className="absolute bottom-3 left-3 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-lg shadow-sm flex items-center gap-1.5 hover:bg-white transition-colors cursor-pointer"
-              >
-                <span className="material-symbols-outlined text-[#2d5a27] text-[16px]">flutter_dash</span>
-                <span className="text-[12px] font-bold text-[#181c20]">{post.speciesName}</span>
-                <span className="text-[11px] italic text-[#42493e]/80 ml-0.5">
-                  {post.speciesScientific}
-                </span>
-              </button>
-
-              {/* Tap Hint */}
-              <div className="absolute top-3 right-3 bg-black/40 backdrop-blur-md w-7 h-7 rounded-full flex items-center justify-center text-white">
-                <span className="material-symbols-outlined text-[16px]">info</span>
-              </div>
-            </div>
-
-            {/* Content & EXIF Strip */}
-            <div className="p-3.5 flex flex-col gap-2.5">
-              <p className="text-[14px] text-[#181c20] leading-relaxed">{post.caption}</p>
-
-              {/* Minimal EXIF Bar */}
-              <div className="bg-[#f1f4f9] rounded-xl px-3 py-2 flex items-center justify-between text-[#42493e] text-[12px]">
-                <div className="flex items-center gap-1 min-w-0">
-                  <span className="material-symbols-outlined text-[14px] flex-shrink-0">photo_camera</span>
-                  <span className="truncate">
-                    {post.exif.camera} · {post.exif.lens}
-                  </span>
-                </div>
-                <div className="flex items-center gap-1.5 font-mono text-[11px] text-[#181c20] flex-shrink-0">
-                  <span>ISO {post.exif.iso}</span>
-                  <span>·</span>
-                  <span>{post.exif.aperture}</span>
-                  <span>·</span>
-                  <span>{post.exif.shutter}</span>
-                </div>
-              </div>
-
-              {/* Social Action Bar */}
-              <div className="pt-1 flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <button
-                    aria-label={post.isLiked ? "Unlike sighting" : "Like sighting"}
-                    aria-pressed={Boolean(post.isLiked)}
-                    onClick={() => onToggleLike(post.id)}
-                    className="flex items-center gap-1.5 text-[#42493e] hover:text-[#ba1a1a] transition-colors group"
-                  >
-                    <span
-                      className={`material-symbols-outlined text-[20px] transition-transform group-active:scale-125 ${
-                        post.isLiked ? 'text-[#ba1a1a]' : ''
-                      }`}
-                      style={{ fontVariationSettings: post.isLiked ? "'FILL' 1" : "'FILL' 0" }}
-                    >
-                      {post.isLiked ? 'favorite' : 'favorite_border'}
+              {/* Author Bar */}
+              <div className="p-3.5 flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => openPhotographerBio(post)}
+                  className="flex items-center gap-2.5 text-left group"
+                >
+                  <div className="relative">
+                    <img
+                      src={post.authorAvatar}
+                      alt={post.authorName}
+                      className="w-10 h-10 rounded-full object-cover shadow-sm group-hover:scale-105 transition-transform"
+                    />
+                    <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-[#a1d494] rounded-full flex items-center justify-center">
+                      <span
+                        className="material-symbols-outlined text-[#154212] text-[10px]"
+                        style={{ fontVariationSettings: "'FILL' 1" }}
+                      >
+                        eco
+                      </span>
                     </span>
-                    <span className="text-[12px] font-semibold">{post.likes}</span>
-                  </button>
+                  </div>
 
-                  <button
-                    aria-label="Open sighting comments"
-                    onClick={() => setSelectedPostId(post.id)}
-                    className="flex items-center gap-1.5 text-[#42493e] hover:text-[#154212] transition-colors"
-                  >
-                    <span className="material-symbols-outlined text-[20px]">chat_bubble_outline</span>
-                    <span className="text-[12px] font-semibold">{post.commentsCount}</span>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      if (navigator.share) {
-                        navigator.share({
-                          title: post.speciesName,
-                          text: post.caption,
-                          url: window.location.href,
-                        }).catch((error) => {
-                          if (error.name !== 'AbortError') showToast('Could not share this sighting. Please try again.');
-                        });
-                      } else {
-                        showToast('Sharing is not supported by this browser yet.');
-                      }
-                    }}
-                    aria-label="Share sighting"
-                    className="text-[#42493e] hover:text-[#154212] transition-colors"
-                  >
-                    <span className="material-symbols-outlined text-[20px]">send</span>
-                  </button>
-                </div>
+                  <div className="flex flex-col min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[14px] font-bold text-[#181c20] group-hover:text-[#154212] transition-colors truncate">
+                        {post.authorName}
+                      </span>
+                      {post.authorBadge && (
+                        <span className="px-1.5 py-0.5 rounded bg-[#c7ecce] text-[#01210f] text-[9px] font-bold uppercase tracking-wider">
+                          {post.authorBadge}
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-[12px] text-[#42493e] flex items-center gap-0.5 truncate">
+                      <span className="material-symbols-outlined text-[13px]">location_on</span>
+                      {post.location}
+                    </span>
+                  </div>
+                </button>
 
                 <button
-                  onClick={() => onToggleSave(post.id)}
-                  aria-label="Bookmark post"
-                  className="text-[#42493e] hover:text-[#904d00] transition-colors"
+                  aria-label="Post options"
+                  onClick={() => setSelectedPostId(post.id)}
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-[#42493e] hover:bg-[#ebeef3] transition-colors"
                 >
-                  <span
-                    className={`material-symbols-outlined text-[20px] ${
-                      post.isSaved ? 'text-[#904d00]' : ''
-                    }`}
-                    style={{ fontVariationSettings: post.isSaved ? "'FILL' 1" : "'FILL' 0" }}
-                  >
-                    {post.isSaved ? 'bookmark' : 'bookmark_border'}
-                  </span>
+                  <span className="material-symbols-outlined text-[18px]">more_horiz</span>
                 </button>
               </div>
-            </div>
-          </article>
-        ))}
 
-        {filteredPosts.length === 0 && (
-          <p role="status" className="py-8 text-center text-[13px] text-[#42493e]">No posts match this search and filter.</p>
+              {/* Bird Image with Tap to Open Details */}
+              <div
+                className="relative w-full aspect-[4/3] bg-[#ebeef3] cursor-pointer overflow-hidden group"
+                onClick={() => setSelectedPostId(post.id)}
+              >
+                <button
+                  type="button"
+                  aria-label={`View ${post.speciesName} post details`}
+                  className="block w-full h-full"
+                >
+                  <img
+                    src={post.imageUrl}
+                    alt={post.speciesName}
+                    className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500"
+                  />
+                </button>
+
+                {/* Species Badge */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSelectSpeciesById(post.speciesId);
+                  }}
+                  className="absolute bottom-3 left-3 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-lg shadow-sm flex items-center gap-1.5 hover:bg-white transition-colors cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[#2d5a27] text-[16px]">flutter_dash</span>
+                  <span className="text-[12px] font-bold text-[#181c20]">{post.speciesName}</span>
+                  <span className="text-[11px] italic text-[#42493e]/80 ml-0.5">
+                    {post.speciesScientific}
+                  </span>
+                </button>
+
+                {/* Tap Hint */}
+                <div className="absolute top-3 right-3 bg-black/40 backdrop-blur-md w-7 h-7 rounded-full flex items-center justify-center text-white">
+                  <span className="material-symbols-outlined text-[16px]">info</span>
+                </div>
+              </div>
+
+              {/* Content & EXIF Strip */}
+              <div className="p-3.5 flex flex-col gap-2.5">
+                <p className="text-[14px] text-[#181c20] leading-relaxed">{post.caption}</p>
+
+                {/* Minimal EXIF Bar */}
+                <div className="bg-[#f1f4f9] rounded-xl px-3 py-2 flex items-center justify-between text-[#42493e] text-[12px]">
+                  <div className="flex items-center gap-1 min-w-0">
+                    <span className="material-symbols-outlined text-[14px] flex-shrink-0">photo_camera</span>
+                    <span className="truncate">
+                      {post.exif.camera} · {post.exif.lens}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5 font-mono text-[11px] text-[#181c20] flex-shrink-0">
+                    <span>ISO {post.exif.iso}</span>
+                    <span>·</span>
+                    <span>{post.exif.aperture}</span>
+                    <span>·</span>
+                    <span>{post.exif.shutter}</span>
+                  </div>
+                </div>
+
+                {/* Social Action Bar */}
+                <div className="pt-1 flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <button
+                      aria-label={post.isLiked ? 'Unlike sighting' : 'Like sighting'}
+                      aria-pressed={Boolean(post.isLiked)}
+                      onClick={() => onToggleLike(post.id)}
+                      className="flex items-center gap-1.5 text-[#42493e] hover:text-[#ba1a1a] transition-colors group"
+                    >
+                      <span
+                        className={`material-symbols-outlined text-[20px] transition-transform group-active:scale-125 ${
+                          post.isLiked ? 'text-[#ba1a1a]' : ''
+                        }`}
+                        style={{ fontVariationSettings: post.isLiked ? "'FILL' 1" : "'FILL' 0" }}
+                      >
+                        {post.isLiked ? 'favorite' : 'favorite_border'}
+                      </span>
+                      <span className="text-[12px] font-semibold">{post.likes}</span>
+                    </button>
+
+                    <button
+                      aria-label="Open sighting comments"
+                      onClick={() => setSelectedPostId(post.id)}
+                      className="flex items-center gap-1.5 text-[#42493e] hover:text-[#154212] transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-[20px]">chat_bubble_outline</span>
+                      <span className="text-[12px] font-semibold">{post.commentsCount}</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        if (navigator.share) {
+                          navigator
+                            .share({
+                              title: post.speciesName,
+                              text: post.caption,
+                              url: window.location.href,
+                            })
+                            .catch((error) => {
+                              if (error.name !== 'AbortError')
+                                showToast('Could not share this sighting. Please try again.');
+                            });
+                        } else {
+                          showToast('Sharing is not supported by this browser yet.');
+                        }
+                      }}
+                      aria-label="Share sighting"
+                      className="text-[#42493e] hover:text-[#154212] transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-[20px]">send</span>
+                    </button>
+                  </div>
+
+                  <button
+                    onClick={() => onToggleSave(post.id)}
+                    aria-label="Bookmark post"
+                    className="text-[#42493e] hover:text-[#904d00] transition-colors"
+                  >
+                    <span
+                      className={`material-symbols-outlined text-[20px] ${
+                        post.isSaved ? 'text-[#904d00]' : ''
+                      }`}
+                      style={{ fontVariationSettings: post.isSaved ? "'FILL' 1" : "'FILL' 0" }}
+                    >
+                      {post.isSaved ? 'bookmark' : 'bookmark_border'}
+                    </span>
+                  </button>
+                </div>
+              </div>
+            </article>
+          ))}
+
+        {filteredPosts.length === 0 && activeFilter !== 'people' && (
+          <p role="status" className="py-8 text-center text-[13px] text-[#42493e]">
+            No posts match this search and filter.
+          </p>
         )}
 
         {/* Field Etiquette Quote Card */}
@@ -377,9 +450,7 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
             nature_people
           </span>
           <p className="text-[13px] leading-snug">
-            <span className="font-bold text-[#154212] uppercase text-[11px] mr-1">
-              Field Etiquette:
-            </span>
+            <span className="font-bold text-[#154212] uppercase text-[11px] mr-1">Field Etiquette:</span>
             Keep a respectful 20m distance from active nesting perches across wetlands. Happy wandering!
           </p>
         </div>
@@ -388,12 +459,16 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
       {/* OVERLAY 1: Post Details, EXIF & Comments Bottom Sheet */}
       {selectedPostForDetails && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-xs transition-opacity animate-in fade-in duration-200">
-          <div
-            className="absolute inset-0"
-            onClick={() => setSelectedPostId(null)}
-          ></div>
+          <div className="absolute inset-0" onClick={() => setSelectedPostId(null)}></div>
 
-          <div ref={postDialogRef} role="dialog" aria-modal="true" aria-label="Sighting details and comments" tabIndex={-1} className="relative w-full max-w-md bg-white rounded-t-3xl shadow-xl flex flex-col max-h-[85dvh] overflow-hidden z-10 animate-in slide-in-from-bottom duration-300">
+          <div
+            ref={postDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Sighting details and comments"
+            tabIndex={-1}
+            className="relative w-full max-w-md bg-white rounded-t-3xl shadow-xl flex flex-col max-h-[85dvh] overflow-hidden z-10 animate-in slide-in-from-bottom duration-300"
+          >
             {/* Handle */}
             <div
               role="button"
@@ -442,21 +517,23 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
                     <span className="material-symbols-outlined text-[#904d00] text-[18px]">sunny</span>
                     <p className="text-[10px] text-[#42493e] mt-0.5">Lighting</p>
                     <p className="text-[12px] font-bold text-[#181c20]">
-                      {selectedPostForDetails.weather?.lighting || 'Morning Clear'}
+                      {selectedPostForDetails.weather?.lighting || 'Unverified'}
                     </p>
                   </div>
                   <div className="bg-white p-2 rounded-lg shadow-xs">
-                    <span className="material-symbols-outlined text-[#154212] text-[18px]">device_thermostat</span>
+                    <span className="material-symbols-outlined text-[#154212] text-[18px]">
+                      device_thermostat
+                    </span>
                     <p className="text-[10px] text-[#42493e] mt-0.5">Temp</p>
                     <p className="text-[12px] font-bold text-[#181c20]">
-                      {selectedPostForDetails.weather?.temp || '24°C'}
+                      {selectedPostForDetails.weather?.temp || 'Unverified'}
                     </p>
                   </div>
                   <div className="bg-white p-2 rounded-lg shadow-xs">
                     <span className="material-symbols-outlined text-[#2d5a27] text-[18px]">air</span>
                     <p className="text-[10px] text-[#42493e] mt-0.5">Wind</p>
                     <p className="text-[12px] font-bold text-[#181c20]">
-                      {selectedPostForDetails.weather?.wind || '5 km/h'}
+                      {selectedPostForDetails.weather?.wind || 'Unverified'}
                     </p>
                   </div>
                 </div>
@@ -470,15 +547,11 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
                 <div className="grid grid-cols-2 gap-y-2 gap-x-4 pt-1 text-[13px] text-[#181c20]">
                   <div className="flex justify-between">
                     <span className="text-[#42493e]">Camera:</span>
-                    <span className="font-semibold truncate ml-2">
-                      {selectedPostForDetails.exif.camera}
-                    </span>
+                    <span className="font-semibold truncate ml-2">{selectedPostForDetails.exif.camera}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-[#42493e]">Lens:</span>
-                    <span className="font-semibold truncate ml-2">
-                      {selectedPostForDetails.exif.lens}
-                    </span>
+                    <span className="font-semibold truncate ml-2">{selectedPostForDetails.exif.lens}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-[#42493e]">Focal:</span>
@@ -522,6 +595,15 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
                           <span className="text-[10px] text-[#42493e]">{comm.time}</span>
                         </div>
                         <p className="text-[13px] text-[#42493e] mt-0.5 leading-snug">{comm.text}</p>
+                        {comm.canDelete && onDeleteComment && (
+                          <button
+                            type="button"
+                            onClick={() => void onDeleteComment(comm.id)}
+                            className="min-h-11 text-left text-[11px] underline"
+                          >
+                            Delete comment
+                          </button>
+                        )}
                       </div>
                     </div>
                   ))
@@ -537,7 +619,7 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
                     value={newCommentInput}
                     onChange={(e) => setNewCommentInput(e.target.value)}
                     placeholder="Add observation note..."
-                    className="w-full h-10 pl-3 pr-10 bg-[#ebeef3] text-[#181c20] placeholder:text-[#42493e]/60 text-[13px] rounded-lg focus:outline-none focus:bg-white shadow-xs transition-colors"
+                    className="w-full h-11 pl-3 pr-14 bg-[#ebeef3] text-[#181c20] placeholder:text-[#42493e]/60 text-[13px] rounded-lg focus:outline-none focus:bg-white shadow-xs transition-colors"
                   />
                   <button
                     aria-label="Submit observation note"
@@ -548,6 +630,48 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
                     <span className="material-symbols-outlined text-[20px]">arrow_upward</span>
                   </button>
                 </form>
+                {onReport && (
+                  <details className="rounded-xl bg-[#f1f4f9] p-3">
+                    <summary className="min-h-11 cursor-pointer text-[13px] font-semibold">
+                      Report this sighting
+                    </summary>
+                    <label className="block text-[12px]">
+                      Reason
+                      <select
+                        aria-label="Report reason"
+                        value={reportReason}
+                        onChange={(event) => setReportReason(event.target.value)}
+                        className="block w-full min-h-11 rounded-lg bg-white p-2"
+                      >
+                        {['identification', 'location', 'privacy', 'abuse', 'other'].map((reason) => (
+                          <option key={reason} value={reason}>
+                            {reason}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <textarea
+                      aria-label="Report details"
+                      value={reportDetail}
+                      maxLength={1000}
+                      onChange={(event) => setReportDetail(event.target.value)}
+                      className="mt-2 w-full rounded-lg bg-white p-2 text-[13px]"
+                      placeholder="Explain the issue without sharing private coordinates"
+                    />
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        if (await onReport(selectedPostForDetails.id, reportReason, reportDetail)) {
+                          setReportDetail('');
+                          showToast('Report saved for review; no moderation action has occurred yet.');
+                        }
+                      }}
+                      className="min-h-11 underline text-[12px]"
+                    >
+                      Submit report
+                    </button>
+                  </details>
+                )}
               </div>
             </div>
           </div>
@@ -557,12 +681,16 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
       {/* OVERLAY 2: Photographer Bio Quick Sheet */}
       {selectedPhotographer && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-xs transition-opacity animate-in fade-in duration-200">
-          <div
-            className="absolute inset-0"
-            onClick={() => setSelectedPhotographer(null)}
-          ></div>
+          <div className="absolute inset-0" onClick={() => setSelectedPhotographer(null)}></div>
 
-          <div ref={photographerDialogRef} role="dialog" aria-modal="true" aria-label="Photographer profile" tabIndex={-1} className="relative w-full max-w-md bg-white rounded-t-3xl shadow-xl flex flex-col p-5 items-center text-center max-h-[85dvh] overflow-y-auto z-10 animate-in slide-in-from-bottom duration-300">
+          <div
+            ref={photographerDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Photographer profile"
+            tabIndex={-1}
+            className="relative w-full max-w-md bg-white rounded-t-3xl shadow-xl flex flex-col p-5 items-center text-center max-h-[85dvh] overflow-y-auto z-10 animate-in slide-in-from-bottom duration-300"
+          >
             <div className="w-10 h-1.5 rounded-full bg-[#e0e3e8] mb-3"></div>
 
             <img
@@ -571,9 +699,7 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
               className="w-20 h-20 rounded-full object-cover shadow-md ring-4 ring-[#ebeef3]"
             />
 
-            <h3 className="text-[20px] font-bold text-[#181c20] mt-3">
-              {selectedPhotographer.name}
-            </h3>
+            <h3 className="text-[20px] font-bold text-[#181c20] mt-3">{selectedPhotographer.name}</h3>
             <p className="text-[12px] text-[#42493e] flex items-center justify-center gap-1 mt-0.5">
               <span className="material-symbols-outlined text-[14px]">location_on</span>
               {selectedPhotographer.location}
@@ -582,31 +708,24 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
             {/* Stats */}
             <div className="grid grid-cols-3 gap-3 w-full my-4 bg-[#f1f4f9] rounded-xl p-3">
               <div>
-                <p className="text-[18px] font-bold text-[#154212]">
-                  {selectedPhotographer.sightings}
-                </p>
+                <p className="text-[18px] font-bold text-[#154212]">{selectedPhotographer.sightings}</p>
                 <p className="text-[10px] font-semibold text-[#42493e]">Sightings</p>
               </div>
               <div>
-                <p className="text-[18px] font-bold text-[#181c20]">
-                  {selectedPhotographer.lifers}
-                </p>
+                <p className="text-[18px] font-bold text-[#181c20]">{selectedPhotographer.lifers}</p>
                 <p className="text-[10px] font-semibold text-[#42493e]">Lifer Birds</p>
               </div>
               <div>
-                <p className="text-[18px] font-bold text-[#904d00]">
-                  {selectedPhotographer.followers}
-                </p>
+                <p className="text-[18px] font-bold text-[#904d00]">{selectedPhotographer.followers}</p>
                 <p className="text-[10px] font-semibold text-[#42493e]">Followers</p>
               </div>
             </div>
 
-            <p className="text-[13px] text-[#42493e] mb-5 px-2 leading-relaxed">
-              {selectedPhotographer.bio}
-            </p>
+            <p className="text-[13px] text-[#42493e] mb-5 px-2 leading-relaxed">{selectedPhotographer.bio}</p>
 
             <div className="flex items-center gap-2.5 w-full">
               <button
+                disabled={selectedPhotographer.isSelf}
                 onClick={() => handleToggleFollow(selectedPhotographer.handle)}
                 className={`flex-1 h-11 font-semibold text-[14px] rounded-xl shadow-sm active:scale-98 transition-all flex items-center justify-center gap-1.5 ${
                   isFollowing(selectedPhotographer.handle)
@@ -618,7 +737,11 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
                   {isFollowing(selectedPhotographer.handle) ? 'check' : 'person_add'}
                 </span>
                 <span>
-                  {isFollowing(selectedPhotographer.handle) ? 'Following' : 'Follow'}
+                  {selectedPhotographer.isSelf
+                    ? 'Your profile'
+                    : isFollowing(selectedPhotographer.handle)
+                      ? 'Following'
+                      : 'Follow'}
                 </span>
               </button>
 

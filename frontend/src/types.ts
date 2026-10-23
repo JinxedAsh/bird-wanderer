@@ -55,6 +55,9 @@ export interface PostExif {
 }
 
 export interface CommunityPost {
+  authorId?: string;
+  isFollowing?: boolean;
+  isNearby?: boolean;
   id: string;
   authorName: string;
   authorHandle: string;
@@ -79,6 +82,7 @@ export interface CommunityPost {
     time: string;
     text: string;
     color: string;
+    canDelete?: boolean;
   }>;
   weather?: {
     lighting: string;
