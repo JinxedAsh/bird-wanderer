@@ -20,7 +20,8 @@ export interface PhotoLoadState {
   error: string;
 }
 
-export const PhotoCredit: React.FC<{ photo: Photo; full?: boolean }> = ({ photo, full = false }) => (
+export type PhotoAttribution = Pick<Photo,'author'|'license'|'licenseUrl'|'sourceUrl'|'title'|'credit'|'attribution'|'usageTerms'|'restrictions'|'matchUrl'>;
+export const PhotoCredit: React.FC<{ photo: PhotoAttribution; full?: boolean }> = ({ photo, full = false }) => (
   <figcaption onClick={(event) => event.stopPropagation()} onKeyDown={(event) => event.stopPropagation()} className="col-span-3 row-start-2 mt-1 text-[10px] leading-relaxed text-[#42493e] break-words">
     <span>{!full && photo.author.length > 180 ? 'Photo reference • ' : `Photo: ${photo.author} • `}</span>
     <a href={photo.licenseUrl} target="_blank" rel="noreferrer" className="underline">{photo.license}</a>
