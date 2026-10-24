@@ -219,6 +219,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, showToas
           </button>
         </form>
 
+        {typeof navigator!=='undefined'&&navigator.userAgent.includes('BirdWandererAndroid/')&&<button type="button" onClick={()=>{window.location.href='birdwanderer://connection';}} className="min-h-11 w-full text-[12px] font-semibold text-[#154212] underline">Android server connection</button>}
         {/* Footer Toggle Link */}
         <div className="flex items-center justify-center text-center pt-1">
           <p className="text-[12px] text-[#42493e]">

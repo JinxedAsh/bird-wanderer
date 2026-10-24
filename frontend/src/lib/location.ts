@@ -18,12 +18,29 @@ export function getDeviceLocation(geolocation: Geolocation | null | undefined = 
   if (!secureContext) return Promise.reject(new Error('GPS requires HTTPS or localhost. On the phone LAN preview, enter coordinates below.'));
   if (!geolocation) return Promise.reject(new Error('This browser does not support GPS. Enter coordinates below.'));
   return new Promise((resolve, reject) => {
-    geolocation.getCurrentPosition((position) => {
-      const point: LocationPoint = { latitude: position.coords.latitude, longitude: position.coords.longitude, source: 'GPS' };
-      if (!hotspotCoordinates(point)) { reject(new Error('The device returned invalid coordinates. Try again or enter them below.')); return; }
-      if (Number.isFinite(position.coords.accuracy) && position.coords.accuracy >= 0) point.accuracyM = position.coords.accuracy;
-      resolve(point);
-    }, (error) => reject(new Error(error.code === 1 ? 'Location permission was denied. You can enter coordinates below.' : error.code === 3 ? 'Location request timed out. Try again or enter coordinates below.' : 'Device location is unavailable. Try again or enter coordinates below.')),
-    { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 });
+    let settled = false;
+    // Some WebViews never settle a denied/pending permission request, so their
+    // geolocation timeout alone cannot guarantee that the controls recover.
+    const watchdog = setTimeout(() => fail(new Error('Location request did not return in time. Try again or enter coordinates below.')), 12000);
+    const fail = (error: Error) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(watchdog);
+      reject(error);
+    };
+    try {
+      geolocation.getCurrentPosition((position) => {
+        if (settled) return;
+        const point: LocationPoint = { latitude: position.coords.latitude, longitude: position.coords.longitude, source: 'GPS' };
+        if (!hotspotCoordinates(point)) { fail(new Error('The device returned invalid coordinates. Try again or enter them below.')); return; }
+        if (Number.isFinite(position.coords.accuracy) && position.coords.accuracy >= 0) point.accuracyM = position.coords.accuracy;
+        settled = true;
+        clearTimeout(watchdog);
+        resolve(point);
+      }, (error) => fail(new Error(error.code === 1 ? 'Location permission was denied. You can enter coordinates below.' : error.code === 3 ? 'Location request timed out. Try again or enter coordinates below.' : 'Device location is unavailable. Try again or enter coordinates below.')),
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 });
+    } catch {
+      fail(new Error('Device location is unavailable. Try again or enter coordinates below.'));
+    }
   });
 }
