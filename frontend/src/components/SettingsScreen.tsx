@@ -59,6 +59,10 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
 
   return (
     <div className="flex flex-col w-full pb-28 pt-1">
+      {typeof navigator!=='undefined'&&navigator.userAgent.includes('BirdWandererAndroid/')&&<div className="mx-4 my-2 rounded-xl bg-white p-3 text-[12px] text-[#42493e]">
+        <button type="button" onClick={()=>{window.location.href='birdwanderer://connection';}} className="min-h-11 font-semibold underline">Android server connection</button>
+        <p>Choose the trusted server for this Android app. Changing servers signs this app out; records remain on their original server. Native push is not configured.</p>
+      </div>}
       {/* Field Naturalist Identity Snippet */}
       <div className="px-4 pt-2 pb-2">
         <div className="bg-[#f1f4f9] rounded-2xl p-4 flex items-center gap-3.5 shadow-xs border border-[#e0e3e8]">
