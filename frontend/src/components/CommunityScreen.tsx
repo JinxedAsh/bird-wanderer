@@ -581,10 +581,11 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
                 <div className="flex items-center justify-between">
                   <span className="text-[14px] font-bold text-[#181c20]">Field Notes & Comments</span>
                   <span className="text-[11px] text-[#42493e]">
-                    {(selectedPostForDetails.comments?.length || 0) + ' replies'}
+                    {(selectedPostForDetails.commentsCount ?? selectedPostForDetails.comments?.length ?? 0) + ' replies'}
                   </span>
                 </div>
 
+                {selectedPostForDetails.commentsCount>(selectedPostForDetails.comments?.length||0)&&<p className="text-xs text-[#42493e]">Showing the latest {selectedPostForDetails.comments?.length||0} replies. Earlier replies are not loaded.</p>}
                 {selectedPostForDetails.comments && selectedPostForDetails.comments.length > 0 ? (
                   selectedPostForDetails.comments.map((comm) => (
                     <div key={comm.id} className="bg-[#f1f4f9] rounded-xl p-3 flex gap-2.5">

@@ -14,6 +14,11 @@ const maxBytes = 10 * 1024 * 1024;
 const clean = (value, max) => (typeof value === 'string' && value.trim().length <= max ? value.trim() : null);
 const fail = (status, message) => Object.assign(new Error(message), { status });
 const uuid = (value) => typeof value === 'string' && /^[a-f0-9-]{36}$/.test(value);
+const validObservationTime=(value,time)=>{
+  if(typeof value!=='string'||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value))return false;
+  const parsed=Date.parse(`${value}:00Z`);
+  return Number.isFinite(parsed)&&new Date(parsed).toISOString().slice(0,16)===value&&parsed<=time+86400000&&parsed>=Date.UTC(1900,0,1);
+};
 const initialProfile = (user) => ({
   name: user.name,
   handle: `birder-${user.id.replaceAll('-', '').slice(0, 12)}`,
@@ -440,14 +445,8 @@ export function observationsRouter(
           400,
           'Choose a photograph, species, hotspot, date/time and visibility; notes may have up to 3000 characters.',
         );
-      const when = Date.parse(`${body.observedAt}:00Z`);
-      if (
-        !Number.isFinite(when) ||
-        new Date(when).toISOString().slice(0, 16) !== body.observedAt ||
-        when > now() + 86400000 ||
-        when < Date.UTC(1900, 0, 1)
-      )
-        throw fail(400, 'Enter a valid observation date/time (camera/local clock; timezone unverified).');
+      if(!validObservationTime(body.observedAt,now()))
+        throw fail(400,'Enter a valid observation date/time (camera/local clock; timezone unverified).');
       const media = db.prepare('SELECT * FROM media WHERE id=? AND user_id=?').get(body.mediaId, req.userId);
       if (!media) throw fail(409, 'Choose an unused photograph belonging to your account.');
       const existing = db.prepare('SELECT * FROM observations WHERE media_id=?').get(body.mediaId);
@@ -515,22 +514,43 @@ export function observationsRouter(
   );
   router.patch(
     '/:id',
-    route((req, res) => {
-      const row = observation(req.params.id);
-      if (!row || row.user_id !== req.userId) throw fail(404, 'Observation not found.');
-      const { inLifeList, visibility } = req.body || {};
-      if (
-        (inLifeList !== undefined && typeof inLifeList !== 'boolean') ||
-        (visibility !== undefined && !['public', 'followers', 'private'].includes(visibility)) ||
-        (inLifeList === undefined && visibility === undefined)
-      )
-        throw fail(400, 'Choose a valid life-list or visibility change.');
-      db.prepare('UPDATE observations SET in_life_list=?,visibility=? WHERE id=?').run(
-        inLifeList === undefined ? row.in_life_list : Number(inLifeList),
-        visibility ?? row.visibility,
-        row.id,
-      );
-      res.json({ observation: serialize(observation(row.id), req.userId), profile: profile(req.userId) });
+    route(async(req,res)=>{
+      const original=observation(req.params.id);
+      if(!original||original.user_id!==req.userId)throw fail(404,'Observation not found.');
+      const body=req.body,allowed=['inLifeList','visibility','notes','observedAt','speciesId','hotspotId'];
+      if(!body||typeof body!=='object'||Array.isArray(body)||!Object.keys(body).length||Object.keys(body).some(key=>!allowed.includes(key)))
+        throw fail(400,'Choose valid observation fields to change.');
+      if((body.inLifeList!==undefined&&typeof body.inLifeList!=='boolean')||
+         (body.visibility!==undefined&&!['public','followers','private'].includes(body.visibility))||
+         (body.notes!==undefined&&clean(body.notes,3000)===null)||
+         (body.observedAt!==undefined&&!validObservationTime(body.observedAt,now()))||
+         ['speciesId','hotspotId'].some(key=>body[key]!==undefined&&(typeof body[key]!=='string'||!body[key]||body[key].length>80)))
+        throw fail(400,'Check species, hotspot, local date/time, visibility and notes (up to 3000 characters).');
+      // Text/privacy/life-list edits must still work when the discovery provider is unavailable.
+      const needsCatalogue=(body.speciesId!==undefined&&body.speciesId!==original.species_id)||(body.hotspotId!==undefined&&body.hotspotId!==original.hotspot_id);
+      const catalogue=needsCatalogue?await discovery.catalogue():null;
+      const species=body.speciesId===undefined?null:body.speciesId===original.species_id?{id:original.species_id,name:original.species_name,scientificName:original.scientific_name}:catalogue.species.find(row=>row.id===body.speciesId);
+      const hotspot=body.hotspotId===undefined?null:body.hotspotId===original.hotspot_id?{id:original.hotspot_id,name:original.hotspot_name}:catalogue.hotspots.find(row=>row.id===body.hotspotId);
+      if((body.speciesId!==undefined&&!species)||(body.hotspotId!==undefined&&!hotspot))throw fail(400,'Choose a species and hotspot from the current discovery catalogue.');
+      // Awaiting the provider may allow another request to run. Merge only submitted
+      // fields into the latest owned row, preserving unrelated concurrent changes.
+      const row=observation(original.id);
+      if(!row||row.user_id!==req.userId)throw fail(404,'Observation not found.');
+      const corrected=(species&&species.id!==row.species_id)||(hotspot&&hotspot.id!==row.hotspot_id);
+      db.exec('BEGIN');
+      try{
+        db.prepare(`UPDATE observations SET in_life_list=?,visibility=?,notes=?,observed_at=?,species_id=?,species_name=?,scientific_name=?,hotspot_id=?,hotspot_name=? WHERE id=?`).run(
+          body.inLifeList===undefined?row.in_life_list:Number(body.inLifeList),body.visibility??row.visibility,
+          body.notes===undefined?row.notes:body.notes.trim(),body.observedAt??row.observed_at,
+          species?.id??row.species_id,species?.name??row.species_name,species?.scientificName??row.scientific_name,
+          hotspot?.id??row.hotspot_id,hotspot?.name??row.hotspot_name,row.id);
+        // A corrected species/site is not a newly published sighting. Old matched
+        // alerts/outbox references must not silently change into a different report.
+        if(corrected)db.prepare('DELETE FROM sighting_alerts WHERE observation_id=?').run(row.id);
+        db.exec('COMMIT');
+      }catch(error){db.exec('ROLLBACK');throw error;}
+      res.json({observation:serialize(observation(row.id),req.userId),profile:profile(req.userId)});
+
     }),
   );
   router.delete(

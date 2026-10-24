@@ -1,6 +1,6 @@
 # Bird Wanderer — Development Record
 
-- **Last updated:** 24 October 2026, India Standard Time (Asia/Kolkata).
+- **Last updated:** 25 October 2026, India Standard Time (Asia/Kolkata).
 - **Current project phase:** Phase 1 delivered foundation; full-project completion now authorized across Phases 1–4 and Android.
 - **Required final deliverable:** an Android application/APK.
 - **Audience:** team members, evaluators and the developer; no code knowledge is required for the main sections.
@@ -740,6 +740,20 @@ The header logo now uses a bundled SVG following the supplied green bird emblem,
 
 **Files/Viva:** android Gradle/wrapper/build configuration, manifest/debug policy/resources, MainActivity/OriginPolicy/unit tests, Android CI workflow, Android-only Settings row and shared documentation. android/README.md explains build/install/server setup, native behavior/tradeoffs, signing/privacy boundaries and six Viva questions. Build output, SDK/AVD/JDK, private local settings/signing keys and QA files remain outside Git. Search/social #30 merged at da676b7 after exact-head/main CI passed before this branch.
 
+**Delivery follow-up, 25 October:** PR #31 merged at47cbef4 after all four checks passed for exact head03f5941; merged-main web and Android checks also passed. The rebuilt native guard passed a targeted single-denial/picker-cancel recheck: one location prompt, no repeat prompt during the recorded14-second observation, deadline/manual recovery and normal picker cancellation. Earlier full JPEG/PNG flows were not repeated on that guard rebuild. Physical-device, successful GPS, native push and HTTPS release acceptance remain open.
+
+### Entry 39 — Owned-record editing and truthful action feedback
+
+**Date/group:** 24–25 October2026 IST; Journal/community reliability. **Status:** implemented locally on journal-record-editing;115 automated tests, TypeScript and production build pass. Scoped browser acceptance and GitHub delivery are pending.
+
+**Problem and result:** Journal Edit previously showed a placeholder. It now loads the actual owned record and saves reported species, hotspot, local date/time, notes and visibility. The photograph, original EXIF/private coordinates and publication time remain unchanged. Delete/life-list controls wait for server acknowledgement and show a failure if the change was not confirmed. All-record summary totals remain distinct from loaded-page details.
+
+**How it works:** the existing observation client sends only changed fields to the authenticated PATCH endpoint. The server validates ownership, allowed fields, calendar values and source IDs. Notes/privacy do not need a provider lookup. After an awaited source lookup it rereads the record, preserving unrelated concurrent changes. Species/site corrections and removal of stale sighting alerts/outbox references share a database transaction; corrections are not new sighting events. Failed saves keep the form draft.
+
+**Related fixes:** long discussions now show latest100 comments in chronological order with their true total and an explicit history limit. Journal code loads on demand; a small React error boundary offers reload recovery when rendering/code download fails. Ordinary API failures stay inside the editable form.
+
+**Verification/files:**115 tests passed, zero TypeScript errors and production build passed on25 October; main JavaScript488.84kB and Journal17.15kB. Tests cover invalid/foreign updates, unavailable discovery, preserved bytes/EXIF/privacy/restart, transactional rollback, concurrent changes/deletion and comments beyond100. Modified observation/community server modules and tests, frontend test harness, App/Journal/Community/main; added EditObservationSheet/AppErrorBoundary and shared acceptance/walkthrough documents. See OBSERVATION_EDITING_WALKTHROUGH.md for request flow and six Viva questions. FINAL_ACCEPTANCE.md tracks the finite remaining controls and unavailable scientific/provider/manual evidence. No Firebase project exists; real push delivery remains unconfigured.
+
 ## 4. How the current application fits together
 
 The interface is what the user sees and interacts with. The backend is the program that receives requests and checks account information. The database is where persistent account information is saved.
@@ -790,7 +804,7 @@ Android delivery is now in scope for full-project completion. Follow PROJECT_COM
 
 - Seasonal statistics require legitimate regional historical exports with denominators. Measured photography difficulty and historical environmental matching lack reliable evidence; general heuristics must stay labelled.
 - Firebase project/configuration and actual browser/native-device push receipt are unavailable. Social notifications are currently in-app only; Android WebView needs a native push adapter before device delivery can be accepted.
-- Android source/build and initial emulator installation pass locally; native photo/location/back/navigation QA and physical Oppo acceptance remain pending.
+- Android preview is delivered in #31 with passing exact-head/main CI and scoped native photo/privacy/back/connection checks; successful GPS, physical Oppo and HTTPS release acceptance remain pending.
 - Global search/social-notification/pagination changes are delivered in #30/da676b7 with exact-head/main CI and scoped browser acceptance; integrated weak-network/device acceptance remains open.
 - Entity-specific shareable URLs/browser history, production hosting/backups and genuine provider-outage/public-tunnel acceptance remain open.
 - Operator-current access/entrance confirmation and final design approval still require external/manual evidence. Scientific/provider gaps must not be replaced by sample values.

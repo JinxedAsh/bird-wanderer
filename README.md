@@ -4,9 +4,9 @@ A mobile-first birdwatching and wildlife photography application built for a sem
 
 Bird Wanderer brings species discovery, hotspots, photography logistics, personal observations and community activity into one interface. Development follows four increments, with the documented screen designs serving as the visual specification.
 
-> **In development:** account registration, login, persistent sessions and logout are implemented. External discovery is connected to eBird and requires a server API key. Persistent observation, community, alert and quiz/challenge cores are implemented; messaging is delivered, while global search/social inbox cores are delivered and Android verification/delivery are in progress. This repository is not a finished production service.
+> **In development:** account registration, login, persistent sessions and logout are implemented. External discovery is connected to eBird and requires a server API key. Persistent observation, community, alert and quiz/challenge cores are implemented; messaging is delivered, while global search/social inbox cores are delivered and Android preview is delivered with scoped emulator acceptance. This repository is not a finished production service.
 
-**Required delivery:** an Android app/APK. The current runtime is a React mobile web interface; Android native packaging now builds locally and has installed/launched in an owned emulator; broader native QA/physical acceptance and delivery are in progress. See [Android setup and Viva Notes](android/README.md). Stage 1 frontend stabilization does not produce an APK.
+**Required delivery:** an Android app/APK. The current runtime is a React mobile web interface; Android native packaging now builds locally and has installed/launched in an owned emulator; scoped native picker/privacy/back/connection checks passed, with physical/HTTPS-release acceptance pending. See [Android setup and Viva Notes](android/README.md). Stage 1 frontend stabilization does not produce an APK.
 
 Start with the [current completion plan](docs/PROJECT_COMPLETION_PLAN.md), [Development Record](docs/DEVELOPMENT_RECORD.md) and [Phase 1 acceptance evidence](docs/PHASE_1_ACCEPTANCE.md). The [presentation script](docs/PHASE_1_PRESENTATION.md) retains the original 6 October checkpoint context. Historical checks are dated; they are not automatically fresh verification.
 
@@ -100,7 +100,7 @@ The frontend and backend currently share one package under `frontend/`. Keeping 
 | 3 — Alerts | Subscriptions, sighting notifications, conservation privacy filters | Sighting and forecast in-app alerts delivered; optional Firebase source, real push unconfigured |
 | 4 — Retention | Quiz and engagement features, remaining required interactions | Quiz/challenges and messaging/search delivered; integrated acceptance continues |
 
-All four phases and an Android APK are required. The original **20 October 2026** deadline is historical; full-cycle completion was authorized on 23 October without a replacement deadline. Seasonal statistical imports, measured difficulty/historical environment matching, complete operator-confirmed access, production hosting, physical-device/push and exact visual acceptance remain unresolved. Multi-photo comparisons and labelled forecast heuristics are implemented. The Android debug and unsigned release APKs build locally; initial emulator installation/launch passes. Native-flow verification, signing/distribution and physical acceptance remain in progress. See the completion plan for current status rather than treating historical presentation checks as final acceptance.
+All four phases and an Android APK are required. The original **20 October 2026** deadline is historical; full-cycle completion was authorized on 23 October without a replacement deadline. Seasonal statistical imports, measured difficulty/historical environment matching, complete operator-confirmed access, production hosting, physical-device/push and exact visual acceptance remain unresolved. Multi-photo comparisons and labelled forecast heuristics are implemented. The Android debug and unsigned release APKs build locally; initial emulator installation/launch passes. Scoped native flows passed; successful GPS, signing/distribution and physical acceptance remain open. See the completion plan for current status rather than treating historical presentation checks as final acceptance.
 
 ## Documentation
 
@@ -125,3 +125,5 @@ All four phases and an Android APK are required. The original **20 October 2026*
 - [Multiple-reference evidence, local timing and access — Viva Notes](docs/PHASE_1_EVIDENCE_WALKTHROUGH.md)
 
 Design references come from the team's specification. Runtime prototype imagery uses external URLs and still needs a source/attribution review before public release. No project-wide open-source license has been selected; existing file-level notices are preserved.
+
+Current control checklist: [Final acceptance](docs/FINAL_ACCEPTANCE.md). Journal editor flow and Viva Notes: [Observation editing](docs/OBSERVATION_EDITING_WALKTHROUGH.md).
