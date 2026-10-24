@@ -111,13 +111,17 @@ test('accounts and sessions survive restart; separate users retain separate iden
   let f = await fixture({ dbPath });
   try {
     const first = await f.request('register', account);
-    const firstCookie = cookie(first);
+    let firstCookie = cookie(first);
     const second = await f.request('register', { ...account, name: 'Second Birder', email: 'second@example.test' });
     const secondCookie = cookie(second);
+    const changed = await f.request('change-password', { currentPassword:account.password, newPassword:'restart-new-long-passphrase' }, firstCookie);
+    assert.equal(changed.status,200);firstCookie=cookie(changed);
     await f.close();
     f = await fixture({ dbPath });
     assert.equal((await (await f.request('me', undefined, firstCookie)).json()).user.email, account.email);
     assert.equal((await (await f.request('me', undefined, secondCookie)).json()).user.email, 'second@example.test');
+    assert.equal((await f.request('login',account)).status,401);
+    assert.equal((await f.request('login',{...account,password:'restart-new-long-passphrase'})).status,200);
     await f.request('logout', {}, firstCookie);
     assert.equal((await f.request('me', undefined, secondCookie)).status, 200);
   } finally {
@@ -183,4 +187,16 @@ test('concurrent password changes allow one confirmed result and password attemp
     const blocked=await limited.request('change-password',input,session);
     assert.equal(blocked.status,429);assert.ok(Number(blocked.headers.get('retry-after'))>0);
   }finally{await limited.close();}
+});
+
+test('a session expiring during password hashing cannot change credentials',async()=>{
+  const time=Date.now();let checking=false,calls=0;
+  const f=await fixture({now:()=>checking&&++calls>=3?time+8*86400000:time});
+  try{
+    const session=cookie(await f.request('register',account));
+    const before=f.db.prepare('SELECT password_hash,salt FROM users').get();
+    checking=true;
+    assert.equal((await f.request('change-password',{currentPassword:account.password,newPassword:'expiry-new-long-password'},session)).status,401);
+    assert.deepEqual(f.db.prepare('SELECT password_hash,salt FROM users').get(),before);
+  }finally{await f.close();}
 });
