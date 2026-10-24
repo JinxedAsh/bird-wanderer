@@ -1,6 +1,6 @@
 # Bird Wanderer — full-project completion plan
 
-Updated 24 October 2026. The user authorized the full development cycle in Continue Project Build 2; this supersedes the previous Phase-1-only increment and Android deferral. Live SRS re-read through Drive on 23 October; last modified 5 October. Preserve final designs and React/Express/SQLite architecture. No paid services or invented evidence. Original 20 October deadline is historical; no new deadline is assumed.
+Updated 24 October 2026. The user authorized the full development cycle on23 October2026; this supersedes the previous Phase-1-only increment and Android deferral. Live SRS re-read through Drive on 23 October; last modified 5 October. Preserve final designs and React/Express/SQLite architecture. No paid services or invented evidence. Original 20 October deadline is historical; no new deadline is assumed.
 
 ## Current delivery
 
@@ -28,19 +28,16 @@ Screen -> request -> backend -> storage -> result examples will accompany each s
 
 ## Immediate slice in progress
 
-Retention on retention-progress after delivered #27. Source and 104 local tests/type/build pass. Server-graded ten-photo practice, answer/resume/completion/XP/streak persistence and journal-derived weekly challenge progress are connected to the existing design. Browser QA passed live practice and targeted dialog/mobile/image/provider-recovery checks; source delivery is next. Do not call this merged yet.
+Retention on retention-progress after delivered #27. PR #28 is pushed;104 local tests/type/build and scoped browser QA pass. Server-graded ten-photo practice, answer/resume/completion/XP/streak persistence and journal-derived weekly challenge progress are connected to the existing design. Browser QA passed live practice and targeted dialog/mobile/image/provider-recovery checks; exact-head CI delivery is in progress. Do not call this merged yet.
 
-## Exact continuation checkpoint — 24 October
+## Next implementation priorities
 
-- Branch retention-progress, base #27/196f2517744b4a4f6002dbc3f1ccfa8a15adb22c. Forecast PR27 exact head ba0d0c275d238457a0626a34c6d680f38a47e860 passed both checks before squash merge; merged-main CI verified success. No retention PR/commit yet. Preserve unrelated deleted Start-Dev.ps1/untracked Test.ps1.
-- Uncommitted retention.mjs/retention.test.mjs, src/lib/retention.ts, existing BirdQuizScreen + narrower SpeciesPhoto PhotoAttribution type, App lazy/account wiring, auth router mount, package and frontend.test harness. New RETENTION_WALKTHROUGH plus current docs updates. Inspect actual Git for full list; do not overwrite any source on resume.
-- Behavior: explicit 10-question start needs 10 credited exact-species photo matches, bounded 3 requests; missing bank returns 503 without half-session. Server checks account/index/options, records answer once,50 XP correct, idempotent Next including completion; active session resumes after restart. Consecutive completed days in Asia/Kolkata give streak. Explicit restart abandons unfinished session but preserves earned answerXP. Weekly challenges count owner's currently stored species/hotspots/ISO+aperture uploads published since Monday local; no verification or challengeXP claim. Reactlazy keeps initial bundle 487kB, quiz chunk11.4kB.
-- Latest verified:104 local tests/type/build pass. Live10q completion/scoring/duplicateclick/resume/streak/console passed, plus challenge/deletion/account-isolation HTTP checks. In-app restart cancel/confirm/Escape/focus,320/390px, image retry and controlled provider-error recovery passed. Source/provider evidence remains distinct from fixtures. QA cursor reset to4ef9dd90-e568-4764-b859-81fec24ce178:1. Its server/test observations are cleaned; folder removal was rejected by automatic approval review and must not be bypassed. Awaiting exact remaining path/reason from QA for handover.
-- Next: secret/diff checks and focused retention commit/PR/attach, exact latest-head CI before merge and merged-main verification. Then messaging/search/pagination/ID routing, Android/release and integrated/manual Phase1 queue. No native phone or real Firebase claim. Inspect actual Git/GitHub state before resuming to avoid duplicating a just-created commit/PR.
+1. Finish the retention increment's exact-head PR checks and merge; preserve passing quiz/challenge behavior.
+2. Implement the documented messaging flow, real people/post search and ID-based targets; address bounded-list usability and meaningful privacy/error cases.
+3. Build Android packaging with explicit backend connection setup, file selection, permissions and secure navigation. Development tooling is prepared; no APK or connected-device evidence exists yet.
+4. Run integrated regressions and the remaining Phase1 responsive/failure/tunnel/manual acceptance checks. Keep blocked scientific/provider requirements explicit.
 
-- Android preparation: checksummed Temurin 17.0.20.1+1 and Google commandtools 15859902 in C:/Users/ayush/.cache/bird-wanderer-android. sdkmanager 22.0 runs on JDK17 (deprecated warning only); standard SDK licenses accepted locally; platform-tools, android-36 and buildtools 35.0.0 installed. adb devices shows NONE, not a device pass. Gradle 8.13 downloaded via official versions/all metadata, checksum verified, extracted and --version passed. Session80778 completed. Earlier per-version metadata URL 404 was replaced; PowerShell array-filter issue fixed with explicit foreach. No Android source/APK yet; no systemwide install/PATH changes.
-- User answered no Firebase project exists; keep realpush explicitly unconfigured and don't create account/paid service. Full optional adapter exists but permission/token/actual provider/device receipt remains unverified. Seasonal/export/difficulty/source evidence and operator/device/design/tunnel acceptance remain explicit gaps.
-- Supervisor Continue Project Build2 is read-only and owns active 15min full-scope quota-reset recovery. Do not duplicate it, message it without separate human auth, mark incomplete complete or voluntarily pause. Continue same full four-phase + Android instruction after resets.
+Internal coordination, runtime paths and recovery checkpoints belong in the ignored private context file, not shared documentation.
 
 ## External/manual inputs
 
