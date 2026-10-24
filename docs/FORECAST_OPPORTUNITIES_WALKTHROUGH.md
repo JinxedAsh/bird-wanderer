@@ -22,7 +22,7 @@ The outbox migration preserves old sighting attempts/status/schedules while addi
 
 ## Evidence and limits
 
-101 local tests pass at implementation time, including the existing 98 regressions. New tests cover local clocks including a DST clock, thresholds/zero/missing/stale data, opt-in, failed-site isolation, hourly bounds, deduplication, read ownership, unsubscribe/expiry, generic simulated push and preservation/cascades of the old outbox schema. TypeScript and production build pass. Browser results and exact delivery are recorded in Development Record Entry 34 when available.
+101 local tests pass at implementation time, including the existing 98 regressions. New tests cover local clocks including a DST clock, thresholds/zero/missing/stale data, opt-in, failed-site isolation, hourly bounds, deduplication, read ownership, unsubscribe/expiry, generic simulated push and preservation/cascades of the old outbox schema. TypeScript and production build pass. Test chat browser QA passed exact hotspot/readstate, opt-out/unsubscribe/expiry, deduplication and320/390px wrapping. Favorable/failure/stale/missing weather paths used an isolated labelled fixture; its process/data were cleaned. Exact delivery is recorded in Development Record Entry34.
 
 Controlled forecasts/outages are synthetic test evidence. A real provider may return no qualifying window; absence is displayed rather than replaced with a sample. Exact golden-hour astronomy, species activity inference, venue access confirmation and actual push receipt remain outside what this feature proves.
 
