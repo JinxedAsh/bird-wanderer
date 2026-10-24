@@ -1,55 +1,171 @@
-import React, { useState } from 'react';
-import { QUIZ_QUESTIONS } from '../data/mockData';
+import React, { useEffect, useRef, useState } from 'react';
+import { retention, type PracticeState } from '../lib/retention';
+import { SessionExpiredError } from '../lib/auth';
+import { PhotoCredit } from './SpeciesPhoto';
+import { useDialogFocus } from '../lib/useDialogFocus';
 import { ScreenType } from '../types';
 
 interface BirdQuizScreenProps {
+  onSessionExpired?: () => void;
   onNavigate: (screen: ScreenType) => void;
   showToast: (message: string) => void;
 }
 
-export const BirdQuizScreen: React.FC<BirdQuizScreenProps> = ({ onNavigate, showToast }) => {
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [selectedOptionId, setSelectedOptionId] = useState<string>('B');
-  const [isAnswerChecked, setIsAnswerChecked] = useState(false);
-  const [xp, setXp] = useState(1240);
-  const [streak, setStreak] = useState(7);
-
-  const question = QUIZ_QUESTIONS[currentQuestionIndex] || QUIZ_QUESTIONS[0];
-  const isCorrect = selectedOptionId === question.correctOptionId;
-
+export const BirdQuizScreen: React.FC<BirdQuizScreenProps> = ({
+  onNavigate,
+  showToast,
+  onSessionExpired,
+}) => {
+  const [data, setData] = useState<PracticeState | null>(null);
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [photoFailed, setPhotoFailed] = useState(false);
+  const [photoAttempt, setPhotoAttempt] = useState(0);
+  const [selectedOptionId, setSelectedOptionId] = useState('');
+  const [confirmRestart, setConfirmRestart] = useState(false);
+  const restartDialog = useDialogFocus(confirmRestart, () => setConfirmRestart(false));
+  const controller = useRef<AbortController | null>(null);
+  const pending = useRef(false);
+  const run = async (action: (signal: AbortSignal) => Promise<PracticeState>) => {
+    const request = controller.current;
+    if (!request || request.signal.aborted || pending.current) return;
+    pending.current = true;
+    setBusy(true);
+    setError('');
+    try {
+      const next = await action(request.signal);
+      if (!request.signal.aborted) setData(next);
+    } catch (failure) {
+      if (!request.signal.aborted) {
+        if (failure instanceof SessionExpiredError) onSessionExpired?.();
+        else setError(failure instanceof Error ? failure.message : 'Practice could not be loaded.');
+      }
+    } finally {
+      if (!request.signal.aborted) {
+        pending.current = false;
+        setBusy(false);
+      }
+    }
+  };
+  useEffect(() => {
+    const request = new AbortController();
+    controller.current = request;
+    pending.current = false;
+    void run((signal) => retention.load(signal));
+    return () => request.abort();
+  }, []);
+  const question = data?.session?.question;
+  const feedback = data?.session?.feedback;
+  useEffect(() => {
+    setSelectedOptionId(feedback?.selectedOptionId || '');
+    setPhotoFailed(false);
+  }, [question?.id, feedback?.selectedOptionId]);
+  const isAnswerChecked = Boolean(feedback),
+    isCorrect = Boolean(feedback?.correct);
+  const xp = data?.stats.xp || 0,
+    streak = data?.stats.streak || 0;
   const handleCheckAnswer = () => {
-    if (!selectedOptionId) {
-      showToast('Please select an option first');
-      return;
-    }
-    setIsAnswerChecked(true);
-    if (selectedOptionId === question.correctOptionId) {
-      setXp((prev) => prev + 50);
-      showToast('+50 XP! Field identification verified');
-    } else {
-      showToast('Incorrect specimen. Check the plumage notes.');
-    }
+    if (!selectedOptionId || !data?.session || isAnswerChecked || photoFailed) return;
+    void run((signal) =>
+      retention.answer(data.session!.id, data.session!.currentIndex, selectedOptionId, signal),
+    );
   };
-
   const handleNextQuestion = () => {
-    const nextIdx = (currentQuestionIndex + 1) % QUIZ_QUESTIONS.length;
-    setCurrentQuestionIndex(nextIdx);
-    setSelectedOptionId('B');
-    setIsAnswerChecked(false);
+    if (data?.session)
+      void run((signal) => retention.next(data.session!.id, data.session!.currentIndex, signal));
   };
+  const issue = error && (
+    <div role="alert" className="my-3 rounded-xl bg-white p-3 text-[13px]">
+      <p>{error}</p>
+      <button
+        type="button"
+        disabled={busy}
+        className="min-h-11 underline"
+        onClick={() => void run((signal) => retention.load(signal))}
+      >
+        Reload practice
+      </button>
+    </div>
+  );
+  const challenges = data && (
+    <details className="mt-4 rounded-xl bg-white p-3 text-[13px]">
+      <summary className="min-h-11 cursor-pointer font-bold">Photography challenges · this week</summary>
+      <p className="mb-2 text-[12px]">
+        Based on your current journal records published this week ({data.stats.timezone}). User-reported
+        progress, not independent identification or proof of a visit. Deleting a record updates progress; no
+        challenge XP is awarded.
+      </p>
+      {data.stats.challenges.map((challenge) => (
+        <div key={challenge.id} className="my-3">
+          <p>{challenge.title}</p>
+          <progress
+            className="w-full"
+            max={challenge.target}
+            value={Math.min(challenge.progress, challenge.target)}
+            aria-label={challenge.title}
+          />
+          <p>
+            {challenge.progress} / {challenge.target}
+            {challenge.progress >= challenge.target ? ' · Complete' : ''}
+          </p>
+        </div>
+      ))}
+    </details>
+  );
+  if (!data)
+    return (
+      <div className="px-4 py-5 pb-28">{issue || <p role="status">Loading your practice progress…</p>}</div>
+    );
+  if (!question)
+    return (
+      <div className="px-4 py-5 pb-28 text-[#181c20]">
+        {issue}
+        <section className="rounded-2xl bg-white p-4">
+          <h2 className="text-[20px] font-bold">
+            {data.session?.status === 'completed' ? 'Practice complete' : 'Bird identification practice'}
+          </h2>
+          {data.session?.status === 'completed' && (
+            <p className="mt-2 text-[16px]">
+              Score: {data.session.score} / {data.session.totalQuestions}
+            </p>
+          )}
+          <p className="my-3 text-[13px]">
+            {xp} XP · {streak} day streak · {data.stats.completedSessions} completed sessions
+          </p>
+          <p className="my-3 text-[12px]">
+            Ten source-matched, credited reference photos. Progress is saved after each answer; correct
+            answers earn 50 XP once. Complete a session to record a practice day ({data.stats.timezone}). This
+            is learning practice, not a verified sighting assessment.
+          </p>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => void run((signal) => retention.start(false, signal))}
+            className="min-h-12 w-full rounded-xl bg-[#2d5a27] px-3 font-bold text-white"
+          >
+            {busy
+              ? 'Loading credited photographs…'
+              : data.session
+                ? 'Start another practice'
+                : 'Start 10-question practice'}
+          </button>
+        </section>
+        {challenges}
+        <button type="button" onClick={() => onNavigate('journal')} className="mt-3 min-h-11 underline">
+          Open journal
+        </button>
+      </div>
+    );
 
   return (
     <div className="flex flex-col w-full pb-28 pt-2 px-4">
+      {issue}
       {/* Quiz Meta & Progress Header */}
       <section className="flex flex-col gap-2.5">
         <div className="flex items-center justify-between">
           <div className="flex items-baseline gap-1.5">
-            <span className="text-[17px] font-bold text-[#181c20]">
-              Question {question.questionNumber}
-            </span>
-            <span className="text-[12px] text-[#42493e] font-semibold">
-              / {question.totalQuestions}
-            </span>
+            <span className="text-[17px] font-bold text-[#181c20]">Question {question.questionNumber}</span>
+            <span className="text-[12px] text-[#42493e] font-semibold">/ {question.totalQuestions}</span>
           </div>
 
           <div className="flex items-center gap-1.5">
@@ -82,6 +198,8 @@ export const BirdQuizScreen: React.FC<BirdQuizScreenProps> = ({ onNavigate, show
       <section className="py-2.5">
         <div className="relative w-full rounded-2xl overflow-hidden bg-[#ebeef3] shadow-sm aspect-[4/3]">
           <img
+            key={`${question.imageUrl}:${photoAttempt}`}
+            onError={() => setPhotoFailed(true)}
             src={question.imageUrl}
             alt="Quiz Observation Specimen"
             className="w-full h-full object-cover"
@@ -93,6 +211,31 @@ export const BirdQuizScreen: React.FC<BirdQuizScreenProps> = ({ onNavigate, show
         </div>
       </section>
 
+      <figure>
+        <details className="my-2 text-[12px]">
+          <summary className="min-h-11 cursor-pointer">Photograph source and licence</summary>
+          <PhotoCredit photo={question.photoCredit} full />
+          <p>Source filenames may name the species; this is practice, not a closed-book exam.</p>
+        </details>
+      </figure>
+      {photoFailed && (
+        <div role="alert" className="my-2 text-[13px]">
+          <p>
+            The reference image is unavailable. Retry loading it or start over; no replacement species image
+            is inferred.
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              setPhotoFailed(false);
+              setPhotoAttempt((value) => value + 1);
+            }}
+            className="min-h-11 underline"
+          >
+            Retry image
+          </button>
+        </div>
+      )}
       {/* Multiple Choice Options */}
       <section className="flex flex-col gap-2 pt-1">
         {question.options.map((opt) => {
@@ -101,6 +244,8 @@ export const BirdQuizScreen: React.FC<BirdQuizScreenProps> = ({ onNavigate, show
             <button
               key={opt.id}
               type="button"
+              aria-pressed={isSelected}
+              disabled={busy || isAnswerChecked || photoFailed}
               onClick={() => {
                 if (!isAnswerChecked) {
                   setSelectedOptionId(opt.id);
@@ -128,9 +273,7 @@ export const BirdQuizScreen: React.FC<BirdQuizScreenProps> = ({ onNavigate, show
                   isSelected ? 'bg-white text-[#2d5a27]' : 'bg-[#e0e3e8]'
                 }`}
               >
-                {isSelected && (
-                  <span className="material-symbols-outlined text-[16px] font-bold">done</span>
-                )}
+                {isSelected && <span className="material-symbols-outlined text-[16px] font-bold">done</span>}
               </div>
             </button>
           );
@@ -143,6 +286,7 @@ export const BirdQuizScreen: React.FC<BirdQuizScreenProps> = ({ onNavigate, show
           <button
             type="button"
             onClick={handleCheckAnswer}
+            disabled={busy || !selectedOptionId || photoFailed}
             className="w-full h-12 rounded-xl bg-[#2d5a27] text-white font-bold text-[13px] tracking-wider uppercase shadow-sm flex items-center justify-center gap-2 active:opacity-90 transition-opacity"
           >
             <span>Check Answer</span>
@@ -173,11 +317,11 @@ export const BirdQuizScreen: React.FC<BirdQuizScreenProps> = ({ onNavigate, show
               <div className="flex flex-col min-w-0">
                 <div className="flex items-baseline gap-1.5 flex-wrap">
                   <span className="text-[16px] font-bold">
-                    {isCorrect ? question.factTitle : 'Not quite right!'}
+                    {isCorrect ? feedback?.factTitle : 'Not quite right!'}
                   </span>
-                  <span className="text-[13px] italic opacity-90">{question.factSpecies}</span>
+                  <span className="text-[13px] italic opacity-90">{feedback?.factSpecies}</span>
                 </div>
-                <p className="text-[13px] leading-snug mt-1 opacity-90">{question.factText}</p>
+                <p className="text-[13px] leading-snug mt-1 opacity-90">{feedback?.factText}</p>
               </div>
             </div>
 
@@ -185,14 +329,64 @@ export const BirdQuizScreen: React.FC<BirdQuizScreenProps> = ({ onNavigate, show
               <button
                 type="button"
                 onClick={handleNextQuestion}
+                disabled={busy}
                 className="w-full h-11 rounded-xl bg-[#20402b] text-white font-bold text-[13px] flex items-center justify-center gap-2 active:opacity-90 shadow-sm transition-opacity"
               >
-                <span>Next Question</span>
+                <span>
+                  {busy
+                    ? 'Saving…'
+                    : question.questionNumber === question.totalQuestions
+                      ? 'Finish practice'
+                      : 'Next Question'}
+                </span>
                 <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
               </button>
             </div>
           </div>
         </section>
+      )}
+      <button
+        type="button"
+        disabled={busy}
+        onClick={() => setConfirmRestart(true)}
+        className="mt-3 min-h-11 text-[12px] underline"
+      >
+        Start over
+      </button>
+      {challenges}
+      {confirmRestart && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div
+            ref={restartDialog}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Restart practice confirmation"
+            tabIndex={-1}
+            className="w-full max-w-md rounded-2xl bg-white p-4 text-[13px] shadow-xl"
+          >
+            <h2 className="mb-2 text-[18px] font-bold">Start a new practice?</h2>
+            <p>Saved answers keep their XP. This unfinished session will not count toward your streak.</p>
+            <div className="mt-4 flex gap-3">
+              <button
+                type="button"
+                className="min-h-11 flex-1 rounded-xl bg-[#ebeef3]"
+                onClick={() => setConfirmRestart(false)}
+              >
+                Keep current practice
+              </button>
+              <button
+                type="button"
+                className="min-h-11 flex-1 rounded-xl bg-[#2d5a27] text-white"
+                onClick={() => {
+                  setConfirmRestart(false);
+                  void run((signal) => retention.start(true, signal));
+                }}
+              >
+                Restart practice
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

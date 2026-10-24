@@ -38,7 +38,7 @@ import { SpeciesDetailScreen } from './components/SpeciesDetailScreen';
 import { LogObservationScreen } from './components/LogObservationScreen';
 import { HotspotDetailScreen } from './components/HotspotDetailScreen';
 import { LifeListScreen } from './components/LifeListScreen';
-import { BirdQuizScreen } from './components/BirdQuizScreen';
+const BirdQuizScreen=React.lazy(()=>import('./components/BirdQuizScreen').then(module=>({default:module.BirdQuizScreen})));
 import { FieldChatScreen } from './components/FieldChatScreen';
 import { GlobalSearchScreen } from './components/GlobalSearchScreen';
 import { NotificationsScreen } from './components/NotificationsScreen';
@@ -800,7 +800,7 @@ export default function App() {
           )}
 
           {currentScreen === 'quiz' && (
-            <BirdQuizScreen onNavigate={navigateTo} showToast={showToast} />
+            <React.Suspense fallback={<p role="status" className="p-4 text-[13px]">Loading practice…</p>}><BirdQuizScreen key={sessionUser?.id} onSessionExpired={resetSession} onNavigate={navigateTo} showToast={showToast} /></React.Suspense>
           )}
 
           {currentScreen === 'messages' && (

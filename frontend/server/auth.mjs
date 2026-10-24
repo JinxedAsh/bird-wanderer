@@ -7,6 +7,7 @@ import { dirname } from 'node:path';
 import { discoveryRouter, createDiscoveryService } from './discovery.mjs';
 import { activityRouter } from './activity.mjs';
 import { observationsRouter } from './observations.mjs';
+import { retentionRouter } from './retention.mjs';
 
 const scrypt = promisify(scryptCallback);
 const cookieName = 'bw_session';
@@ -137,6 +138,7 @@ export function createApp({ dbPath = ':memory:', origin = 'http://localhost:3000
   app.use('/api/activity', requireSession, activityRouter(db, discovery, now));
   const observations = observationsRouter(db, discovery, { mediaPath, now, processImage: imageProcessor, push });
   app.use('/api/observations', requireSession, observations);
+  app.use('/api/retention', requireSession, retentionRouter(db,discovery,now));
   app.use('/api/discovery', requireSession, discoveryRouter(discovery));
   app.use('/api', (_req, res) => res.status(404).json({ error: 'API endpoint not found.' }));
   app.use((error, _req, res, _next) => {
