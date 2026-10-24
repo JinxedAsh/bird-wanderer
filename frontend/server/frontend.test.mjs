@@ -611,3 +611,28 @@ test('global search describes real access-controlled lookup and social notificat
   const notices=render('NotificationsScreen',{notifications:[],onMarkAllRead:noop,onSelectNotification:noop,onNavigate:noop});
   assert.match(notices,/followers/);assert.doesNotMatch(notices,/Maya Singh/);
 });
+
+
+test('device location recovers when a WebView never calls either callback and ignores late results',async t=>{
+  t.mock.timers.enable({apis:['setTimeout']});
+  let lateSuccess;
+  const pending=locationHelpers.getDeviceLocation({getCurrentPosition:success=>{lateSuccess=success;}},true);
+  const rejected=assert.rejects(pending,/did not return in time/);
+  t.mock.timers.tick(12000);
+  await rejected;
+  lateSuccess({coords:{latitude:28.6,longitude:77.2,accuracy:10}});
+  const success=locationHelpers.getDeviceLocation({getCurrentPosition:done=>done({coords:{latitude:0,longitude:0,accuracy:0}})},true);
+  assert.deepEqual(await success,{latitude:0,longitude:0,source:'GPS',accuracyM:0});
+  t.mock.timers.tick(12000);
+  await assert.rejects(locationHelpers.getDeviceLocation({getCurrentPosition:()=>{throw new Error('Synthetic native exception');}},true),/Device location is unavailable/);
+});
+
+
+test('Android connection recovery is reachable on login before an account session exists',t=>{
+  const previous=Object.getOwnPropertyDescriptor(globalThis,'navigator');
+  t.after(()=>{if(previous)Object.defineProperty(globalThis,'navigator',previous);else delete globalThis.navigator;});
+  Object.defineProperty(globalThis,'navigator',{value:{userAgent:'QA BirdWandererAndroid/0.1'},configurable:true});
+  assert.match(render('AuthScreen',{onLoginSuccess:noop,showToast:noop}),/Android server connection/);
+  Object.defineProperty(globalThis,'navigator',{value:{userAgent:'Ordinary browser'},configurable:true});
+  assert.doesNotMatch(render('AuthScreen',{onLoginSuccess:noop,showToast:noop}),/Android server connection/);
+});

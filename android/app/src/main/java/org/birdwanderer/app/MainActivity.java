@@ -176,8 +176,7 @@ public class MainActivity extends Activity {
         });
         webView.setWebChromeClient(new WebChromeClient() {
             @Override public boolean onShowFileChooser(WebView view, ValueCallback<Uri[]> callback, FileChooserParams params) {
-                if (view != webView || !trusted() || params.getMode() != FileChooserParams.MODE_OPEN) return false;
-                if (photoCallback != null) photoCallback.onReceiveValue(null);
+                if (view != webView || !trusted() || !hasWindowFocus() || photoCallback != null || params.getMode() != FileChooserParams.MODE_OPEN) return false;
                 photoCallback = callback;
                 Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
                 intent.addCategory(Intent.CATEGORY_OPENABLE); intent.setType("image/*");
@@ -187,8 +186,8 @@ public class MainActivity extends Activity {
                 return true;
             }
             @Override public void onGeolocationPermissionsShowPrompt(String requestedOrigin, GeolocationPermissions.Callback callback) {
-                if (!trusted() || !OriginPolicy.sameOrigin(requestedOrigin, origin, BuildConfig.DEBUG)) { callback.invoke(requestedOrigin, false, false); return; }
-                if (locationCallback != null) locationCallback.invoke(locationOrigin, false, false);
+                // Keep the first Android permission request; never queue a second dialog behind it.
+                if (!trusted() || !hasWindowFocus() || locationCallback != null || !OriginPolicy.sameOrigin(requestedOrigin, origin, BuildConfig.DEBUG)) { callback.invoke(requestedOrigin, false, false); return; }
                 locationCallback = callback; locationOrigin = requestedOrigin;
                 if (checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) finishLocationPermission();
                 else requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, LOCATION_PERMISSION);
