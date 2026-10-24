@@ -914,10 +914,11 @@ export default function App() {
         {toastMessage && (
           <div role="status" aria-live="polite" className="fixed top-20 inset-x-4 mx-auto max-w-xs z-50 bg-[#2d3135] text-[#eef1f6] py-2.5 px-4 rounded-xl shadow-lg flex items-center justify-center gap-2 animate-in fade-in slide-in-from-top-3 duration-200">
             <span
-              className="material-symbols-outlined text-[18px] text-[#a1d494]"
+              aria-hidden="true"
+              className="material-symbols-outlined text-[18px]"
               style={{ fontVariationSettings: "'FILL' 1" }}
             >
-              check_circle
+              info
             </span>
             <span className="text-[12px] font-semibold text-center">{toastMessage}</span>
           </div>

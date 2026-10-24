@@ -22,7 +22,7 @@ The sheet reuses the existing dialog-focus hook and visual style. Abort on unmou
 
 Current local suite:115 tests pass, TypeScript passes and production build passes; initial main JavaScript488.84kB, journal chunk17.15kB at this checkpoint. New coverage includes ownership/invalid fields/date rollover/future dates, missing provider, privacy and media access, safe repeat update, preserved image bytes/EXIF/private source coordinates/publication time, restart, stale-alert/outbox deletion, injected transaction rollback, unrelated concurrent edit and deletion while awaiting discovery. Editor initial-render check verifies loading before an owned record is returned. Comment regression crosses100 earlier replies and confirms the new one appears with the real total.
 
-Scoped browser editing/draft/failure/mobile and isolated code-download-failure checks are in progress. Exact design approval, physical phone and real provider-outage claims are not implied by these local tests.
+Scoped browser checks passed real notes/privacy edits without discovery, corrected species/site, private-reader404/public200, ownership, invalid future date with draft retained, retry after PATCH503, Escape/focus containment, failed/retried life-list/delete and isolated Journal-chunk503→reload recovery. The fixture required re-login after recreation, so this is not new session-persistence evidence. Browser QA found a misleading success checkmark beside error toasts; the shared icon is now neutral information. Fresh320/390px editor and icon rechecks remain pending; latest100-comment boundary is HTTP-tested, not yet browser-accepted. Exact design approval, physical phone and real provider-outage claims are not implied by these local tests.
 
 ## Viva Notes
 
