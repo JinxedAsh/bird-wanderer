@@ -298,7 +298,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
         <div className="flex flex-col">
           <div className="bg-white rounded-2xl shadow-xs flex flex-col overflow-hidden border border-[#f1f4f9]">
             <button
-              onClick={() => showToast(`Bird Wanderer v${packageInfo.version} • Development preview • React interface and server-backed accounts`)}
+              onClick={() => showToast(`Bird Wanderer v${packageInfo.version} • Development preview`)}
               className="w-full px-4 py-3 flex items-center justify-between text-left active:bg-[#f1f4f9] transition-colors border-b border-[#f1f4f9]"
             >
               <div className="flex items-center gap-2.5">

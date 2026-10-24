@@ -43,4 +43,4 @@ Internal coordination, runtime paths and recovery checkpoints belong in the igno
 
 Legitimate eBird histogram export with metadata/denominators; reliable measured difficulty/environment evidence; current operator/entrance confirmation; final user design approval; Android physical device and any unavailable SDK/provider/hosting credentials. Investigate once, record exact blockers and continue independent work. Never request passwords in chat.
 
-Source-ID route/history/sharing work is implemented locally in Entry41 with121 web tests/type/build; native/browser/delivery checks pending. See FINAL_ACCEPTANCE.md and NAVIGATION_SHARING_WALKTHROUGH.md.
+Source-ID route/history/sharing work is implemented locally in Entry41 with121 web tests/type/build; native5tests/lint0errors1warning/bothAPK builds and scoped browser/history/privacy/retry plus fresh-debug-emulator chooser/cancel passed; PR #34 final delivery pending. Desktop-browser share completion, physical/release/OS app-link and recipient acceptance remain unverified. See FINAL_ACCEPTANCE.md and NAVIGATION_SHARING_WALKTHROUGH.md.

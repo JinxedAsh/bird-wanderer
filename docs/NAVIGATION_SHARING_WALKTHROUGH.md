@@ -1,6 +1,6 @@
 # Destination links, browser history and sharing
 
-Updated25 October2026. Implementation and verification are recorded separately; this is not a production deployment claim.
+Updated 25 October 2026. Implementation and verification are recorded separately; this is not a production deployment claim.
 
 ## User-visible behavior
 
@@ -21,7 +21,7 @@ On supported browsers the Web Share API opens the platform chooser. Otherwise a 
 
 ## Verification
 
-Local web suite121 tests passed; TypeScript and production build passed (main497.81kB). New checks cover round-trip species/site/post/person routes, legacy alerts, invalid/missing/duplicate IDs, history-state privacy, canonical sharing and browser fallback. Native policy tests, lint/assembly and independent browser/native acceptance are pending at this checkpoint; the Development Record will record their actual results.
+Local web suite: 121 tests passed; TypeScript and production build passed (main 497.76 kB). New checks cover round-trip species/site/post/person routes, legacy alerts, invalid/missing/duplicate IDs, history-state privacy, canonical sharing and browser fallback. Five native policy tests, lint 0 errors/1 required-JavaScript warning, debug and unsigned-release assembly passed. Independent browser checks passed exact species login/reload restoration, hotspot reload, same-screen selections, Back/Forward/app Back, legacy alerts, invalid/out-of-region IDs, provider503 retry, post/person sheet reload/history, private-reader404 and unknown notes/GPS query removal. Fresh API35 emulator debug APK checks passed actual native UI taps opening species/post choosers with canonical ID URLs only; cancellation returned to the same page/connection and nothing was sent. Desktop-browser share completion remains unverified. Hotspot sign-in restoration and malformed person/post IDs were not separately browser-checked. Physical handset, release HTTPS, external OS app-link launch and recipient delivery remain unverified.
 
 Manual acceptance must distinguish real browser history/restoration, provider failures, private-record authorization, copy/chooser cancellation, native chooser evidence, physical-phone behavior and public deployment. A compiled handler does not prove a chooser opened or a recipient received anything.
 
