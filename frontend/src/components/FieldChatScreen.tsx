@@ -1,100 +1,401 @@
-import React, { useState } from 'react';
-import { CHAT_CONVERSATIONS } from '../data/mockData';
-import { ScreenType, ChatConversation, ChatMessage } from '../types';
+import React, { useEffect, useRef, useState } from 'react';
+import { messages, messageRequestId } from '../lib/messages';
+import { observations, type PublicBirder } from '../lib/observations';
+import { SessionExpiredError } from '../lib/auth';
+import { useDialogFocus } from '../lib/useDialogFocus';
+import { ScreenType, ChatConversation, Hotspot } from '../types';
 
 interface FieldChatScreenProps {
+  hotspots: Hotspot[];
+  onOpenHotspot: (id: string) => void;
+  onOpenObservation: (id: string) => void;
+  onSessionExpired?: () => void;
   onNavigate: (screen: ScreenType) => void;
   showToast: (message: string) => void;
 }
 
-export const FieldChatScreen: React.FC<FieldChatScreenProps> = ({ onNavigate, showToast }) => {
-  const [conversations, setConversations] = useState<ChatConversation[]>(CHAT_CONVERSATIONS);
+export const FieldChatScreen: React.FC<FieldChatScreenProps> = ({
+  hotspots,
+  onOpenHotspot,
+  onOpenObservation,
+  onSessionExpired,
+}) => {
+  const [conversations, setConversations] = useState<ChatConversation[]>([]);
+  const [thread, setThread] = useState<ChatConversation | null>(null);
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
-  const [activeFilter, setActiveFilter] = useState<'all' | 'okhla' | 'gear'>('all');
+  const [activeFilter, setActiveFilter] = useState<'all' | 'gear' | 'okhla'>(
+    'all',
+  );
   const [searchQuery, setSearchQuery] = useState('');
   const [inputMessage, setInputMessage] = useState('');
-
-  const activeChat = conversations.find((c) => c.id === activeChatId);
-
-  const handleSendMessage = (textToSend?: string) => {
-    const text = textToSend || inputMessage.trim();
-    if (!text || !activeChatId) return;
-
-    const newMsg: ChatMessage = {
-      id: `msg-${Date.now()}`,
-      sender: 'me',
-      senderName: 'You',
-      text,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      delivered: true,
-    };
-
-    setConversations((prev) =>
-      prev.map((conv) => {
-        if (conv.id === activeChatId) {
-          return {
-            ...conv,
-            lastMessage: `"${text}"`,
-            timeAgo: 'Just now',
-            messages: [...conv.messages, newMsg],
-          };
-        }
-        return conv;
-      })
-    );
-
-    setInputMessage('');
-
-    // Simulate natural naturalist reply
-    setTimeout(() => {
-      const replyMsg: ChatMessage = {
-        id: `reply-${Date.now()}`,
-        sender: 'other',
-        senderName: activeChat?.contactName.split(' ')[0] || 'Birder',
-        text: 'Noted! I will adjust my field focal length and see you on the trail.',
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      };
-      setConversations((prev) =>
-        prev.map((conv) => {
-          if (conv.id === activeChatId) {
-            return {
-              ...conv,
-              messages: [...conv.messages, replyMsg],
-            };
-          }
-          return conv;
-        })
+  const [attachment, setAttachment] = useState<{
+    observationId?: string;
+    hotspotId?: string;
+    label: string;
+  } | null>(null);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [retry, setRetry] = useState(0);
+  const [nextOffset, setNextOffset] = useState<number | null>(null);
+  const [nextBefore, setNextBefore] = useState<number | null>(null);
+  const [picker, setPicker] = useState<
+    'people' | 'photo' | 'hotspot' | 'profile' | null
+  >(null);
+  const [pickerQuery, setPickerQuery] = useState('');
+  const [people, setPeople] = useState<PublicBirder[]>([]);
+  const [photos, setPhotos] = useState<
+    Array<{ id: string; label: string; imageUrl: string }>
+  >([]);
+  const [person, setPerson] = useState<PublicBirder | null>(null);
+  const [pickerLoading, setPickerLoading] = useState(false);
+  const dialog = useDialogFocus(!!picker, () => setPicker(null));
+  const controller = useRef<AbortController | null>(null);
+  const sending = useRef(false);
+  const pages = useRef(1);
+  const requestId = useRef<{ payload: string; id: string } | null>(null);
+  const activeChat =
+    thread?.id === activeChatId
+      ? thread
+      : conversations.find((c) => c.id === activeChatId);
+  const failed = (failure: unknown, signal: AbortSignal) => {
+    if (signal.aborted) return;
+    if (failure instanceof SessionExpiredError) onSessionExpired?.();
+    else
+      setError(
+        failure instanceof Error
+          ? failure.message
+          : 'Chat could not be loaded. Please retry.',
       );
-    }, 1200);
   };
-
-  const filteredConversations = conversations.filter((c) => {
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      return (
-        c.contactName.toLowerCase().includes(q) ||
-        c.lastMessage.toLowerCase().includes(q) ||
-        (c.topic || '').toLowerCase().includes(q)
+  useEffect(() => {
+    const request = new AbortController();
+    controller.current = request;
+    return () => request.abort();
+  }, []);
+  useEffect(() => {
+    pages.current = 1;
+    setThread(null);
+    setInputMessage('');
+    setAttachment(null);
+    requestId.current = null;
+  }, [activeChatId, searchQuery]);
+  useEffect(() => {
+    const request = new AbortController();
+    let running = false;
+    setLoading(true);
+    setError('');
+    const load = async () => {
+      if (running || document.visibilityState === 'hidden') return;
+      running = true;
+      try {
+        if (activeChatId) {
+          const result = await messages.thread(activeChatId, request.signal);
+          if (request.signal.aborted) return;
+          const combined = result.conversation;
+          let before = result.nextBefore;
+          for (let page = 1; page < pages.current && before !== null; page++) {
+            const older = await messages.thread(
+              activeChatId,
+              request.signal,
+              before,
+            );
+            combined.messages = [
+              ...older.conversation.messages,
+              ...combined.messages,
+            ];
+            before = older.nextBefore;
+          }
+          if (request.signal.aborted) return;
+          setThread(combined);
+          setNextBefore(before);
+          const last = result.conversation.messages.at(-1);
+          if (last && result.conversation.unread)
+            await messages.read(activeChatId, last.id, request.signal);
+        } else {
+          const result = await messages.list(request.signal, 0, searchQuery);
+          if (request.signal.aborted) return;
+          const combined = result.conversations;
+          let offset = result.nextOffset;
+          for (let page = 1; page < pages.current && offset !== null; page++) {
+            const older = await messages.list(
+              request.signal,
+              offset,
+              searchQuery,
+            );
+            combined.push(...older.conversations);
+            offset = older.nextOffset;
+          }
+          if (request.signal.aborted) return;
+          setConversations(combined);
+          setNextOffset(offset);
+        }
+      } catch (failure) {
+        failed(failure, request.signal);
+      } finally {
+        running = false;
+        if (!request.signal.aborted) setLoading(false);
+      }
+    };
+    void load();
+    const timer = window.setInterval(() => void load(), 5000);
+    document.addEventListener('visibilitychange', load);
+    return () => {
+      request.abort();
+      window.clearInterval(timer);
+      document.removeEventListener('visibilitychange', load);
+    };
+  }, [activeChatId, searchQuery, retry]);
+  useEffect(() => {
+    if (!picker) return;
+    const request = new AbortController();
+    setPickerLoading(true);
+    setError('');
+    setPeople([]);
+    setPhotos([]);
+    setPerson(null);
+    const load = async () => {
+      try {
+        if (picker === 'people') {
+          const result = await observations.people(request.signal, pickerQuery);
+          if (!request.signal.aborted)
+            setPeople(result.filter((p) => !p.isSelf));
+        } else if (picker === 'photo' && activeChatId) {
+          const result = await messages.shareable(activeChatId, request.signal);
+          if (!request.signal.aborted) setPhotos(result.observations);
+        } else if (picker === 'profile' && activeChat?.contactId) {
+          const result = await observations.person(
+            activeChat.contactId,
+            request.signal,
+          );
+          if (!request.signal.aborted) setPerson(result);
+        }
+      } catch (failure) {
+        failed(failure, request.signal);
+      } finally {
+        if (!request.signal.aborted) setPickerLoading(false);
+      }
+    };
+    void load();
+    return () => request.abort();
+  }, [picker, pickerQuery, activeChatId]);
+  const run = async (action: (signal: AbortSignal) => Promise<void>) => {
+    const request = controller.current;
+    if (!request || sending.current) return;
+    sending.current = true;
+    setBusy(true);
+    setError('');
+    try {
+      await action(request.signal);
+    } catch (failure) {
+      failed(failure, request.signal);
+    } finally {
+      sending.current = false;
+      if (!request.signal.aborted) setBusy(false);
+    }
+  };
+  const handleSendMessage = (quick?: string) => {
+    if (quick) setInputMessage(quick);
+    const text = (quick ?? inputMessage).trim();
+    if (!activeChatId || (!text && !attachment)) return;
+    const id = activeChatId,
+      body = {
+        text,
+        ...(attachment?.observationId
+          ? { observationId: attachment.observationId }
+          : {}),
+        ...(attachment?.hotspotId ? { hotspotId: attachment.hotspotId } : {}),
+      };
+    const payload = JSON.stringify({ id, ...body });
+    if (requestId.current?.payload !== payload)
+      requestId.current = { payload, id: messageRequestId() };
+    const clientId = requestId.current.id;
+    void run(async (signal) => {
+      const result = await messages.send(id, { ...body, clientId }, signal);
+      if (signal.aborted) return;
+      setThread((previous) =>
+        previous?.id === id
+          ? {
+              ...previous,
+              messages: [
+                ...previous.messages.filter((m) => m.id !== result.message.id),
+                result.message,
+              ],
+            }
+          : previous,
       );
-    }
-    if (activeFilter === 'okhla') {
-      return (c.topic || '').toLowerCase().includes('okhla');
-    }
-    if (activeFilter === 'gear') {
-      return (c.topic || '').toLowerCase().includes('sony') || (c.topic || '').toLowerCase().includes('lens');
-    }
-    return true;
-  });
+      setInputMessage('');
+      setAttachment(null);
+      requestId.current = null;
+    });
+  };
+  const loadMore = () => {
+    if (loading || busy) return;
+    pages.current++;
+    setRetry((n) => n + 1);
+  };
+  const filteredConversations = conversations.filter(
+    (c) => activeFilter === 'all' || c.tags?.includes(activeFilter),
+  );
 
   return (
     <div className="flex flex-col w-full pb-28 pt-1">
+      {error && (
+        <div role="alert" className="m-4 p-3 rounded-xl bg-orange-50 text-sm">
+          {error}{' '}
+          <button
+            className="min-h-11 underline"
+            onClick={() => setRetry((n) => n + 1)}
+          >
+            Retry loading chat
+          </button>
+        </div>
+      )}
+      {loading && (
+        <p role="status" className="px-4 text-sm">
+          Loading field chat…
+        </p>
+      )}
+      {picker && (
+        <div className="fixed inset-0 z-[80] bg-black/40 p-4 flex items-center justify-center">
+          <div
+            ref={dialog}
+            role="dialog"
+            aria-modal="true"
+            aria-label={
+              picker === 'people'
+                ? 'Choose a birder'
+                : picker === 'photo'
+                  ? 'Choose an observation'
+                  : picker === 'hotspot'
+                    ? 'Choose a public hotspot'
+                    : 'Birder profile'
+            }
+            tabIndex={-1}
+            className="bg-white rounded-2xl p-4 w-full max-w-md max-h-[80vh] overflow-auto"
+          >
+            <div className="flex items-center justify-between">
+              <h2 className="font-bold">
+                {picker === 'people'
+                  ? 'Choose a birder'
+                  : picker === 'photo'
+                    ? 'Choose an observation'
+                    : picker === 'hotspot'
+                      ? 'Choose a public hotspot'
+                      : 'Birder profile'}
+              </h2>
+              <button
+                className="min-h-11 min-w-11"
+                onClick={() => setPicker(null)}
+                aria-label="Close picker"
+              >
+                ×
+              </button>
+            </div>
+            {pickerLoading && <p role="status">Loading…</p>}
+            {error && <p role="alert">{error}</p>}
+            {picker === 'people' && (
+              <>
+                <input
+                  aria-label="Search birders"
+                  value={pickerQuery}
+                  onChange={(e) => setPickerQuery(e.target.value)}
+                  maxLength={100}
+                  className="border rounded-xl p-3 w-full"
+                  placeholder="Search birders by name"
+                />
+                {people.map((p) => (
+                  <button
+                    key={p.id}
+                    disabled={busy}
+                    className="block min-h-11 w-full text-left border-b"
+                    onClick={() =>
+                      void run(async (signal) => {
+                        const result = await messages.open(p.id, signal);
+                        if (signal.aborted) return;
+                        setConversations((old) => [
+                          result.conversation,
+                          ...old.filter((c) => c.id !== result.conversation.id),
+                        ]);
+                        setActiveChatId(result.conversation.id);
+                        setPicker(null);
+                      })
+                    }
+                  >
+                    {p.name} · {p.handle}
+                  </button>
+                ))}
+                {!pickerLoading && !people.length && (
+                  <p>No matching birders.</p>
+                )}
+              </>
+            )}
+            {picker === 'photo' && (
+              <>
+                <p className="text-sm">
+                  Only your observations already visible to this recipient can
+                  be attached. Change observation privacy explicitly in your
+                  journal if needed.
+                </p>
+                {photos.map((p) => (
+                  <button
+                    className="block min-h-11 w-full text-left border-b"
+                    key={p.id}
+                    onClick={() => {
+                      setAttachment({ observationId: p.id, label: p.label });
+                      setPicker(null);
+                    }}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+                {!pickerLoading && !photos.length && (
+                  <p>No eligible observations.</p>
+                )}
+              </>
+            )}
+            {picker === 'hotspot' && (
+              <>
+                {hotspots.map((p) => (
+                  <button
+                    className="block min-h-11 w-full text-left border-b"
+                    key={p.id}
+                    onClick={() => {
+                      setAttachment({ hotspotId: p.id, label: p.name });
+                      setPicker(null);
+                    }}
+                  >
+                    {p.name}
+                  </button>
+                ))}
+                {!hotspots.length && <p>Load discovery hotspots first.</p>}
+              </>
+            )}
+            {picker === 'profile' && person && (
+              <div className="space-y-2">
+                <p>
+                  {person.name} · {person.handle}
+                </p>
+                <p>{person.bio || 'No biography added.'}</p>
+                <p>
+                  {person.photosCount} visible photographs · {person.birdsCount}{' '}
+                  species · {person.followersCount} followers
+                </p>
+                <p>{person.primaryRig || 'Camera details unavailable'}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
       {!activeChatId ? (
         /* CONVERSATION LIST VIEW */
         <section className="flex flex-col w-full px-4 py-2 space-y-3">
           {/* Search & New Chat Action Card */}
           <div className="flex items-center justify-between gap-2 bg-[#ebeef3] rounded-2xl p-1.5 shadow-xs">
             <div className="flex items-center gap-2 flex-1 bg-white rounded-xl px-3 py-2 shadow-xs">
-              <span className="material-symbols-outlined text-[18px] text-[#72796e]">search</span>
+              <span className="material-symbols-outlined text-[18px] text-[#72796e]">
+                search
+              </span>
               <input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -104,13 +405,15 @@ export const FieldChatScreen: React.FC<FieldChatScreenProps> = ({ onNavigate, sh
             </div>
             <button
               onClick={() => {
-                setActiveChatId('maya');
-                showToast('Started chat with Maya Singh');
+                setPickerQuery('');
+                setPicker('people');
               }}
               aria-label="Start new field chat"
-              className="w-10 h-10 flex items-center justify-center rounded-xl bg-[#154212] text-white shadow-xs hover:bg-[#2d5a27] active:scale-95 transition-all flex-shrink-0"
+              className="min-w-11 min-h-11 flex items-center justify-center rounded-xl bg-[#154212] text-white shadow-xs hover:bg-[#2d5a27] active:scale-95 transition-all flex-shrink-0"
             >
-              <span className="material-symbols-outlined text-[20px]">edit_square</span>
+              <span className="material-symbols-outlined text-[20px]">
+                edit_square
+              </span>
             </button>
           </div>
 
@@ -136,7 +439,9 @@ export const FieldChatScreen: React.FC<FieldChatScreenProps> = ({ onNavigate, sh
               }`}
             >
               <span>Okhla Hotspot</span>
-              <span className="text-[10px] bg-[#e0e3e8] px-1 rounded">2</span>
+              <span className="text-[10px] bg-[#e0e3e8] px-1 rounded">
+                {conversations.filter((c) => c.tags?.includes('okhla')).length}
+              </span>
             </button>
             <button
               onClick={() => setActiveFilter('gear')}
@@ -152,17 +457,19 @@ export const FieldChatScreen: React.FC<FieldChatScreenProps> = ({ onNavigate, sh
 
           {/* Conversations Stack */}
           <div className="flex flex-col space-y-2.5">
+            {!loading && !filteredConversations.length && (
+              <p className="p-4 text-sm">
+                No matching conversations. Start a new chat with a birder.
+              </p>
+            )}
             {filteredConversations.map((conv) => (
-              <div
+              <button
+                type="button"
                 key={conv.id}
                 onClick={() => {
                   setActiveChatId(conv.id);
-                  // Mark as read
-                  setConversations((prev) =>
-                    prev.map((c) => (c.id === conv.id ? { ...c, unread: false } : c))
-                  );
                 }}
-                className="flex items-start gap-3 p-3.5 bg-white rounded-2xl shadow-xs hover:bg-[#f1f4f9] active:bg-[#ebeef3] transition-all cursor-pointer relative border border-[#f1f4f9]"
+                className="flex items-start gap-3 p-3.5 bg-white rounded-2xl shadow-xs hover:bg-[#f1f4f9] active:bg-[#ebeef3] transition-all cursor-pointer relative text-left border border-[#f1f4f9]"
               >
                 <div className="relative flex-shrink-0">
                   <img
@@ -221,18 +528,30 @@ export const FieldChatScreen: React.FC<FieldChatScreenProps> = ({ onNavigate, sh
                     <span className="w-2.5 h-2.5 rounded-full bg-[#fe932c] ring-2 ring-white"></span>
                   </div>
                 )}
-              </div>
+              </button>
             ))}
           </div>
 
+          {nextOffset !== null && (
+            <button
+              disabled={busy || loading}
+              className="min-h-11 underline"
+              onClick={loadMore}
+            >
+              Load more conversations
+            </button>
+          )}
           {/* Thoughtful Naturalist Journal Footer Note */}
           <div className="flex items-center gap-3 p-3.5 bg-[#f1f4f9] rounded-2xl">
-            <div className="w-8 h-8 rounded-lg bg-[#e0e3e8] flex items-center justify-center text-[#20402b] flex-shrink-0">
-              <span className="material-symbols-outlined text-[18px]">nature_people</span>
+            <div className="min-w-11 min-h-11 rounded-lg bg-[#e0e3e8] flex items-center justify-center text-[#20402b] flex-shrink-0">
+              <span className="material-symbols-outlined text-[18px]">
+                nature_people
+              </span>
             </div>
             <p className="text-[12px] text-[#42493e] leading-snug">
-              Conversations are geo-tagged to your regional life-list logbook for easy hotspot
-              referencing.
+              Messages are stored for participants. Photo access follows
+              observation privacy. Attach public hotspots explicitly; precise
+              GPS is never attached automatically.
             </p>
           </div>
         </section>
@@ -243,29 +562,28 @@ export const FieldChatScreen: React.FC<FieldChatScreenProps> = ({ onNavigate, sh
           <div className="sticky top-16 z-30 flex items-center justify-between px-4 py-2.5 bg-white border-b border-[#f1f4f9] shadow-xs">
             <div className="flex items-center gap-2.5 min-w-0">
               <button
+                disabled={busy}
                 onClick={() => setActiveChatId(null)}
                 aria-label="Back to conversations"
-                className="w-9 h-9 flex items-center justify-center rounded-xl bg-[#ebeef3] text-[#181c20] hover:bg-[#e0e3e8] active:scale-95 transition-all"
+                className="min-w-11 min-h-11 flex items-center justify-center rounded-xl bg-[#ebeef3] text-[#181c20] hover:bg-[#e0e3e8] active:scale-95 transition-all"
               >
-                <span className="material-symbols-outlined text-[20px]">arrow_back</span>
+                <span className="material-symbols-outlined text-[20px]">
+                  arrow_back
+                </span>
               </button>
 
               <div className="relative flex-shrink-0">
                 <img
                   src={activeChat?.contactAvatar}
                   alt={activeChat?.contactName}
-                  className="w-9 h-9 rounded-xl object-cover"
+                  className="min-w-11 min-h-11 rounded-xl object-cover"
                 />
-                <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[#a1d494] ring-1 ring-white"></span>
               </div>
 
               <div className="flex flex-col min-w-0">
                 <div className="flex items-center gap-1.5">
                   <span className="text-[14px] font-bold text-[#181c20] truncate">
                     {activeChat?.contactName}
-                  </span>
-                  <span className="px-1.5 py-0.2 rounded bg-[#ffdcc3] text-[#6e3900] text-[9px] font-bold">
-                    PRO
                   </span>
                 </div>
                 <span className="text-[11px] text-[#42493e] flex items-center gap-1">
@@ -277,11 +595,13 @@ export const FieldChatScreen: React.FC<FieldChatScreenProps> = ({ onNavigate, sh
 
             <div className="flex items-center gap-1 flex-shrink-0">
               <button
-                onClick={() => showToast(`Viewing observation logbook for ${activeChat?.contactName}`)}
+                onClick={() => setPicker('profile')}
                 aria-label="View birder observation card"
-                className="w-8 h-8 flex items-center justify-center rounded-lg text-[#42493e] hover:bg-[#ebeef3]"
+                className="min-w-11 min-h-11 flex items-center justify-center rounded-lg text-[#42493e] hover:bg-[#ebeef3]"
               >
-                <span className="material-symbols-outlined text-[18px]">person_pin_circle</span>
+                <span className="material-symbols-outlined text-[18px]">
+                  person_pin_circle
+                </span>
               </button>
             </div>
           </div>
@@ -289,20 +609,36 @@ export const FieldChatScreen: React.FC<FieldChatScreenProps> = ({ onNavigate, sh
           {/* Active Field Context Strip */}
           <div className="px-4 py-1.5 bg-[#f1f4f9] flex items-center justify-between text-[#42493e] text-[11px] border-b border-[#e0e3e8]">
             <span className="flex items-center gap-1 truncate">
-              <span className="material-symbols-outlined text-[13px] text-[#20402b]">pin_drop</span>
+              <span className="material-symbols-outlined text-[13px] text-[#20402b]">
+                pin_drop
+              </span>
               {activeChat?.contextLocation}
             </span>
-            <span className="text-[#72796e] flex-shrink-0">{activeChat?.contextLifeNumber}</span>
+            <span className="text-[#72796e] flex-shrink-0">
+              {activeChat?.contextLifeNumber}
+            </span>
           </div>
 
           {/* Messages Stream */}
           <div className="flex flex-col space-y-3 px-4 py-4 min-h-[360px]">
             <div className="flex items-center justify-center my-1">
               <span className="px-2.5 py-0.5 rounded-full bg-[#ebeef3] text-[#42493e] text-[10px] font-bold tracking-wide uppercase">
-                Today • Field Session
+                Stored field messages · India time
               </span>
             </div>
 
+            {nextBefore !== null && (
+              <button
+                disabled={busy || loading}
+                className="min-h-11 underline"
+                onClick={loadMore}
+              >
+                Load older messages
+              </button>
+            )}
+            {!loading && !activeChat?.messages.length && (
+              <p>No messages yet. Start with a field note.</p>
+            )}
             {activeChat?.messages.map((msg) => {
               const isMe = msg.sender === 'me';
               return (
@@ -313,7 +649,9 @@ export const FieldChatScreen: React.FC<FieldChatScreenProps> = ({ onNavigate, sh
                   }`}
                 >
                   <div className="flex items-center gap-1.5 px-1">
-                    <span className="text-[10px] text-[#72796e]">{msg.time}</span>
+                    <span className="text-[10px] text-[#72796e]">
+                      {msg.time}
+                    </span>
                     <span
                       className={`text-[10px] font-semibold ${
                         isMe ? 'text-[#154212]' : 'text-[#42493e]'
@@ -330,12 +668,42 @@ export const FieldChatScreen: React.FC<FieldChatScreenProps> = ({ onNavigate, sh
                         : 'bg-white text-[#181c20] rounded-tl-xs'
                     }`}
                   >
-                    {msg.text}
+                    <span className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
+                      {msg.text}
+                    </span>
+                    {msg.attachment &&
+                      (msg.attachment.unavailable ? (
+                        <p>{msg.attachment.label}</p>
+                      ) : (
+                        <button
+                          type="button"
+                          className="block min-h-11 text-left underline"
+                          onClick={() => {
+                            const item = msg.attachment!;
+                            if (item.id)
+                              (item.kind === 'hotspot'
+                                ? onOpenHotspot
+                                : onOpenObservation)(item.id);
+                          }}
+                        >
+                          {msg.attachment.imageUrl && (
+                            <img
+                              src={msg.attachment.imageUrl}
+                              alt="Shared observation"
+                              className="w-32 h-24 rounded-lg object-cover"
+                              onError={(e) => {
+                                e.currentTarget.hidden = true;
+                              }}
+                            />
+                          )}
+                          {msg.attachment.label}
+                        </button>
+                      ))}
                   </div>
 
                   {isMe && (
                     <div className="flex items-center gap-1 pr-1 text-[10px] text-[#72796e]">
-                      <span>Delivered</span>
+                      <span>Stored on server</span>
                       <span className="material-symbols-outlined text-[13px] text-[#3b6934]">
                         done_all
                       </span>
@@ -348,12 +716,25 @@ export const FieldChatScreen: React.FC<FieldChatScreenProps> = ({ onNavigate, sh
 
           {/* Sticky Field Composer */}
           <div className="sticky bottom-0 z-30 p-2.5 bg-white border-t border-[#f1f4f9] shadow-lg">
+            {attachment && (
+              <div className="flex items-center justify-between text-sm">
+                {attachment.label}
+                <button
+                  disabled={busy}
+                  className="min-h-11"
+                  onClick={() => setAttachment(null)}
+                >
+                  Remove attachment
+                </button>
+              </div>
+            )}
             <div className="flex items-center gap-1.5 bg-[#f1f4f9] rounded-2xl p-1.5 shadow-inner">
               <button
                 type="button"
-                onClick={() => showToast('Photo picker ready')}
+                disabled={busy || loading}
+                onClick={() => setPicker('photo')}
                 aria-label="Attach field photo"
-                className="w-9 h-9 flex items-center justify-center rounded-xl text-[#42493e] hover:bg-[#ebeef3]"
+                className="min-w-11 min-h-11 flex items-center justify-center rounded-xl text-[#42493e] hover:bg-[#ebeef3]"
               >
                 <span className="material-symbols-outlined text-[20px] text-[#20402b]">
                   add_a_photo
@@ -363,20 +744,24 @@ export const FieldChatScreen: React.FC<FieldChatScreenProps> = ({ onNavigate, sh
               <button
                 type="button"
                 onClick={() => {
-                  setInputMessage('28.5670° N, 77.3110° E (Okhla Watchtower perches)');
-                  showToast('Attached GPS Coordinates');
+                  if (!busy && !loading) setPicker('hotspot');
                 }}
-                aria-label="Share GPS coordinates"
-                className="w-8 h-8 flex items-center justify-center rounded-lg text-[#72796e] hover:text-[#181c20]"
+                aria-label="Share public hotspot"
+                className="min-w-11 min-h-11 flex items-center justify-center rounded-lg text-[#72796e] hover:text-[#181c20]"
               >
-                <span className="material-symbols-outlined text-[18px]">share_location</span>
+                <span className="material-symbols-outlined text-[18px]">
+                  share_location
+                </span>
               </button>
 
               <input
+                disabled={busy}
+                maxLength={2000}
+                aria-label="Message text"
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
+                  if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
                     e.preventDefault();
                     handleSendMessage();
                   }
@@ -388,10 +773,15 @@ export const FieldChatScreen: React.FC<FieldChatScreenProps> = ({ onNavigate, sh
               <button
                 type="button"
                 onClick={() => handleSendMessage()}
+                disabled={
+                  busy || loading || (!inputMessage.trim() && !attachment)
+                }
                 aria-label="Send message"
-                className="w-9 h-9 flex items-center justify-center rounded-full bg-[#2d5a27] text-white shadow-xs hover:opacity-90 active:scale-95 transition-all flex-shrink-0"
+                className="min-w-11 min-h-11 flex items-center justify-center rounded-full bg-[#2d5a27] text-white shadow-xs hover:opacity-90 active:scale-95 transition-all flex-shrink-0"
               >
-                <span className="material-symbols-outlined text-[18px]">send</span>
+                <span className="material-symbols-outlined text-[18px]">
+                  send
+                </span>
               </button>
             </div>
 
@@ -400,21 +790,26 @@ export const FieldChatScreen: React.FC<FieldChatScreenProps> = ({ onNavigate, sh
               <button
                 type="button"
                 onClick={() => handleSendMessage('What time works best?')}
-                className="px-2.5 py-1 rounded-full bg-[#ebeef3] text-[#181c20] text-[11px] font-medium whitespace-nowrap hover:bg-[#e0e3e8]"
+                disabled={busy || loading}
+                className="min-h-11 px-2.5 py-1 rounded-full bg-[#ebeef3] text-[#181c20] text-[11px] font-medium whitespace-nowrap hover:bg-[#e0e3e8]"
               >
                 “What time works best?”
               </button>
               <button
                 type="button"
-                onClick={() => handleSendMessage('Light is best near the northern hide.')}
-                className="px-2.5 py-1 rounded-full bg-[#ebeef3] text-[#181c20] text-[11px] font-medium whitespace-nowrap hover:bg-[#e0e3e8]"
+                onClick={() =>
+                  handleSendMessage('What access arrangements should we check?')
+                }
+                disabled={busy || loading}
+                className="min-h-11 px-2.5 py-1 rounded-full bg-[#ebeef3] text-[#181c20] text-[11px] font-medium whitespace-nowrap hover:bg-[#e0e3e8]"
               >
-                “Northern hide light is best”
+                “What access should we check?”
               </button>
               <button
                 type="button"
                 onClick={() => handleSendMessage('Count me in!')}
-                className="px-2.5 py-1 rounded-full bg-[#ebeef3] text-[#181c20] text-[11px] font-medium whitespace-nowrap hover:bg-[#e0e3e8]"
+                disabled={busy || loading}
+                className="min-h-11 px-2.5 py-1 rounded-full bg-[#ebeef3] text-[#181c20] text-[11px] font-medium whitespace-nowrap hover:bg-[#e0e3e8]"
               >
                 “Count me in!”
               </button>

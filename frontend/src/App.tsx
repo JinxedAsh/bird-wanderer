@@ -804,7 +804,10 @@ export default function App() {
           )}
 
           {currentScreen === 'messages' && (
-            <FieldChatScreen onNavigate={navigateTo} showToast={showToast} />
+            <FieldChatScreen key={sessionUser?.id} onNavigate={navigateTo} showToast={showToast} hotspots={externalHotspots} onSessionExpired={resetSession} onOpenHotspot={handleSelectHotspotById} onOpenObservation={id=>{
+              const request=recordsController.current;if(!request)return;
+              void observations.get(id,request.signal).then(row=>{if(request.signal.aborted)return;setPosts(previous=>[observationPost(row),...previous.filter(p=>p.id!==row.id)]);setAlertPost({id:row.id,request:Date.now()});navigateTo('community');}).catch(error=>{if(!request.signal.aborted){if(error instanceof SessionExpiredError)resetSession();else showToast(error instanceof Error?error.message:'Observation unavailable.');}});
+            }} />
           )}
 
           {currentScreen === 'search' && (

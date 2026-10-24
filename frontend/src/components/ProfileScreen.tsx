@@ -118,7 +118,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
               setGearInput(userProfile.primaryRig);
               setIsEditDrawerOpen(true);
             }}
-            className="h-10 px-2 bg-[#2d5a27] hover:bg-[#154212] text-white rounded-xl text-[12px] font-semibold flex items-center justify-center gap-1 shadow-xs active:scale-[0.98] transition-transform"
+            className="h-11 px-2 bg-[#2d5a27] hover:bg-[#154212] text-white rounded-xl text-[12px] font-semibold flex items-center justify-center gap-1 shadow-xs active:scale-[0.98] transition-transform"
           >
             <span className="material-symbols-outlined text-[16px]">edit</span>
             <span>Edit profile</span>
@@ -126,7 +126,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
 
           <button
             onClick={() => onNavigate('settings')}
-            className="h-10 px-2 bg-[#ebeef3] hover:bg-[#e0e3e8] text-[#181c20] rounded-xl text-[12px] font-semibold flex items-center justify-center gap-1 transition-colors"
+            className="h-11 px-2 bg-[#ebeef3] hover:bg-[#e0e3e8] text-[#181c20] rounded-xl text-[12px] font-semibold flex items-center justify-center gap-1 transition-colors"
           >
             <span className="material-symbols-outlined text-[16px]">tune</span>
             <span>Settings</span>
@@ -134,10 +134,13 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
 
           <button
             onClick={() => onNavigate('notifications')}
-            className="h-10 px-2 bg-[#ebeef3] hover:bg-[#e0e3e8] text-[#181c20] rounded-xl text-[12px] font-semibold flex items-center justify-center gap-1 transition-colors"
+            className="h-11 px-2 bg-[#ebeef3] hover:bg-[#e0e3e8] text-[#181c20] rounded-xl text-[12px] font-semibold flex items-center justify-center gap-1 transition-colors"
           >
             <span className="material-symbols-outlined text-[16px]">notifications_none</span>
             <span>Alerts</span>
+          </button>
+          <button type="button" onClick={()=>onNavigate('messages')} className="col-span-3 min-h-11 px-3 bg-[#ebeef3] hover:bg-[#e0e3e8] text-[#181c20] rounded-xl text-[12px] font-semibold flex items-center justify-center gap-2">
+            <span className="material-symbols-outlined text-[18px]">chat</span>Field Chats
           </button>
         </div>
       </div>

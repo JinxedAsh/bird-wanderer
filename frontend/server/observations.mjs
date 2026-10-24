@@ -7,6 +7,7 @@ import exifr from 'exifr';
 import { normalizeExif } from './exif.mjs';
 import { communityRouter, communityStats } from './community.mjs';
 import { createAlerts } from './alerts.mjs';
+import { messagesRouter } from './messages.mjs';
 
 const maxBytes = 10 * 1024 * 1024;
 const clean = (value, max) => (typeof value === 'string' && value.trim().length <= max ? value.trim() : null);
@@ -168,6 +169,7 @@ export function observationsRouter(
     };
   };
   router.use('/social',communityRouter(db,{observation,canRead,serialize},now));
+  router.use('/chat',messagesRouter(db,discovery,{observation,canRead},now));
   const alerts = createAlerts(db, discovery, { observation, canRead }, now, push);
   router.dispatchPush = alerts.dispatchPush;
   router.checkOpportunities = alerts.checkOpportunities;

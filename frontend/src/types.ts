@@ -179,6 +179,8 @@ export interface AppNotification {
 }
 
 export interface ChatMessage {
+  createdAt?: number;
+  attachment?: {kind:'observation'|'hotspot';id?:string;label:string;imageUrl?:string;unavailable?:boolean};
   id: string;
   sender: 'other' | 'me';
   senderName: string;
@@ -188,6 +190,9 @@ export interface ChatMessage {
 }
 
 export interface ChatConversation {
+  tags?:string[];
+  contactId?:string;
+  updatedAt?:number;
   id: string;
   contactName: string;
   contactAvatar: string;
