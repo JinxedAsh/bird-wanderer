@@ -4,7 +4,7 @@ export class SessionExpiredError extends Error {
   constructor() { super('Your session has ended. Please sign in again.'); }
 }
 
-async function request(path: string, body?: object): Promise<AuthUser | null> {
+async function request(path: string, body?: object, signal?: AbortSignal): Promise<AuthUser | null> {
   let response: Response;
   try {
     response = await fetch(`/api/auth/${path}`, {
@@ -12,11 +12,13 @@ async function request(path: string, body?: object): Promise<AuthUser | null> {
       credentials: 'same-origin',
       headers: body ? { 'Content-Type': 'application/json' } : undefined,
       body: body ? JSON.stringify(body) : undefined,
+      signal,
     });
   } catch {
     throw new Error('Cannot reach Bird Wanderer. Check your connection and try again.');
   }
   if (path === 'me' && response.status === 401) return null;
+  if (path === 'change-password' && response.status === 401) throw new SessionExpiredError();
   if (response.status === 204) return null;
   const data = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(data.error || 'The server is unavailable. Please try again.');
@@ -29,4 +31,5 @@ export const auth = {
   login: (email: string, password: string) => request('login', { email, password }),
   register: (name: string, email: string, password: string) => request('register', { name, email, password }),
   logout: () => request('logout', {}),
+  changePassword: (currentPassword: string, newPassword: string, signal?: AbortSignal) => request('change-password', { currentPassword, newPassword }, signal),
 };

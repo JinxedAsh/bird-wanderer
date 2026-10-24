@@ -127,3 +127,60 @@ test('accounts and sessions survive restart; separate users retain separate iden
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test('password changes validate current credentials, rotate sessions and revoke push registrations atomically', async () => {
+  const f = await fixture();
+  try {
+    const first = await f.request('register', account), firstSession = cookie(first);
+    const user = (await first.json()).user;
+    const otherSession = cookie(await f.request('login', account));
+    const unrelated = cookie(await f.request('register', { ...account, email:'another@example.test' }));
+    const input = { currentPassword:account.password, newPassword:'replacement-long-passphrase' };
+    assert.equal((await f.request('change-password', input)).status,401);
+    assert.equal((await f.request('change-password', input, firstSession,'https://evil.example')).status,403);
+    for (const body of [null,{}, {...input,newPassword:'short'}, {...input,newPassword:account.password}, {...input,currentPassword:[]}, {...input,newPassword:'x'.repeat(129)}])
+      assert.equal((await f.request('change-password',body,firstSession)).status,400);
+    assert.equal((await f.request('change-password',{...input,currentPassword:'incorrect'},firstSession)).status,403);
+    assert.equal((await f.request('me',undefined,firstSession)).status,200);
+    const sessionHash=f.db.prepare('SELECT token_hash FROM sessions WHERE user_id=? LIMIT 1').get(user.id).token_hash;
+    f.db.prepare('INSERT INTO push_devices VALUES (?,?,?,?)').run('synthetic-password-change-device',user.id,sessionHash,Date.now());
+    const before=f.db.prepare('SELECT password_hash,salt FROM users WHERE id=?').get(user.id);
+    f.db.exec("CREATE TRIGGER fail_password BEFORE UPDATE ON users BEGIN SELECT RAISE(ABORT,'fixture'); END");
+    assert.equal((await f.request('change-password',input,firstSession)).status,500);
+    assert.deepEqual(f.db.prepare('SELECT password_hash,salt FROM users WHERE id=?').get(user.id),before);
+    assert.equal((await f.request('me',undefined,firstSession)).status,200);
+    assert.equal(f.db.prepare('SELECT count(*) AS n FROM push_devices').get().n,1);
+    f.db.exec('DROP TRIGGER fail_password');
+    const response=await f.request('change-password',input,firstSession);
+    assert.equal(response.status,200);const rotated=cookie(response);
+    assert.equal((await response.json()).user.id,user.id);
+    assert.notEqual(rotated,firstSession);
+    for(const session of [firstSession,otherSession])assert.equal((await f.request('me',undefined,session)).status,401);
+    assert.equal((await f.request('me',undefined,rotated)).status,200);
+    assert.equal((await f.request('me',undefined,unrelated)).status,200);
+    assert.equal(f.db.prepare('SELECT count(*) AS n FROM push_devices').get().n,0);
+    assert.notEqual(f.db.prepare('SELECT salt FROM users WHERE id=?').get(user.id).salt,before.salt);
+    assert.equal((await f.request('login',account)).status,401);
+    assert.equal((await f.request('login',{...account,password:input.newPassword})).status,200);
+  } finally { await f.close(); }
+});
+
+test('concurrent password changes allow one confirmed result and password attempts are rate-limited',async()=>{
+  const f=await fixture();
+  try{
+    const session=cookie(await f.request('register',account));
+    const results=await Promise.all(['first-new-long-password','second-new-long-password'].map(newPassword=>f.request('change-password',{currentPassword:account.password,newPassword},session)));
+    assert.equal(results.filter(result=>result.status===200).length,1);
+    assert.ok(results.some(result=>[401,409].includes(result.status)));
+    const winner=results.find(result=>result.status===200);
+    assert.equal((await f.request('me',undefined,cookie(winner))).status,200);
+  }finally{await f.close();}
+  const limited=await fixture({rateLimit:2});
+  try{
+    const session=cookie(await limited.request('register',account));
+    const input={currentPassword:'incorrect',newPassword:'replacement-long-password'};
+    assert.equal((await limited.request('change-password',input,session)).status,403);
+    const blocked=await limited.request('change-password',input,session);
+    assert.equal(blocked.status,429);assert.ok(Number(blocked.headers.get('retry-after'))>0);
+  }finally{await limited.close();}
+});

@@ -63,7 +63,7 @@ export function createApp({ dbPath = ':memory:', origin = 'http://localhost:3000
     const time = now();
     db.prepare('DELETE FROM auth_limits WHERE resets_at <= ?').run(time);
     const email = typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase() : '';
-    const keys = [`ip:${req.ip}`, `email:${digest(email)}`];
+    const keys = [`ip:${req.ip}`, req.userId ? `user:${req.userId}` : `email:${digest(email)}`];
     for (const key of keys) {
       const limit = db.prepare('SELECT * FROM auth_limits WHERE key = ?').get(key);
       if (limit && limit.attempts >= rateLimit) {
@@ -115,7 +115,8 @@ export function createApp({ dbPath = ':memory:', origin = 'http://localhost:3000
     const user = db.prepare('SELECT * FROM users WHERE email = ?').get(input.email);
     // Perform the same expensive operation even for unknown accounts.
     const hash = await scrypt(input.password, user?.salt || '00000000000000000000000000000000', 64, passwordOptions);
-    if (!user || !timingSafeEqual(hash, Buffer.from(user.password_hash, 'hex'))) {
+    if (!user || !timingSafeEqual(hash, Buffer.from(user.password_hash, 'hex')) ||
+        db.prepare('SELECT password_hash FROM users WHERE id=?').get(user.id)?.password_hash !== user.password_hash) {
       return res.status(401).json({ error: 'Email or password is incorrect.' });
     }
     startSession(req, res, user.id);
@@ -135,6 +136,33 @@ export function createApp({ dbPath = ':memory:', origin = 'http://localhost:3000
     req.sessionHash = digest(token);
     next();
   };
+  app.post('/api/auth/change-password', requireSession, limited, asyncRoute(async (req, res) => {
+    const { currentPassword, newPassword } = req.body || {};
+    if (typeof currentPassword !== 'string' || !currentPassword.length || currentPassword.length > 128 ||
+        typeof newPassword !== 'string' || newPassword.length < 12 || newPassword.length > 128 || newPassword === currentPassword)
+      return res.status(400).json({ error: 'Enter your current password and a different new password (12–128 characters).' });
+    const user = db.prepare('SELECT * FROM users WHERE id=?').get(req.userId);
+    const currentHash = await scrypt(currentPassword, user.salt, 64, passwordOptions);
+    if (!timingSafeEqual(currentHash, Buffer.from(user.password_hash, 'hex')))
+      return res.status(403).json({ error: 'Your current password is incorrect.' });
+    const salt = randomBytes(16).toString('hex');
+    const hash = await scrypt(newPassword, salt, 64, passwordOptions);
+    // Hashing yields to other requests. Recheck the session and original hash so
+    // logout, expiry or a concurrent password change cannot be bypassed.
+    if (!db.prepare('SELECT 1 FROM sessions WHERE token_hash=? AND user_id=? AND expires_at>?').get(req.sessionHash, req.userId, now()))
+      return res.status(401).json({ error: 'Your session has ended. Please sign in again.' });
+    if (db.prepare('SELECT password_hash FROM users WHERE id=?').get(req.userId)?.password_hash !== user.password_hash)
+      return res.status(409).json({ error: 'Your password changed in another request. Sign in again before retrying.' });
+    db.exec('BEGIN');
+    try {
+      db.prepare('UPDATE users SET password_hash=?,salt=? WHERE id=?').run(hash.toString('hex'), salt, req.userId);
+      // Cascades revoke session-bound push registrations and queued deliveries.
+      db.prepare('DELETE FROM sessions WHERE user_id=?').run(req.userId);
+      startSession(req, res, req.userId);
+      db.exec('COMMIT');
+    } catch (error) { db.exec('ROLLBACK'); throw error; }
+    res.json({ user: publicUser(user) });
+  }));
   app.use('/api/activity', requireSession, activityRouter(db, discovery, now));
   const observations = observationsRouter(db, discovery, { mediaPath, now, processImage: imageProcessor, push });
   app.use('/api/observations', requireSession, observations);
