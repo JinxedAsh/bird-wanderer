@@ -1,3 +1,4 @@
+import { createSocialNotifications } from './social-notifications.mjs';
 import express, { Router } from 'express';
 import { randomUUID } from 'node:crypto';
 import { mkdir, writeFile, unlink } from 'node:fs/promises';
@@ -5,7 +6,7 @@ import { resolve } from 'node:path';
 import sharp from 'sharp';
 import exifr from 'exifr';
 import { normalizeExif } from './exif.mjs';
-import { communityRouter, communityStats } from './community.mjs';
+import { communityRouter, communityStats, visibleObservationSQL } from './community.mjs';
 import { createAlerts } from './alerts.mjs';
 import { messagesRouter } from './messages.mjs';
 
@@ -168,9 +169,10 @@ export function observationsRouter(
         'Shared records use hotspot-level location only; exact EXIF coordinates are never published. This conservative protection applies to all species, without claiming a verified sensitivity classification.',
     };
   };
-  router.use('/social',communityRouter(db,{observation,canRead,serialize},now));
+  const socialNotifications=createSocialNotifications(db,{observation,canRead},now);
+  router.use('/social',communityRouter(db,{observation,canRead,serialize},now,socialNotifications));
   router.use('/chat',messagesRouter(db,discovery,{observation,canRead},now));
-  const alerts = createAlerts(db, discovery, { observation, canRead }, now, push);
+  const alerts = createAlerts(db, discovery, { observation, canRead }, now, push, socialNotifications);
   router.dispatchPush = alerts.dispatchPush;
   router.checkOpportunities = alerts.checkOpportunities;
   router.use('/alerts', alerts.router);
@@ -404,22 +406,15 @@ export function observationsRouter(
   router.get(
     '/',
     route((req, res) => {
-      const rows =
-        req.query.scope === 'feed'
-          ? db
-              .prepare(
-                `SELECT o.id FROM observations o LEFT JOIN profiles p ON p.user_id=o.user_id
-            WHERE o.visibility != 'private' AND COALESCE(p.location_privacy,'approximate') != 'private' AND (o.user_id=? OR (
-              (o.visibility='public' OR EXISTS(SELECT 1 FROM follows f WHERE f.follower_id=? AND f.followed_id=o.user_id))
-              AND (COALESCE(p.visibility,'public')='public' OR EXISTS(SELECT 1 FROM follows f WHERE f.follower_id=? AND f.followed_id=o.user_id))
-            )) ORDER BY o.created_at DESC LIMIT 500`,
-              )
-              .all(req.userId, req.userId, req.userId)
-          : db
-              .prepare('SELECT id FROM observations WHERE user_id=? ORDER BY created_at DESC LIMIT 500')
-              .all(req.userId);
+      const offset=Number(req.query.offset??0);
+      if(!Number.isSafeInteger(offset)||offset<0||offset>Number.MAX_SAFE_INTEGER-500)throw fail(400,'Invalid field-record page.');
+      const feed=req.query.scope==='feed';
+      const rows=db.prepare(`SELECT o.id FROM observations o LEFT JOIN profiles p ON p.user_id=o.user_id
+        WHERE ${feed?`o.visibility!='private' AND COALESCE(p.location_privacy,'approximate')!='private' AND ${visibleObservationSQL}`:'o.user_id=:viewer'}
+        ORDER BY o.created_at DESC,o.id DESC LIMIT 501 OFFSET :offset`).all({viewer:req.userId,offset});
       res.json({
-        observations: rows
+        nextOffset:rows.length>500?offset+500:null,
+        observations: rows.slice(0,500)
           .map((row) => observation(row.id))
           .filter((row) => canRead(row, req.userId))
           .map((row) => serialize(row, req.userId)),

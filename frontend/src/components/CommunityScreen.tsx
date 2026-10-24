@@ -4,6 +4,7 @@ import { useDialogFocus } from '../lib/useDialogFocus';
 import type { PublicBirder } from '../lib/observations';
 
 interface CommunityScreenProps {
+  openPerson?: {id:string;request:number}|null;
   openPost?: {id:string;request:number}|null;
   people?: PublicBirder[];
   onToggleFollow?: (id: string, following: boolean) => Promise<boolean | undefined>;
@@ -22,6 +23,7 @@ interface CommunityScreenProps {
 }
 
 export const CommunityScreen: React.FC<CommunityScreenProps> = ({
+  openPerson,
   openPost,
   people = [],
   onToggleFollow,
@@ -76,6 +78,7 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
     setSelectedPhotographer(null),
   );
   const isFollowing = (handle: string) =>
+    selectedPhotographer?.handle===handle ? !!selectedPhotographer.isFollowing :
     people.find((person) => person.handle === handle)?.following ??
     posts.some((post) => post.authorHandle === handle && post.isFollowing);
 
@@ -118,6 +121,11 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
       bio: person.bio || 'No biography shared.',
       isFollowing: person.following,
     });
+  useEffect(()=>{
+    if(!openPerson||!onPersonDetails)return;let active=true;
+    void onPersonDetails(openPerson.id).then(person=>{if(active)showPerson(person);}).catch(error=>{if(active)showToast(error instanceof Error?error.message:'Birder unavailable.');});
+    return ()=>{active=false;};
+  },[openPerson?.request]);
   const openPhotographerBio = async (post: CommunityPost) => {
     if (!post.authorId || !onPersonDetails) {
       showToast('This photographer profile is unavailable.');
@@ -586,11 +594,11 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
                         {comm.avatarInitials}
                       </div>
                       <div className="flex flex-col flex-1 min-w-0">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[12px] font-bold text-[#181c20]">{comm.author}</span>
-                          <span className="text-[10px] text-[#42493e]">{comm.time}</span>
+                        <div className="flex flex-col gap-0.5 min-w-0">
+                          <span className="text-[12px] font-bold text-[#181c20] [overflow-wrap:anywhere]">{comm.author}</span>
+                          <time dateTime={comm.time} className="text-[10px] text-[#42493e] [overflow-wrap:anywhere]">{Number.isNaN(Date.parse(comm.time))?comm.time:`${new Date(comm.time).toLocaleString('en-GB',{timeZone:'Asia/Kolkata'})} IST`}</time>
                         </div>
-                        <p className="text-[13px] text-[#42493e] mt-0.5 leading-snug">{comm.text}</p>
+                        <p className="text-[13px] text-[#42493e] mt-0.5 leading-snug whitespace-pre-wrap [overflow-wrap:anywhere]">{comm.text}</p>
                         {comm.canDelete && onDeleteComment && (
                           <button
                             type="button"

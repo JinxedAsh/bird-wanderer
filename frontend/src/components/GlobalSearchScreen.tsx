@@ -1,8 +1,16 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { BirdSpecies, Hotspot, ScreenType, CommunityPost } from '../types';
+import {
+  observations,
+  observationPost,
+  type PublicBirder,
+} from '../lib/observations';
+import { SessionExpiredError } from '../lib/auth';
 import { SpeciesPhoto } from './SpeciesPhoto';
 
 interface GlobalSearchScreenProps {
+  onOpenPerson?: (id: string) => void;
+  onOpenPost?: (id: string) => void;
   recentSearches?: string[];
   savedSpeciesIds?: string[];
   historyDisabled?: boolean;
@@ -20,11 +28,26 @@ interface GlobalSearchScreenProps {
 
 export function birdMatchesQuery(bird: BirdSpecies, query: string) {
   const q = query.trim().toLowerCase();
-  const values = [bird.name, bird.scientificName, bird.orderFamily, ...(bird.recentObservations || []).map((report) => report.location)];
-  return !q || values.some((value) => typeof value === 'string' && value !== 'Not available from eBird' && value.toLowerCase().includes(q));
+  const values = [
+    bird.name,
+    bird.scientificName,
+    bird.orderFamily,
+    ...(bird.recentObservations || []).map((report) => report.location),
+  ];
+  return (
+    !q ||
+    values.some(
+      (value) =>
+        typeof value === 'string' &&
+        value !== 'Not available from eBird' &&
+        value.toLowerCase().includes(q),
+    )
+  );
 }
 
 export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
+  onOpenPerson,
+  onOpenPost,
   recentSearches = [],
   savedSpeciesIds = [],
   historyDisabled = false,
@@ -40,39 +63,158 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
   posts,
 }) => {
   const [query, setQuery] = useState('');
-  const [activeCategory, setActiveCategory] = useState<'all' | 'birds' | 'people' | 'hotspots' | 'posts'>('all');
+  const [activeCategory, setActiveCategory] = useState<
+    'all' | 'birds' | 'people' | 'hotspots' | 'posts'
+  >('all');
   const [savedOnly, setSavedOnly] = useState(false);
   const recordSearch = () => {
     const term = query.trim().replace(/\s+/g, ' ');
     if (term) onRecordSearch?.(term);
   };
-  const selectBird = (bird: BirdSpecies) => { recordSearch(); onSelectSpecies(bird); };
-  const selectHotspot = (hotspot: Hotspot) => { recordSearch(); onSelectHotspot(hotspot); };
+  const selectBird = (bird: BirdSpecies) => {
+    recordSearch();
+    onSelectSpecies(bird);
+  };
+  const selectHotspot = (hotspot: Hotspot) => {
+    recordSearch();
+    onSelectHotspot(hotspot);
+  };
 
   const q = query.toLowerCase().trim();
 
   // Matched results
   const matchingBirds = speciesList.filter(
-    (b) => (!savedOnly || savedSpeciesIds.includes(b.id)) && birdMatchesQuery(b, q)
+    (b) =>
+      (!savedOnly || savedSpeciesIds.includes(b.id)) && birdMatchesQuery(b, q),
   );
   const matchedBirds = matchingBirds.slice(0, 60);
 
   const matchedHotspots = hotspots.filter(
-    (h) => !q || h.name.toLowerCase().includes(q) || h.region.toLowerCase().includes(q)
+    (h) =>
+      !q ||
+      h.name.toLowerCase().includes(q) ||
+      h.region.toLowerCase().includes(q),
   );
 
-  const people = [...new Map(posts.map((post) => [post.authorHandle, post])).values()];
-  const matchedPeople = people.filter((person) =>
-    !q || person.authorName.toLowerCase().includes(q) || person.authorHandle.toLowerCase().includes(q)
-  );
-  const matchedPosts = posts.filter((post) =>
-    !q || [post.speciesName, post.speciesScientific, post.authorName, post.location, post.caption]
-      .some((value) => value.toLowerCase().includes(q))
-  );
+  const [foundPeople, setFoundPeople] = useState<PublicBirder[]>([]);
+  const [foundPosts, setFoundPosts] = useState<CommunityPost[]>([]);
+  const [searchError, setSearchError] = useState('');
+  const [searchLoading, setSearchLoading] = useState(externalDiscovery);
+  const [nextPeople, setNextPeople] = useState<number | null>(null);
+  const [nextPosts, setNextPosts] = useState<number | null>(null);
+  const [searchAttempt, setSearchAttempt] = useState(0);
+  const searchController = useRef<AbortController | null>(null);
+  const loadingPage = useRef(false);
+  const fail = (error: unknown, signal: AbortSignal) => {
+    if (signal.aborted) return;
+    if (error instanceof SessionExpiredError) onSessionExpired?.();
+    else
+      setSearchError(
+        error instanceof Error
+          ? error.message
+          : 'Search is unavailable. Please retry.',
+      );
+  };
+  useEffect(() => {
+    if (!externalDiscovery) return;
+    const request = new AbortController();
+    searchController.current = request;
+    loadingPage.current = true;
+    setFoundPeople([]);
+    setFoundPosts([]);
+    setNextPeople(null);
+    setNextPosts(null);
+    setSearchLoading(true);
+    setSearchError('');
+    const timer = window.setTimeout(() => {
+      void observations
+        .search(q, request.signal)
+        .then((result) => {
+          if (request.signal.aborted) return;
+          setFoundPeople(result.people);
+          setFoundPosts(result.observations.map(observationPost));
+          setNextPeople(result.nextPeopleOffset);
+          setNextPosts(result.nextPostsOffset);
+        })
+        .catch((error) => fail(error, request.signal))
+        .finally(() => {
+          if (!request.signal.aborted) {
+            loadingPage.current = false;
+            setSearchLoading(false);
+          }
+        });
+    }, 200);
+    return () => {
+      request.abort();
+      window.clearTimeout(timer);
+    };
+  }, [q, externalDiscovery, searchAttempt]);
+  const more = async (kind: 'people' | 'posts') => {
+    const request = searchController.current,
+      offset = kind === 'people' ? nextPeople : nextPosts;
+    if (
+      !request ||
+      request.signal.aborted ||
+      offset === null ||
+      loadingPage.current
+    )
+      return;
+    loadingPage.current = true;
+    setSearchLoading(true);
+    setSearchError('');
+    try {
+      const result = await observations.search(
+        q,
+        request.signal,
+        kind === 'people' ? offset : 0,
+        kind === 'posts' ? offset : 0,
+      );
+      if (request.signal.aborted) return;
+      if (kind === 'people') {
+        setFoundPeople((previous) => [
+          ...previous,
+          ...result.people.filter(
+            (p) => !previous.some((old) => old.id === p.id),
+          ),
+        ]);
+        setNextPeople(result.nextPeopleOffset);
+      } else {
+        setFoundPosts((previous) => [
+          ...previous,
+          ...result.observations
+            .map(observationPost)
+            .filter((p) => !previous.some((old) => old.id === p.id)),
+        ]);
+        setNextPosts(result.nextPostsOffset);
+      }
+    } catch (error) {
+      fail(error, request.signal);
+    } finally {
+      if (!request.signal.aborted) {
+        loadingPage.current = false;
+        setSearchLoading(false);
+      }
+    }
+  };
+  const matchedPeople = foundPeople;
+  const matchedPosts = externalDiscovery
+    ? foundPosts
+    : posts.filter(
+        (post) =>
+          !q ||
+          [
+            post.speciesName,
+            post.speciesScientific,
+            post.authorName,
+            post.location,
+            post.caption,
+          ].some((value) => value.toLowerCase().includes(q)),
+      );
 
   const showBirds = activeCategory === 'all' || activeCategory === 'birds';
   const showPeople = activeCategory === 'all' || activeCategory === 'people';
-  const showHotspots = activeCategory === 'all' || activeCategory === 'hotspots';
+  const showHotspots =
+    activeCategory === 'all' || activeCategory === 'hotspots';
   const showPosts = activeCategory === 'all' || activeCategory === 'posts';
 
   const hasAnyResult =
@@ -93,7 +235,9 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
             aria-label="Search birds, hotspots, birders and posts"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') recordSearch(); }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') recordSearch();
+            }}
             maxLength={100}
             placeholder="Search birds, hotspots, birders..."
             className="w-full min-w-0 bg-transparent border-0 outline-none px-2.5 text-[14px] text-[#181c20] placeholder:text-[#72796e]"
@@ -105,7 +249,9 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
               onClick={() => setQuery('')}
               className="w-11 h-11 shrink-0 flex items-center justify-center rounded-full text-[#42493e] hover:bg-[#ebeef3]"
             >
-              <span className="material-symbols-outlined text-[16px]">close</span>
+              <span className="material-symbols-outlined text-[16px]">
+                close
+              </span>
             </button>
           )}
         </div>
@@ -113,32 +259,43 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
 
       {/* Category Filter Pills */}
       <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
-        {(['all', 'birds', 'people', 'hotspots', 'posts'] as const).map((cat) => {
-          const isActive = activeCategory === cat;
-          return (
-            <button
-              key={cat}
-              type="button"
-              onClick={() => setActiveCategory(cat)}
-              className={`min-h-11 px-3.5 py-1.5 rounded-full text-[12px] font-semibold capitalize transition-all whitespace-nowrap ${
-                isActive
-                  ? 'bg-[#154212] text-white shadow-xs'
-                  : 'bg-[#ebeef3] text-[#42493e] hover:bg-[#e0e3e8]'
-              }`}
-            >
-              {cat}
-            </button>
-          );
-        })}
+        {(['all', 'birds', 'people', 'hotspots', 'posts'] as const).map(
+          (cat) => {
+            const isActive = activeCategory === cat;
+            return (
+              <button
+                key={cat}
+                type="button"
+                onClick={() => setActiveCategory(cat)}
+                className={`min-h-11 px-3.5 py-1.5 rounded-full text-[12px] font-semibold capitalize transition-all whitespace-nowrap ${
+                  isActive
+                    ? 'bg-[#154212] text-white shadow-xs'
+                    : 'bg-[#ebeef3] text-[#42493e] hover:bg-[#e0e3e8]'
+                }`}
+              >
+                {cat}
+              </button>
+            );
+          },
+        )}
       </div>
 
-      {(activeCategory === 'all' || activeCategory === 'birds') && externalDiscovery && (
-        <label className="mt-2 flex items-center gap-2 text-[12px] text-[#42493e]">
-          <input type="checkbox" checked={savedOnly} onChange={(event) => setSavedOnly(event.target.checked)} />
-          Saved birds only
-        </label>
+      {(activeCategory === 'all' || activeCategory === 'birds') &&
+        externalDiscovery && (
+          <label className="mt-2 flex items-center gap-2 text-[12px] text-[#42493e]">
+            <input
+              type="checkbox"
+              checked={savedOnly}
+              onChange={(event) => setSavedOnly(event.target.checked)}
+            />
+            Saved birds only
+          </label>
+        )}
+      {onRecordSearch && (
+        <p className="mt-2 text-[11px] text-[#72796e]">
+          Press Enter or open a bird/hotspot result to keep this search.
+        </p>
       )}
-      {onRecordSearch && <p className="mt-2 text-[11px] text-[#72796e]">Press Enter or open a bird/hotspot result to keep this search.</p>}
 
       {/* Recent Searches */}
       {recentSearches.length > 0 && (
@@ -165,7 +322,10 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
                 <button
                   type="button"
                   disabled={historyDisabled}
-                  onClick={() => { setQuery(term); onRecordSearch?.(term); }}
+                  onClick={() => {
+                    setQuery(term);
+                    onRecordSearch?.(term);
+                  }}
                   className="min-h-11 min-w-0 text-left break-words cursor-pointer hover:text-[#154212]"
                 >
                   {term}
@@ -177,7 +337,9 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
                   onClick={() => onRemoveSearch?.(term)}
                   className="h-11 w-11 shrink-0 flex items-center justify-center text-[#72796e] hover:text-[#181c20]"
                 >
-                  <span className="material-symbols-outlined text-[14px]">close</span>
+                  <span className="material-symbols-outlined text-[14px]">
+                    close
+                  </span>
                 </button>
               </div>
             ))}
@@ -185,166 +347,256 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
         </div>
       )}
 
-      {showBirds && matchingBirds.length > 60 && <p role="status" className="text-[12px] text-[#42493e]">Showing 60 of {matchingBirds.length} species. Refine your search to see more.</p>}
+      {showBirds && matchingBirds.length > 60 && (
+        <p role="status" className="text-[12px] text-[#42493e]">
+          Showing 60 of {matchingBirds.length} species. Refine your search to
+          see more.
+        </p>
+      )}
+      {externalDiscovery && searchLoading && (
+        <p role="status" className="text-sm">
+          Loading people and posts…
+        </p>
+      )}
+      {searchError && (
+        <p role="alert" className="text-sm">
+          {searchError}{' '}
+          <button
+            className="min-h-11 underline"
+            onClick={() => setSearchAttempt((n) => n + 1)}
+          >
+            Retry global search
+          </button>
+        </p>
+      )}
       {/* Search Results Stream */}
-      {externalDiscovery && (showPeople || showPosts) && <p className="text-[12px] text-[#42493e]">People and community posts are still demonstration data.</p>}
+      {externalDiscovery && (showPeople || showPosts) && (
+        <p className="text-[12px] text-[#42493e]">
+          People and posts are searched on the server using your current access.
+          Photos and identification remain user-reported.
+        </p>
+      )}
       <div className="flex flex-col gap-2.5 pt-2">
         {/* Bird Result */}
-        {showBirds && matchedBirds.map((bird) => (
-          <article
-            key={bird.id}
-            onClick={() => selectBird(bird)}
-            className="w-full text-left grid grid-cols-[64px_1fr_auto] items-center gap-x-3 p-3 bg-white rounded-xl shadow-xs hover:bg-[#f1f4f9] transition-all cursor-pointer border border-[#f1f4f9]"
-          >
-            <SpeciesPhoto key={bird.id} species={bird} onSessionExpired={onSessionExpired} frameClassName="w-16 h-16 rounded-xl overflow-hidden bg-[#ebeef3]" />
-            <div className="flex flex-col min-w-0 flex-1">
-              <div className="flex items-center gap-1.5">
-                <button type="button" onClick={(event) => { event.stopPropagation(); selectBird(bird); }} className="text-left text-[15px] font-bold text-[#181c20] truncate">
-                  {bird.name}
-                </button>
-                <span className="bg-[#ffdcc3] text-[#6e3900] text-[10px] font-bold px-1.5 py-0.2 rounded-full">
-                  Species
-                </span>
+        {showBirds &&
+          matchedBirds.map((bird) => (
+            <article
+              key={bird.id}
+              onClick={() => selectBird(bird)}
+              className="w-full text-left grid grid-cols-[64px_1fr_auto] items-center gap-x-3 p-3 bg-white rounded-xl shadow-xs hover:bg-[#f1f4f9] transition-all cursor-pointer border border-[#f1f4f9]"
+            >
+              <SpeciesPhoto
+                key={bird.id}
+                species={bird}
+                onSessionExpired={onSessionExpired}
+                frameClassName="w-16 h-16 rounded-xl overflow-hidden bg-[#ebeef3]"
+              />
+              <div className="flex flex-col min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      selectBird(bird);
+                    }}
+                    className="text-left text-[15px] font-bold text-[#181c20] truncate"
+                  >
+                    {bird.name}
+                  </button>
+                  <span className="bg-[#ffdcc3] text-[#6e3900] text-[10px] font-bold px-1.5 py-0.2 rounded-full">
+                    Species
+                  </span>
+                </div>
+                <p className="text-[12px] italic text-[#72796e] truncate">
+                  {bird.scientificName}
+                </p>
+                <div className="flex items-center gap-1 mt-1 text-[#42493e] text-[11px] font-semibold">
+                  <span
+                    className="material-symbols-outlined text-[#3b6934] text-[14px]"
+                    style={{ fontVariationSettings: "'FILL' 1" }}
+                  >
+                    visibility
+                  </span>
+                  <span>
+                    {bird.source
+                      ? bird.recentObservations?.length
+                        ? 'Recent regional report available'
+                        : 'No recent regional report in this response'
+                      : `${bird.sightingsThisWeek ?? 0} local sightings this week`}
+                  </span>
+                </div>
               </div>
-              <p className="text-[12px] italic text-[#72796e] truncate">
-                {bird.scientificName}
-              </p>
-              <div className="flex items-center gap-1 mt-1 text-[#42493e] text-[11px] font-semibold">
-                <span
-                  className="material-symbols-outlined text-[#3b6934] text-[14px]"
-                  style={{ fontVariationSettings: "'FILL' 1" }}
-                >
-                  visibility
-                </span>
-                <span>{bird.source ? bird.recentObservations?.length ? 'Recent regional report available' : 'No recent regional report in this response' : `${bird.sightingsThisWeek ?? 0} local sightings this week`}</span>
-              </div>
-            </div>
-            <span className="material-symbols-outlined text-[#c2c9bb] text-[20px]">
-              chevron_right
-            </span>
-          </article>
-        ))}
+              <span className="material-symbols-outlined text-[#c2c9bb] text-[20px]">
+                chevron_right
+              </span>
+            </article>
+          ))}
 
         {/* Person Result */}
-        {showPeople && matchedPeople.map((person) => (
-          <button
-            type="button"
-            key={person.authorHandle}
-            onClick={() => onNavigate('messages')}
-            className="w-full text-left flex items-center gap-3 p-3 bg-white rounded-xl shadow-xs hover:bg-[#f1f4f9] transition-all cursor-pointer border border-[#f1f4f9]"
-          >
-            <div className="w-16 h-16 rounded-full overflow-hidden flex-shrink-0 bg-[#ebeef3]">
-              <img
-                src={person.authorAvatar}
-                alt={person.authorName}
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div className="flex flex-col min-w-0 flex-1">
-              <div className="flex items-center gap-1.5">
-                <span className="text-[15px] font-bold text-[#181c20] truncate">{person.authorName}</span>
-                <span className="bg-[#c7ecce] text-[#01210f] text-[10px] font-bold px-1.5 py-0.2 rounded-full">
-                  {person.authorBadge || 'Birder'}
-                </span>
+        {showPeople &&
+          matchedPeople.map((person) => (
+            <button
+              type="button"
+              key={person.handle}
+              onClick={() => {
+                recordSearch();
+                onOpenPerson?.(person.id);
+              }}
+              className="w-full text-left flex items-center gap-3 p-3 bg-white rounded-xl shadow-xs hover:bg-[#f1f4f9] transition-all cursor-pointer border border-[#f1f4f9]"
+            >
+              <div className="w-16 h-16 rounded-full overflow-hidden flex-shrink-0 bg-[#ebeef3]">
+                <img
+                  src={person.avatarUrl}
+                  alt={person.name}
+                  className="w-full h-full object-cover"
+                />
               </div>
-              <p className="text-[12px] text-[#72796e] truncate">{person.authorHandle}</p>
-              <div className="flex items-center gap-1 mt-1 text-[#42493e] text-[11px] font-semibold">
+              <div className="flex flex-col min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[15px] font-bold text-[#181c20] truncate">
+                    {person.name}
+                  </span>
+                  <span className="bg-[#c7ecce] text-[#01210f] text-[10px] font-bold px-1.5 py-0.2 rounded-full">
+                    {'Birder'}
+                  </span>
+                </div>
+                <p className="text-[12px] text-[#72796e] truncate">
+                  {person.handle}
+                </p>
+                <div className="flex items-center gap-1 mt-1 text-[#42493e] text-[11px] font-semibold">
+                  <span
+                    className="material-symbols-outlined text-[#904d00] text-[14px]"
+                    style={{ fontVariationSettings: "'FILL' 1" }}
+                  >
+                    photo_camera
+                  </span>
+                  <span>{person.photosCount} visible photographs</span>
+                </div>
+              </div>
+              <span className="material-symbols-outlined text-[#c2c9bb] text-[20px]">
+                chevron_right
+              </span>
+            </button>
+          ))}
+
+        {showPeople && nextPeople !== null && (
+          <button
+            disabled={searchLoading}
+            onClick={() => void more('people')}
+            className="min-h-11 underline"
+          >
+            Load more birders
+          </button>
+        )}
+        {/* Hotspot Result */}
+        {showHotspots &&
+          matchedHotspots.map((hotspot) => (
+            <button
+              type="button"
+              key={hotspot.id}
+              onClick={() => selectHotspot(hotspot)}
+              className="w-full text-left flex items-center gap-3 p-3 bg-white rounded-xl shadow-xs hover:bg-[#f1f4f9] transition-all cursor-pointer border border-[#f1f4f9]"
+            >
+              <div className="w-16 h-16 rounded-xl flex items-center justify-center bg-[#2d5a27] text-white flex-shrink-0">
                 <span
-                  className="material-symbols-outlined text-[#904d00] text-[14px]"
+                  className="material-symbols-outlined text-[28px]"
                   style={{ fontVariationSettings: "'FILL' 1" }}
                 >
-                  photo_camera
+                  location_on
                 </span>
-                <span>{posts.filter((post) => post.authorHandle === person.authorHandle).length} community posts</span>
               </div>
-            </div>
-            <span className="material-symbols-outlined text-[#c2c9bb] text-[20px]">
-              chevron_right
-            </span>
-          </button>
-        ))}
-
-        {/* Hotspot Result */}
-        {showHotspots && matchedHotspots.map((hotspot) => (
-          <button
-            type="button"
-            key={hotspot.id}
-            onClick={() => selectHotspot(hotspot)}
-            className="w-full text-left flex items-center gap-3 p-3 bg-white rounded-xl shadow-xs hover:bg-[#f1f4f9] transition-all cursor-pointer border border-[#f1f4f9]"
-          >
-            <div className="w-16 h-16 rounded-xl flex items-center justify-center bg-[#2d5a27] text-white flex-shrink-0">
-              <span
-                className="material-symbols-outlined text-[28px]"
-                style={{ fontVariationSettings: "'FILL' 1" }}
-              >
-                location_on
+              <div className="flex flex-col min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[15px] font-bold text-[#181c20] truncate">
+                    {hotspot.name}
+                  </span>
+                </div>
+                <p className="text-[12px] text-[#72796e] truncate">
+                  {hotspot.region} •{' '}
+                  {hotspot.distanceKm == null
+                    ? 'Distance unavailable'
+                    : `${hotspot.distanceKm.toFixed(1)} km away`}
+                </p>
+                <div className="flex items-center gap-1 mt-1 text-[#42493e] text-[11px] font-semibold">
+                  <span className="material-symbols-outlined text-[#154212] text-[14px]">
+                    eco
+                  </span>
+                  <span className="text-[#3b6934] font-bold">
+                    {hotspot.source
+                      ? `${hotspot.speciesCount ?? 'Unknown'} species recorded all time`
+                      : `${hotspot.activeTodayCount} species active today`}
+                  </span>
+                </div>
+              </div>
+              <span className="material-symbols-outlined text-[#c2c9bb] text-[20px]">
+                chevron_right
               </span>
-            </div>
-            <div className="flex flex-col min-w-0 flex-1">
-              <div className="flex items-center gap-1.5">
-                <span className="text-[15px] font-bold text-[#181c20] truncate">
-                  {hotspot.name}
-                </span>
-              </div>
-              <p className="text-[12px] text-[#72796e] truncate">
-                {hotspot.region} • {hotspot.distanceKm == null ? 'Distance unavailable' : `${hotspot.distanceKm.toFixed(1)} km away`}
-              </p>
-              <div className="flex items-center gap-1 mt-1 text-[#42493e] text-[11px] font-semibold">
-                <span className="material-symbols-outlined text-[#154212] text-[14px]">eco</span>
-                <span className="text-[#3b6934] font-bold">{hotspot.source ? `${hotspot.speciesCount ?? 'Unknown'} species recorded all time` : `${hotspot.activeTodayCount} species active today`}</span>
-              </div>
-            </div>
-            <span className="material-symbols-outlined text-[#c2c9bb] text-[20px]">
-              chevron_right
-            </span>
-          </button>
-        ))}
+            </button>
+          ))}
 
         {/* Community Post Result */}
-        {showPosts && matchedPosts.map((post) => (
-          <button
-            type="button"
-            key={post.id}
-            onClick={() => onNavigate('community')}
-            className="w-full text-left flex items-center gap-3 p-3 bg-white rounded-xl shadow-xs hover:bg-[#f1f4f9] transition-all cursor-pointer border border-[#f1f4f9]"
-          >
-            <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 bg-[#ebeef3]">
-              <img
-                src={post.imageUrl}
-                alt={post.speciesName}
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div className="flex flex-col min-w-0 flex-1">
-              <div className="flex items-center gap-1.5">
-                <span className="text-[15px] font-bold text-[#181c20] truncate">
-                  {post.speciesName}
-                </span>
+        {showPosts &&
+          matchedPosts.map((post) => (
+            <button
+              type="button"
+              key={post.id}
+              onClick={() => {
+                recordSearch();
+                onOpenPost?.(post.id);
+              }}
+              className="w-full text-left flex items-center gap-3 p-3 bg-white rounded-xl shadow-xs hover:bg-[#f1f4f9] transition-all cursor-pointer border border-[#f1f4f9]"
+            >
+              <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 bg-[#ebeef3]">
+                <img
+                  src={post.imageUrl}
+                  alt={post.speciesName}
+                  className="w-full h-full object-cover"
+                />
               </div>
-              <p className="text-[12px] text-[#42493e] line-clamp-1">{post.location}</p>
-              <div className="flex items-center gap-1 mt-1 text-[11px] text-[#72796e]">
-                <span>By {post.authorName}</span>
-                <span>•</span>
-                <span>{post.timeAgo}</span>
+              <div className="flex flex-col min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[15px] font-bold text-[#181c20] truncate">
+                    {post.speciesName}
+                  </span>
+                </div>
+                <p className="text-[12px] text-[#42493e] line-clamp-1">
+                  {post.location}
+                </p>
+                <div className="flex items-center gap-1 mt-1 text-[11px] text-[#72796e]">
+                  <span>By {post.authorName}</span>
+                  <span>•</span>
+                  <span>{post.timeAgo}</span>
+                </div>
               </div>
-            </div>
-            <span className="material-symbols-outlined text-[#c2c9bb] text-[20px]">
-              chevron_right
-            </span>
-          </button>
-        ))}
+              <span className="material-symbols-outlined text-[#c2c9bb] text-[20px]">
+                chevron_right
+              </span>
+            </button>
+          ))}
 
+        {showPosts && nextPosts !== null && (
+          <button
+            disabled={searchLoading}
+            onClick={() => void more('posts')}
+            className="min-h-11 underline"
+          >
+            Load more posts
+          </button>
+        )}
         {/* Empty State */}
-        {!hasAnyResult && (
+        {!hasAnyResult && !searchLoading && !searchError && (
           <div className="py-14 flex flex-col items-center justify-center text-center">
             <div className="w-16 h-16 rounded-full bg-[#ebeef3] flex items-center justify-center mb-2">
               <span className="material-symbols-outlined text-[#72796e] text-[32px]">
                 travel_explore
               </span>
             </div>
-            <span className="text-[16px] font-bold text-[#181c20]">No wanderings found</span>
+            <span className="text-[16px] font-bold text-[#181c20]">
+              No wanderings found
+            </span>
             <p className="text-[13px] text-[#42493e] mt-1 max-w-[240px]">
-              Try adjusting your search terms or exploring nearby regional checklist hotspots.
+              Try adjusting your search terms or exploring nearby regional
+              checklist hotspots.
             </p>
           </div>
         )}

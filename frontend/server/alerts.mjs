@@ -4,7 +4,7 @@ import { createPush } from './push.mjs';
 import { createOpportunities } from './opportunities.mjs';
 
 // Alert rows store references, not copies of private sighting data.
-export function createAlerts(db, discovery, { observation, canRead }, now = Date.now, pushOptions = {}) {
+export function createAlerts(db, discovery, { observation, canRead }, now = Date.now, pushOptions = {}, socialNotifications) {
   db.exec(`
     CREATE TABLE IF NOT EXISTS alert_subscriptions (
       user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -106,6 +106,7 @@ export function createAlerts(db, discovery, { observation, canRead }, now = Date
     res.json({
       subscriptions: subscriptions(req.userId),
       notifications: [
+        ...(socialNotifications?.list(req.userId)||[]),
         ...rows.map((row) => visibleAlert(row, req.userId)),
         ...db
           .prepare('SELECT * FROM opportunity_alerts WHERE user_id=? ORDER BY created_at DESC LIMIT 200')
@@ -217,6 +218,7 @@ export function createAlerts(db, discovery, { observation, canRead }, now = Date
         now(),
         req.userId,
       );
+      socialNotifications?.readAll(req.userId);
       db.exec('COMMIT');
     } catch (error) {
       db.exec('ROLLBACK');
@@ -225,6 +227,10 @@ export function createAlerts(db, discovery, { observation, canRead }, now = Date
     res.status(204).end();
   });
   router.post('/:id/read', (req, res) => {
+    if(req.params.id.startsWith('social:')){
+      if(!socialNotifications?.read(req.params.id.slice(7),req.userId))return res.status(404).json({error:'Social notification is no longer available.'});
+      return res.status(204).end();
+    }
     if (req.params.id.startsWith('opportunity:')) {
       const row = db
         .prepare('SELECT * FROM opportunity_alerts WHERE id=? AND user_id=?')

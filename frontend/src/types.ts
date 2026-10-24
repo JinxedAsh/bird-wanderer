@@ -162,6 +162,7 @@ export interface JournalEntry {
 }
 
 export interface AppNotification {
+  personId?: string;
   opportunityId?: string;
   observationId?: string;
   speciesId?: string;
@@ -170,7 +171,7 @@ export interface AppNotification {
   title: string;
   timeAgo: string;
   description: string;
-  category: 'alerts' | 'mentions' | 'all';
+  category: 'alerts' | 'mentions' | 'followers' | 'all';
   isUnread: boolean;
   icon: string;
   iconBg: string;

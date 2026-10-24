@@ -24,7 +24,7 @@ let searchHelpers;
 before(async () => {
   temporaryDirectory = mkdtempSync(join(root, '.stage1-render-'));
   const screens = {};
-  const names = ['FieldChatScreen', 'BirdQuizScreen', 'AuthScreen', 'LogObservationScreen', 'ProfileScreen', 'JournalScreen', 'LifeListScreen', 'GlobalSearchScreen', 'SettingsScreen', 'SpeciesDetailScreen', 'SpeciesPhoto', 'PhotoMetadata', 'PhotoPlanning', 'ReferenceComparisons', 'SpeciesInfoPanel', 'HotspotMap', 'HotspotWeatherPanel', 'HotspotDetailScreen', 'HotspotAccess', 'HotspotsScreen', 'ExploreScreen', 'LocationPicker', 'Header'];
+  const names = ['NotificationsScreen', 'FieldChatScreen', 'BirdQuizScreen', 'AuthScreen', 'LogObservationScreen', 'ProfileScreen', 'JournalScreen', 'LifeListScreen', 'GlobalSearchScreen', 'SettingsScreen', 'SpeciesDetailScreen', 'SpeciesPhoto', 'PhotoMetadata', 'PhotoPlanning', 'ReferenceComparisons', 'SpeciesInfoPanel', 'HotspotMap', 'HotspotWeatherPanel', 'HotspotDetailScreen', 'HotspotAccess', 'HotspotsScreen', 'ExploreScreen', 'LocationPicker', 'Header'];
   // Compile these existing TSX screens for Node rendering; no browser or new test framework.
   for (const relative of ['lib/useDialogFocus.ts', 'lib/maps.ts', 'lib/auth.ts', 'lib/discovery.ts', 'lib/activity.ts', 'lib/location.ts', 'lib/observations.ts', 'lib/alerts.ts', 'lib/retention.ts', 'lib/messages.ts', ...names.map((name) => `components/${name}.tsx`)]) {
     const output = join(temporaryDirectory, relative.replace(/\.tsx?$/, '.mjs'));
@@ -601,4 +601,13 @@ test('field chat starts without demo people, fabricated replies or location clai
   assert.match(html,/Loading field chat/);
   assert.doesNotMatch(html,/Maya Singh|Kabir Rao|geo-tagged|28.5670|Noted! I will adjust/);
   assert.match(html,/precise GPS is never attached automatically/);
+});
+
+
+test('global search describes real access-controlled lookup and social notification filters have no samples',()=>{
+  const html=render('GlobalSearchScreen',{...searchProps,externalDiscovery:true});
+  assert.match(html,/Loading people and posts/);assert.match(html,/searched on the server/);
+  assert.doesNotMatch(html,/demonstration data|Maya Singh|No wanderings found/);
+  const notices=render('NotificationsScreen',{notifications:[],onMarkAllRead:noop,onSelectNotification:noop,onNavigate:noop});
+  assert.match(notices,/followers/);assert.doesNotMatch(notices,/Maya Singh/);
 });
