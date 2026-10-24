@@ -20,18 +20,19 @@ let planningHelpers;
 let weatherHelpers;
 let referenceHelpers;
 let searchHelpers;
+let navigationHelpers;
 
 before(async () => {
   temporaryDirectory = mkdtempSync(join(root, '.stage1-render-'));
   const screens = {};
   const names = ['ChangePasswordSheet', 'EditObservationSheet', 'NotificationsScreen', 'FieldChatScreen', 'BirdQuizScreen', 'AuthScreen', 'LogObservationScreen', 'ProfileScreen', 'JournalScreen', 'LifeListScreen', 'GlobalSearchScreen', 'SettingsScreen', 'SpeciesDetailScreen', 'SpeciesPhoto', 'PhotoMetadata', 'PhotoPlanning', 'ReferenceComparisons', 'SpeciesInfoPanel', 'HotspotMap', 'HotspotWeatherPanel', 'HotspotDetailScreen', 'HotspotAccess', 'HotspotsScreen', 'ExploreScreen', 'LocationPicker', 'Header'];
   // Compile these existing TSX screens for Node rendering; no browser or new test framework.
-  for (const relative of ['lib/useDialogFocus.ts', 'lib/maps.ts', 'lib/auth.ts', 'lib/discovery.ts', 'lib/activity.ts', 'lib/location.ts', 'lib/observations.ts', 'lib/alerts.ts', 'lib/retention.ts', 'lib/messages.ts', ...names.map((name) => `components/${name}.tsx`)]) {
+  for (const relative of ['lib/navigation.ts', 'lib/useDialogFocus.ts', 'lib/maps.ts', 'lib/auth.ts', 'lib/discovery.ts', 'lib/activity.ts', 'lib/location.ts', 'lib/observations.ts', 'lib/alerts.ts', 'lib/retention.ts', 'lib/messages.ts', ...names.map((name) => `components/${name}.tsx`)]) {
     const output = join(temporaryDirectory, relative.replace(/\.tsx?$/, '.mjs'));
     mkdirSync(dirname(output), { recursive: true });
     const source = readFileSync(join(root, 'src', relative), 'utf8');
     const { code } = transformSync(source, { loader: 'tsx', format: 'esm', jsx: 'automatic', target: 'node24' });
-    writeFileSync(output, code.replace('./ChangePasswordSheet"', './ChangePasswordSheet.mjs"').replace('./EditObservationSheet"','./EditObservationSheet.mjs"').replace('../lib/messages"', '../lib/messages.mjs"').replace('../lib/useDialogFocus"', '../lib/useDialogFocus.mjs"').replace('../lib/maps"', '../lib/maps.mjs"').replace('./HotspotMap"', './HotspotMap.mjs"').replace('./HotspotAccess"', './HotspotAccess.mjs"').replace('./HotspotWeatherPanel"', './HotspotWeatherPanel.mjs"').replace('./SpeciesPhoto"', './SpeciesPhoto.mjs"').replace('./PhotoMetadata"', './PhotoMetadata.mjs"').replace('./PhotoPlanning"', './PhotoPlanning.mjs"').replace('./SpeciesInfoPanel"', './SpeciesInfoPanel.mjs"').replace('./ReferenceComparisons"', './ReferenceComparisons.mjs"').replace('../lib/discovery"', '../lib/discovery.mjs"').replace('../lib/auth"', '../lib/auth.mjs"').replace('../lib/retention"', '../lib/retention.mjs"').replace('./auth"', './auth.mjs"').replace('./maps"', './maps.mjs"').replace('../lib/location"', '../lib/location.mjs"').replace('../lib/observations"', '../lib/observations.mjs"'));
+    writeFileSync(output, code.replace('../lib/navigation"','../lib/navigation.mjs"').replace('./ChangePasswordSheet"', './ChangePasswordSheet.mjs"').replace('./EditObservationSheet"','./EditObservationSheet.mjs"').replace('../lib/messages"', '../lib/messages.mjs"').replace('../lib/useDialogFocus"', '../lib/useDialogFocus.mjs"').replace('../lib/maps"', '../lib/maps.mjs"').replace('./HotspotMap"', './HotspotMap.mjs"').replace('./HotspotAccess"', './HotspotAccess.mjs"').replace('./HotspotWeatherPanel"', './HotspotWeatherPanel.mjs"').replace('./SpeciesPhoto"', './SpeciesPhoto.mjs"').replace('./PhotoMetadata"', './PhotoMetadata.mjs"').replace('./PhotoPlanning"', './PhotoPlanning.mjs"').replace('./SpeciesInfoPanel"', './SpeciesInfoPanel.mjs"').replace('./ReferenceComparisons"', './ReferenceComparisons.mjs"').replace('../lib/discovery"', '../lib/discovery.mjs"').replace('../lib/auth"', '../lib/auth.mjs"').replace('../lib/retention"', '../lib/retention.mjs"').replace('./auth"', './auth.mjs"').replace('./maps"', './maps.mjs"').replace('../lib/location"', '../lib/location.mjs"').replace('../lib/observations"', '../lib/observations.mjs"'));
   }
   for (const name of names) {
     const module = await import(pathToFileURL(join(temporaryDirectory, 'components', `${name}.mjs`)).href);
@@ -46,6 +47,7 @@ before(async () => {
   planningHelpers = await import(pathToFileURL(join(temporaryDirectory, 'components/PhotoPlanning.mjs')).href);
   mapHelpers = await import(pathToFileURL(join(temporaryDirectory, 'lib/maps.mjs')).href);
   authClient = await import(pathToFileURL(join(temporaryDirectory, 'lib/auth.mjs')).href);
+  navigationHelpers = await import(pathToFileURL(join(temporaryDirectory, 'lib/navigation.mjs')).href);
   locationHelpers = await import(pathToFileURL(join(temporaryDirectory, 'lib/location.mjs')).href);
   alertsClient = await import(pathToFileURL(join(temporaryDirectory, 'lib/alerts.mjs')).href);
   activityClient = await import(pathToFileURL(join(temporaryDirectory, 'lib/activity.mjs')).href);
@@ -646,4 +648,44 @@ test('journal editor loads the owned source before allowing edits and describes 
   assert.match(html,/role="dialog"/);assert.match(html,/Edit observation/);assert.match(html,/Loading your record/);
   assert.match(html,/photograph, extracted EXIF and original publication date are preserved/);
   assert.doesNotMatch(html,/Observation changes saved|Editing observation record/);
+});
+
+test('app links retain exact destinations and reject malformed or ambiguous source identifiers',()=>{
+  const {readRoute,routeQuery}=navigationHelpers;
+  for(const route of [{screen:'species-detail',species:'comkin1'},{screen:'hotspot-detail',hotspot:'L123'},{screen:'community',post:'abc-123'},{screen:'community',person:'def-456'},{screen:'journal'},{screen:'notifications'}])
+    assert.deepEqual(readRoute(routeQuery(route)),route);
+  assert.deepEqual(readRoute('?notifications'),{screen:'notifications'});
+  assert.deepEqual(readRoute('?screen=explore&token=private&latitude=12'),{screen:'explore'});
+  for(const query of ['?screen=auth','?screen=made-up','?screen=species-detail','?screen=hotspot-detail&hotspot=12.1,77.2','?screen=community&post=abc&person=def','?screen=community&post=one&post=two','?screen=explore&screen=profile','?screen=community&person='+ 'x'.repeat(81)])
+    assert.throws(()=>readRoute(query));
+});
+
+test('browser route writes retain a bounded app history index without copying private history state or query data',()=>{
+  const prior=Object.getOwnPropertyDescriptor(globalThis,'window'),calls=[];
+  const history={state:{birdWandererIndex:2,privateDraft:'not copied'},pushState(state,unused,url){calls.push({state,url});this.state=state;},replaceState(state,unused,url){calls.push({state,url});this.state=state;}};
+  Object.defineProperty(globalThis,'window',{configurable:true,value:{location:{pathname:'/'},history}});
+  try{
+    navigationHelpers.writeRoute({screen:'species-detail',species:'comkin1'});
+    navigationHelpers.writeRoute({screen:'hotspots'},true);
+    assert.deepEqual(calls,[{state:{birdWandererIndex:3},url:'/?screen=species-detail&species=comkin1'},{state:{birdWandererIndex:3},url:'/?screen=hotspots'}]);
+  }finally{if(prior)Object.defineProperty(globalThis,'window',prior);else delete globalThis.window;}
+});
+
+test('share fallback contains only a canonical app ID link and never an observation caption or unknown query',async()=>{
+  const priorWindow=Object.getOwnPropertyDescriptor(globalThis,'window'),priorNavigator=Object.getOwnPropertyDescriptor(globalThis,'navigator');let shared,prompted;
+  const messages=[];
+  Object.defineProperty(globalThis,'window',{configurable:true,value:{location:{origin:'https://example.test',pathname:'/'},isSecureContext:true,prompt:(text,url)=>{prompted=url;}}});
+  Object.defineProperty(globalThis,'navigator',{configurable:true,value:{userAgent:'Fixture Browser',share:async value=>{shared=value;}}});
+  try{
+    await navigationHelpers.shareAppLink('https://example.test/?screen=community&post=abc&notes=private&token=secret',message=>messages.push(message));
+    assert.deepEqual(shared,{title:'Bird Wanderer',url:'https://example.test/?screen=community&post=abc'});
+    globalThis.navigator.share=undefined;
+    await navigationHelpers.shareAppLink('https://example.test/?screen=hotspots',message=>messages.push(message));
+    assert.equal(prompted,'https://example.test/?screen=hotspots');
+    await navigationHelpers.shareAppLink('https://evil.test/?screen=explore',message=>messages.push(message));
+    assert.match(messages.at(-1),/Could not share/);
+  }finally{
+    if(priorWindow)Object.defineProperty(globalThis,'window',priorWindow);else delete globalThis.window;
+    if(priorNavigator)Object.defineProperty(globalThis,'navigator',priorNavigator);else delete globalThis.navigator;
+  }
 });

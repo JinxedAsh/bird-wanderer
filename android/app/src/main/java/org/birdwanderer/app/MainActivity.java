@@ -147,6 +147,14 @@ public class MainActivity extends Activity {
                 if (url.equals("birdwanderer://connection") && request.hasGesture() && trusted()) {
                     view.post(() -> {if(webView==view)showConnection("");}); return true;
                 }
+                if ("birdwanderer".equals(request.getUrl().getScheme()) && "share".equals(request.getUrl().getHost())) {
+                    String link=request.getUrl().getQueryParameter("url");
+                    if(request.hasGesture()&&trusted()&&OriginPolicy.shareable(link,origin,BuildConfig.DEBUG)){
+                        try { startActivity(Intent.createChooser(new Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT,link),"Share Bird Wanderer link")); }
+                        catch(ActivityNotFoundException failure){Toast.makeText(MainActivity.this,"No sharing application is available.",Toast.LENGTH_LONG).show();}
+                    }
+                    return true;
+                }
                 if (OriginPolicy.sameOrigin(url, origin, BuildConfig.DEBUG)) return false;
                 if (request.hasGesture()) openExternal(request.getUrl());
                 else connectionError(view,"A redirect left the configured server. Check its address; no certificate or origin restriction was bypassed.");
