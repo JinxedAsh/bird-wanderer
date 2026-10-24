@@ -4,11 +4,11 @@ Updated25 October2026. Source implementation is separate from final browser/CI d
 
 ## What changed
 
-Settings previously displayed an unavailable email-recovery message when someone selected Change password. A signed-in person can now open a focused sheet, provide their current password and enter/confirm a different12–128-character password. Wrong credentials and failed requests show their actual error; success appears only after the API confirms. Cancel/Escape close the idle sheet; controls stay disabled during submission.
+Settings previously displayed an unavailable email-recovery message when someone selected Change password. A signed-in person can now open a focused sheet, provide their current password and enter/confirm a different 12–128-character password. Wrong credentials and failed requests show their actual error; success appears only after the API confirms. Cancel/Escape close the idle sheet; controls stay disabled during submission.
 
 The current device receives a fresh session. Other sessions and all session-bound push registrations are revoked, including this device's previous registration. Enable push again if configured and wanted. Saved observations, profile, messages and other account data are preserved. This is an authenticated password change, not email recovery. The login Forgot password control still explicitly reports unavailable recovery and sends no email.
 
-Help & Field Guidelines now opens the [American Birding Association Code of Birding Ethics](https://www.aba.org/aba-code-of-birding-ethics/), reviewed25 October. This provides guidance on disturbance, responsible photography and respecting access; it does not establish a particular venue's permission or current local rules. About displays the actual frontend package version, now0.1.0, matching the Android preview's base version rather than the old invented1.0.4 label. It identifies the app as a development preview.
+Help & Field Guidelines now opens the [American Birding Association Code of Birding Ethics](https://www.aba.org/aba-code-of-birding-ethics/), reviewed25 October. This provides guidance on disturbance, responsible photography and respecting access; it does not establish a particular venue's permission or current local rules. About displays the actual frontend package version, now 0.1.0, matching the Android preview's base version rather than the old invented 1.0.4 label. It identifies the app as a development preview.
 
 ## Request and storage flow
 
@@ -20,7 +20,7 @@ Deleting old sessions cascades to their push registrations and queued deliveries
 
 ## Verification and limits
 
-Focused auth tests cover validation, wrong current password, foreign origin, unauthenticated requests, fresh salted hash, old-password rejection/new-password acceptance, session/push revocation, unrelated-account isolation, injected rollback, concurrent requests, rate limits, expiry during hashing and password/session persistence after restart. An expected SQLite diagnostic comes from a deliberate rollback test.
+Local full suite:118 tests passed; TypeScript and production build passed (main493.89kB). Focused auth tests cover validation, wrong current password, foreign origin, unauthenticated requests, fresh salted hash, old-password rejection/new-password acceptance, session/push revocation, unrelated-account isolation, injected rollback, concurrent requests, rate limits, expiry during hashing and password/session persistence after restart. An expected SQLite diagnostic comes from a deliberate rollback test.
 
 The frontend render harness targets Node24 so JSON import attributes survive transformation; the production frontend still uses Vite's normal JSON bundling. Existing account-identity tests check the real ethics URL and package version. Browser success/error/mismatch/cancel/mobile and exact-head CI acceptance must be recorded separately before delivery. No Firebase project, recovery-email provider, physical-device delivery or production deployment is implied.
 
