@@ -594,11 +594,11 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
                         {comm.avatarInitials}
                       </div>
                       <div className="flex flex-col flex-1 min-w-0">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[12px] font-bold text-[#181c20]">{comm.author}</span>
-                          <span className="text-[10px] text-[#42493e]">{comm.time}</span>
+                        <div className="flex flex-col gap-0.5 min-w-0">
+                          <span className="text-[12px] font-bold text-[#181c20] [overflow-wrap:anywhere]">{comm.author}</span>
+                          <time dateTime={comm.time} className="text-[10px] text-[#42493e] [overflow-wrap:anywhere]">{Number.isNaN(Date.parse(comm.time))?comm.time:`${new Date(comm.time).toLocaleString('en-GB',{timeZone:'Asia/Kolkata'})} IST`}</time>
                         </div>
-                        <p className="text-[13px] text-[#42493e] mt-0.5 leading-snug">{comm.text}</p>
+                        <p className="text-[13px] text-[#42493e] mt-0.5 leading-snug whitespace-pre-wrap [overflow-wrap:anywhere]">{comm.text}</p>
                         {comm.canDelete && onDeleteComment && (
                           <button
                             type="button"

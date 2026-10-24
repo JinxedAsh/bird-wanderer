@@ -718,13 +718,13 @@ The header logo now uses a bundled SVG following the supplied green bird emblem,
 
 ### Entry 37 — Real global search, categorized social notifications and accessible older records
 
-**Date/group:** 24 October 2026 IST; cross-screen community/search/notification completion. **Status:** local implementation on search-notification-targets; 110 tests, TypeScript and production build pass; browser verification/GitHub delivery in progress.
+**Date/group:** 24 October 2026 IST; cross-screen community/search/notification completion. **Status:** local implementation on search-notification-targets; 110 tests, TypeScript and production build pass; scoped browser verification passed; PR #30 exact-head delivery in progress.
 
 **What changed:** Global Search queries real registered people, including people without posts, and all matching accessible observations using server pages. People/post results open the exact profile/observation. Existing bird/hotspot/history behavior remains. Added loading/errors/retry and Load more people/posts. Own/feed lists can load beyond the first 500 records; real profile totals no longer truncate there. Search-opened posts are retained and revalidated when reactions/comments refresh the feed.
 
 **Social notifications:** real follows, comments and stable-handle mentions generate deduplicated in-app events. Followers has its own filter; source-ID navigation and individual/all-read persistence are connected. Current observation privacy is rechecked, a mention never grants access, and deleted comments/observations remove their events. Unfollow removes the related follower event. Action/event writes are transactional; injected failures roll both back. Social previews contain generic action text, not copies of private comments/locations. Exact GPS remains unpublished. These new social events are in-app only; sighting/forecast optional push and its unconfigured Firebase boundary remain unchanged.
 
-**Verification:** 110 local tests/type/build pass. New HTTP tests cover no-post accounts, older-than-500 matching records, 502-record profile counts, page separation, private/follower/owner policy, search-inference prevention for withheld hotspots, malformed parameters, deduplicated mentions/follows/read/restart/cascades and transaction rollback. Existing sighting self-alert test now filters sighting events because real follower notifications can coexist. Browser QA has confirmed zero-post person search, correct profile/post destinations, follow/comment notifications, persisted reads/all-read and mobile filter fit; remaining privacy/pagination/error cases are in progress. Physical-phone/LAN, public hosting and actual Firebase delivery are not claimed.
+**Verification:** 110 local tests/type/build pass. New HTTP tests cover no-post accounts, older-than-500 matching records, 502-record profile counts, page separation, private/follower/owner policy, search-inference prevention for withheld hotspots, malformed parameters, deduplicated mentions/follows/read/restart/cascades and transaction rollback. Existing sighting self-alert test now filters sighting events because real follower notifications can coexist. Browser QA passed zero-post person search, exact profile/post destinations, follow/comment/mention events and duplicate tags, persisted reads/all-read, current privacy/stale-target denial and deletion/unfollow cleanup. A 320px long-name/timestamp overlap was fixed with separate wrapping lines and rechecked at 320/390px, including focus/Escape. Isolated-browser search-outage/retry and 50-to-60 distinct people/post pagination passed. Its server stopped; automatic approval review blocked removing the temporary fixture folder, so full cleanup is not claimed. Physical-phone/LAN, public hosting and actual Firebase delivery are not claimed.
 
 **Files/Viva:** observation/community/alerts source, new social-notifications module and search-social HTTP tests, observation client, App, Global Search, Community, Notifications, shared types, test script/frontend tests and documentation. SEARCH_NOTIFICATIONS_WALKTHROUGH.md explains the request flow, privacy-before-pagination, transactions, source references and six likely Viva questions. Messaging #29 was independently confirmed merged at e085f4e with passing main CI before this branch started. Android toolchain work continues independently; no APK exists yet.
 
@@ -774,19 +774,17 @@ Other incomplete existing controls include password recovery, sourced audio, ent
 
 Android delivery is now in scope for full-project completion. Follow PROJECT_COMPLETION_PLAN.md for all phases and PHASE_1_ACCEPTANCE.md for the unresolved Phase 1 evidence/manual criteria. Historical deferrals describe their original increments only.
 
-### Known issues still requiring follow-up
+### Current issues still requiring follow-up
 
-- Journal membership, life-list flags and profile totals can disagree; several displayed totals remain sample values.
-- Observation photographs/species IDs can be inconsistent, and camera metadata/verification labels are still fabricated in the prototype.
-- Private/follower-only observation choices and sensitive-species settings are not enforced through persistent server records.
-- Notifications use approximate title-based destinations rather than reliable target IDs.
-- Several community filters lack complete real behavior; messaging replies are simulated and searches can bypass chat filters.
-- The quiz has two sample questions, a preselected answer, no proper completion flow and no persistent streak/progress.
-- Navigation has no entity-specific URLs; refresh/share cannot reliably return to a particular bird or hotspot.
-- Frontend type checking does not fully check the JavaScript backend; unused dependencies and old metadata remain cleanup work.
-- Protected-species coordinates, third-party data/image attribution, weak-network behavior and production backup/hosting requirements still require acceptance work.
+- Seasonal statistics require legitimate regional historical exports with denominators. Measured photography difficulty and historical environmental matching lack reliable evidence; general heuristics must stay labelled.
+- Firebase project/configuration and actual browser/native-device push receipt are unavailable. Social notifications are currently in-app only; Android WebView needs a native push adapter before device delivery can be accepted.
+- Android source is in progress; APK build, installation, native photo/location/back/navigation and physical Oppo acceptance need actual verification.
+- Current global search/social-notification/pagination changes are verified locally/browser but their latest exact-head GitHub delivery must finish.
+- Entity-specific shareable URLs/browser history, production hosting/backups and genuine provider-outage/public-tunnel acceptance remain open.
+- Operator-current access/entrance confirmation and final design approval still require external/manual evidence. Scientific/provider gaps must not be replaced by sample values.
+- Frontend type checking does not fully check JavaScript server code; server behavior is covered by HTTP/unit tests rather than a JavaScript type-check claim.
 
-These are review findings, not new implementations. Stage 1 resolved the issues listed in Entry 06; it did not silently classify the remaining items as complete.
+Historical prototype defects in journal counts, fabricated metadata, unenforced record privacy, title-based alert routing, simulated chat and the two-question quiz were replaced by the delivered increments in Entries31–36. Entry37 covers remaining global source-ID and social-inbox work. Their old review findings are not current implementation claims.
 
 ## 7. Source files and evidence index
 
