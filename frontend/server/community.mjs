@@ -28,9 +28,10 @@ export function communityStats(db, observationId, viewerId) {
     comments: db
       .prepare(
         `SELECT c.id,c.user_id,c.text,c.created_at,u.name FROM comments c JOIN users u ON u.id=c.user_id
-      WHERE observation_id=? ORDER BY c.created_at,c.id LIMIT 100`,
+      WHERE observation_id=? ORDER BY c.created_at DESC,c.id DESC LIMIT 100`,
       )
       .all(observationId)
+      .reverse()
       .map((row) => ({
         id: row.id,
         author: row.name,

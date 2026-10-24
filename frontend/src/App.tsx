@@ -32,7 +32,7 @@ import { BottomNav } from './components/BottomNav';
 import { ExploreScreen } from './components/ExploreScreen';
 import { CommunityScreen } from './components/CommunityScreen';
 import { HotspotsScreen } from './components/HotspotsScreen';
-import { JournalScreen } from './components/JournalScreen';
+const JournalScreen=React.lazy(()=>import('./components/JournalScreen').then(module=>({default:module.JournalScreen})));
 import { ProfileScreen } from './components/ProfileScreen';
 import { SpeciesDetailScreen } from './components/SpeciesDetailScreen';
 import { LogObservationScreen } from './components/LogObservationScreen';
@@ -525,9 +525,10 @@ export default function App() {
   };
   const handleToggleJournalLifeList = (entryId: string) => {
     const entry=journalEntries.find(row=>row.id===entryId);
-    if(entry)void changeRecord(signal=>observations.update(entryId,{inLifeList:!entry.inLifeList},signal));
+    if(entry)return changeRecord(signal=>observations.update(entryId,{inLifeList:!entry.inLifeList},signal));
+    return Promise.resolve(false);
   };
-  const handleDeleteJournalEntry = (entryId: string) => {void changeRecord(signal=>observations.remove(entryId,signal));};
+  const handleDeleteJournalEntry = (entryId: string) => changeRecord(signal=>observations.remove(entryId,signal));
   const handlePostObservation = () => {setRecordsAttempt(value=>value+1);};
 
   const changeAlert = async (change: (signal: AbortSignal) => Promise<unknown>) => {
@@ -682,6 +683,7 @@ export default function App() {
             </div>
           )}
           {sessionUser && (recordsLoading || recordsError) && <div role={recordsError?'alert':'status'} className="mx-4 mt-2 rounded-xl bg-[#f1f4f9] p-3 text-[12px] text-[#42493e]">{recordsError||'Loading your field records…'}{recordsError&&<button type="button" onClick={()=>setRecordsAttempt(value=>value+1)} className="min-h-11 ml-2 underline">Retry field records</button>}</div>}
+          {['journal','life-list','profile'].includes(currentScreen)&&userProfile.photosCount>journalEntries.length&&<p className="mx-4 text-xs text-[#42493e]">Showing {journalEntries.length} of {userProfile.photosCount} field records. Totals cover all records; load older pages to include their details/species.</p>}
           {['journal','life-list','profile'].includes(currentScreen)&&ownNext!==null&&<button disabled={recordsLoading} onClick={()=>setOwnPages(n=>n+1)} className="mx-4 min-h-11 underline">Load older field records</button>}
           {currentScreen==='community'&&<div className="mx-4 flex gap-4">{feedNext!==null&&<button disabled={recordsLoading} onClick={()=>setFeedPages(n=>n+1)} className="min-h-11 underline">Load older community posts</button>}{peopleNext!==null&&<button disabled={recordsLoading} onClick={()=>setPeoplePages(n=>n+1)} className="min-h-11 underline">Load more birders</button>}</div>}
           {['explore', 'search', 'hotspots'].includes(currentScreen) && (
@@ -749,13 +751,13 @@ export default function App() {
           )}
 
           {currentScreen === 'journal' && (
-            <JournalScreen
+            <React.Suspense fallback={<p role="status" className="p-4">Loading journal…</p>}><JournalScreen key={sessionUser?.id} totals={userProfile} speciesList={discovery?.species||[]} hotspots={discovery?.hotspots||[]} onRecordChanged={handlePostObservation} onSessionExpired={resetSession}
               entries={journalEntries}
               onNavigate={navigateTo}
               onToggleLifeList={handleToggleJournalLifeList}
               onDeleteEntry={handleDeleteJournalEntry}
               showToast={showToast}
-            />
+            /></React.Suspense>
           )}
 
           {currentScreen === 'profile' && (
@@ -912,10 +914,11 @@ export default function App() {
         {toastMessage && (
           <div role="status" aria-live="polite" className="fixed top-20 inset-x-4 mx-auto max-w-xs z-50 bg-[#2d3135] text-[#eef1f6] py-2.5 px-4 rounded-xl shadow-lg flex items-center justify-center gap-2 animate-in fade-in slide-in-from-top-3 duration-200">
             <span
-              className="material-symbols-outlined text-[18px] text-[#a1d494]"
+              aria-hidden="true"
+              className="material-symbols-outlined text-[18px]"
               style={{ fontVariationSettings: "'FILL' 1" }}
             >
-              check_circle
+              info
             </span>
             <span className="text-[12px] font-semibold text-center">{toastMessage}</span>
           </div>

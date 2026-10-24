@@ -1,15 +1,22 @@
-import React, { useState } from 'react';
-import { JournalEntry, ScreenType } from '../types';
+import React, { useRef, useState } from 'react';
+import { EditObservationSheet } from './EditObservationSheet';
+import { JournalEntry, ScreenType, BirdSpecies, Hotspot, UserProfile } from '../types';
 
 interface JournalScreenProps {
+  totals?:Pick<UserProfile,'birdsCount'|'photosCount'|'tripsCount'>;
+  speciesList:BirdSpecies[];
+  hotspots:Hotspot[];
+  onRecordChanged:()=>void;
+  onSessionExpired?:()=>void;
   entries: JournalEntry[];
   onNavigate: (screen: ScreenType) => void;
-  onToggleLifeList: (entryId: string) => void;
-  onDeleteEntry: (entryId: string) => void;
+  onToggleLifeList: (entryId: string) => Promise<boolean|undefined>;
+  onDeleteEntry: (entryId: string) => Promise<boolean|undefined>;
   showToast: (message: string) => void;
 }
 
 export const JournalScreen: React.FC<JournalScreenProps> = ({
+  totals, speciesList,hotspots,onRecordChanged,onSessionExpired,
   entries,
   onNavigate,
   onToggleLifeList,
@@ -19,8 +26,21 @@ export const JournalScreen: React.FC<JournalScreenProps> = ({
   const [activeEntryId, setActiveEntryId] = useState<string>(entries[0]?.id || '');
   const activeEntry = entries.find((e) => e.id === activeEntryId) || entries[0];
 
+  const [editing,setEditing]=useState<string|null>(null);
+  const [actionError,setActionError]=useState('');
+  const [busy,setBusy]=useState(false);
+  const pending=useRef(false);
+  const act=async(change:()=>Promise<boolean|undefined>,success:string)=>{
+    if(pending.current)return;pending.current=true;setBusy(true);setActionError('');
+    try{if(await change())showToast(success);else setActionError('The change was not confirmed. Check your connection and retry.');}
+    catch(error){setActionError(error instanceof Error?error.message:'The change was not saved. Please retry.');}
+    finally{pending.current=false;setBusy(false);}
+  };
+
   return (
     <div className="flex flex-col w-full px-4 pb-28 pt-1">
+      {editing&&<EditObservationSheet key={editing} id={editing} speciesList={speciesList} hotspots={hotspots} onSessionExpired={onSessionExpired} onClose={()=>setEditing(null)} onSaved={onRecordChanged} showToast={showToast}/>}
+      {actionError&&<p role="alert" className="rounded-xl bg-orange-50 p-3 text-sm">{actionError}</p>}
       {/* Session Title Strip */}
       <div className="pt-2 pb-3 flex items-center justify-between">
         <div className="flex items-center gap-1.5">
@@ -41,7 +61,7 @@ export const JournalScreen: React.FC<JournalScreenProps> = ({
         <div className="grid grid-cols-3 gap-2 text-center">
           <div className="flex flex-col items-center">
             <div className="flex items-center gap-1">
-              <span className="text-[32px] font-bold text-[#181c20] leading-none">{new Set(entries.filter(entry => entry.inLifeList).map(entry => entry.scientificName)).size}</span>
+              <span className="text-[32px] font-bold text-[#181c20] leading-none">{totals?.birdsCount??new Set(entries.filter(entry => entry.inLifeList).map(entry => entry.scientificName)).size}</span>
               <span
                 className="material-symbols-outlined text-[#154212] text-[18px]"
                 style={{ fontVariationSettings: "'FILL' 1" }}
@@ -54,7 +74,7 @@ export const JournalScreen: React.FC<JournalScreenProps> = ({
 
           <div className="flex flex-col items-center border-x border-[#e0e3e8]">
             <div className="flex items-center gap-1">
-              <span className="text-[32px] font-bold text-[#181c20] leading-none">{entries.length}</span>
+              <span className="text-[32px] font-bold text-[#181c20] leading-none">{totals?.photosCount??entries.length}</span>
               <span className="material-symbols-outlined text-[#904d00] text-[18px]">
                 photo_camera
               </span>
@@ -64,7 +84,7 @@ export const JournalScreen: React.FC<JournalScreenProps> = ({
 
           <div className="flex flex-col items-center">
             <div className="flex items-center gap-1">
-              <span className="text-[32px] font-bold text-[#181c20] leading-none">{new Set(entries.map(entry => entry.date.slice(0,10) + ':' + entry.location)).size}</span>
+              <span className="text-[32px] font-bold text-[#181c20] leading-none">{totals?.tripsCount??new Set(entries.map(entry => entry.date.slice(0,10) + ':' + entry.location)).size}</span>
               <span className="material-symbols-outlined text-[#20402b] text-[18px]">explore</span>
             </div>
             <span className="text-[12px] font-semibold text-[#42493e] mt-1">Trips</span>
@@ -258,7 +278,7 @@ export const JournalScreen: React.FC<JournalScreenProps> = ({
           {/* Actions */}
           <div className="flex items-center gap-2 pt-1">
             <button
-              onClick={() => showToast('Editing observation record...')}
+              disabled={busy} onClick={() => setEditing(activeEntry.id)}
               className="flex-1 h-11 bg-[#ebeef3] hover:bg-[#e0e3e8] text-[#181c20] rounded-xl flex items-center justify-center gap-1.5 text-[13px] font-semibold active:scale-95 transition-all"
             >
               <span className="material-symbols-outlined text-[18px]">edit</span>
@@ -266,10 +286,7 @@ export const JournalScreen: React.FC<JournalScreenProps> = ({
             </button>
 
             <button
-              onClick={() => {
-                onDeleteEntry(activeEntry.id);
-                showToast('Entry removed from field log');
-              }}
+              disabled={busy} onClick={() => void act(()=>onDeleteEntry(activeEntry.id),'Entry removed from field log')}
               aria-label="Delete entry"
               className="h-11 px-3 bg-[#ffdad6] hover:bg-red-200 text-[#93000a] rounded-xl flex items-center justify-center active:scale-95 transition-all"
             >
@@ -277,14 +294,7 @@ export const JournalScreen: React.FC<JournalScreenProps> = ({
             </button>
 
             <button
-              onClick={() => {
-                onToggleLifeList(activeEntry.id);
-                showToast(
-                  activeEntry.inLifeList
-                    ? 'Removed from Life List'
-                    : 'Added to Life List!'
-                );
-              }}
+              disabled={busy} onClick={() => void act(()=>onToggleLifeList(activeEntry.id),activeEntry.inLifeList?'Removed from Life List':'Added to Life List')}
               className={`flex-[1.5] h-11 rounded-xl flex items-center justify-center gap-1.5 text-[13px] font-semibold shadow-sm active:scale-95 transition-all ${
                 activeEntry.inLifeList
                   ? 'bg-[#2d5a27] text-white'

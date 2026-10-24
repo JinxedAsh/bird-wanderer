@@ -122,6 +122,12 @@ test('stored follows grant/revoke media access; social actions validate ownershi
   assert.equal(shared.commentsCount, 1);
   assert.equal(shared.isFollowing, true);
   assert.equal((await request(`${social}/comments/${commentId}`, a.cookie, 'DELETE')).status, 204);
+  // More than 100 earlier comments must not hide the newly acknowledged reply.
+  const bulkInsert=current.db.prepare('INSERT INTO comments VALUES (?,?,?,?,?)');
+  for(let i=0;i<101;i++)bulkInsert.run(`fixture-comment-${i}`,record.id,b.user.id,`Earlier ${i}`,Date.now()-10000+i);
+  const latest=await request(`${social}/posts/${record.id}/comments`,b.cookie,'POST',{text:'Latest after 100'});
+  assert.equal(latest.status,201);
+  const conversation=await latest.json();assert.equal(conversation.commentsCount,102);assert.equal(conversation.comments.length,100);assert.equal(conversation.comments.at(-1).text,'Latest after 100');assert.ok(!conversation.comments.some(row=>row.id==='fixture-comment-0'));
   await request('observations/profile', a.cookie, 'PATCH', { locationPrivacy: 'private' });
   assert.equal(
     (await request(`${social}/posts/${record.id}/like`, b.cookie, 'PUT', { liked: false })).status,

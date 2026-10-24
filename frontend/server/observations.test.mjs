@@ -363,3 +363,61 @@ test(
     );
   },
 );
+
+test('owned observation edits validate reported fields, preserve photo/EXIF and work without discovery for text/privacy',async t=>{
+  let offline=false,calls=0;
+  const catalogue={species:[{id:'indrol2',name:'Indian Roller',scientificName:'Coracias benghalensis'},{id:'comkin1',name:'Common Kingfisher',scientificName:'Alcedo atthis'}],hotspots:[{id:'L123',name:'Test Wetland'},{id:'L456',name:'Test Lake'}]};
+  const f=await fixture(t,{discovery:{catalogue:async()=>{calls++;if(offline)throw Object.assign(new Error('Synthetic provider unavailable'),{status:503});return catalogue;}}});
+  const a=await f.account('Editor'),b=await f.account('Viewer');
+  const uploaded=await f.request('observations/media',{cookie:a.cookie,method:'POST',body:await makeImage(),type:'image/jpeg'});
+  const media=(await uploaded.json()).media;
+  const created=await f.request('observations',{cookie:a.cookie,method:'POST',body:{mediaId:media.id,speciesId:'indrol2',hotspotId:'L123',observedAt:'2026-10-23T09:00',notes:'Original',visibility:'private',hideExactLocation:true}});
+  const original=(await created.json()).observation,path=`observations/${original.id}`;
+  const bytesBefore=Buffer.from(await(await f.request(`observations/media/${media.id}`,{cookie:a.cookie})).arrayBuffer());
+  const patch=(body,cookie=a.cookie)=>f.request(path,{cookie,method:'PATCH',body});
+  assert.equal((await patch({notes:'Intrusion'},b.cookie)).status,404);
+  for(const body of [{},{mediaId:media.id},{createdAt:'now'},{notes:[]},{notes:'x'.repeat(3001)},{visibility:'everyone'},{inLifeList:'yes'},{observedAt:'2026-02-30T10:00'},{observedAt:'2026-10-23T09:00Z'},{observedAt:'2100-01-01T10:00'},{observedAt:'1899-01-01T10:00'},{speciesId:''},{hotspotId:[]}])assert.equal((await patch(body)).status,400,JSON.stringify(body));
+  assert.equal((await patch({speciesId:'invented'})).status,400);
+  assert.equal((await patch({hotspotId:'unknown'})).status,400);
+  offline=true;const before=calls;
+  let response=await patch({notes:'  Revised <script>literal</script>  ',visibility:'public',observedAt:'2026-10-23T10:30',inLifeList:false});assert.equal(response.status,200);
+  let result=await response.json();assert.equal(result.observation.notes,'Revised <script>literal</script>');assert.equal(result.profile.birdsCount,0);assert.equal(result.profile.photosCount,1);assert.equal(calls,before,'metadata-free edits do not call discovery');
+  assert.equal((await f.request(path,{cookie:b.cookie})).status,200);assert.equal((await f.request(`observations/media/${media.id}`,{cookie:b.cookie})).status,200);
+  assert.equal((await patch({speciesId:'comkin1',notes:'Must not persist on failure'})).status,503);
+  assert.equal((await(await f.request(path,{cookie:a.cookie})).json()).observation.notes,'Revised <script>literal</script>');
+  await patch({visibility:'followers'});assert.equal((await f.request(path,{cookie:b.cookie})).status,404);
+  await f.request(`observations/social/follows/${a.user.id}`,{cookie:b.cookie,method:'PUT',body:{following:true}});
+  assert.equal((await f.request(path,{cookie:b.cookie})).status,200);
+  offline=false;const change={speciesId:'comkin1',hotspotId:'L456',inLifeList:true};
+  assert.equal((await patch(change)).status,200);assert.equal((await patch(change)).status,200,'identical retries are safe');
+  await f.restart();result=(await(await f.request(path,{cookie:a.cookie})).json()).observation;
+  assert.equal(result.speciesName,'Common Kingfisher');assert.equal(result.scientificName,'Alcedo atthis');assert.equal(result.location,'Test Lake');assert.equal(result.createdAt,original.createdAt);assert.equal(result.observedAt,'2026-10-23T10:30');assert.deepEqual(result.exif,original.exif);assert.deepEqual(result.privateLocation,original.privateLocation);assert.equal(result.imageUrl,original.imageUrl);
+  const bytesAfter=Buffer.from(await(await f.request(`observations/media/${media.id}`,{cookie:a.cookie})).arrayBuffer());assert.deepEqual(bytesAfter,bytesBefore);
+  assert.equal(f.db.prepare('SELECT COUNT(*) AS count FROM media').get().count,1);assert.equal(f.db.prepare('SELECT COUNT(*) AS count FROM observations').get().count,1);
+});
+
+test('source corrections remove stale alert deliveries atomically and merge only submitted fields after awaited lookup',async t=>{
+  let enter,release,hold=false;
+  const catalogue={species:[{id:'indrol2',name:'Indian Roller',scientificName:'Coracias benghalensis'},{id:'comkin1',name:'Common Kingfisher',scientificName:'Alcedo atthis'}],hotspots:[{id:'L123',name:'Test Wetland'},{id:'L456',name:'Test Lake'}]};
+  const f=await fixture(t,{discovery:{catalogue:async()=>{if(hold){hold=false;enter();await new Promise(resolve=>{release=resolve;});}return catalogue;}},push:{webConfig:{projectId:'fixture'},vapidKey:'fixture',send:async()=>{throw new Error('Not dispatched in this fixture');}}});
+  const a=await f.account('Corrector'),b=await f.account('Subscriber');
+  await f.request('observations/profile',{cookie:b.cookie,method:'PATCH',body:{pushAlertsEnabled:true}});
+  for(const id of ['indrol2','comkin1'])await f.request(`observations/alerts/subscriptions/species/${id}`,{cookie:b.cookie,method:'PUT',body:{enabled:true}});
+  await f.request('observations/alerts/push/device',{cookie:b.cookie,method:'PUT',body:{token:'synthetic-device-token-123456789'}});
+  const publish=async()=>{const media=(await(await f.request('observations/media',{cookie:a.cookie,method:'POST',body:await makeImage(),type:'image/jpeg'})).json()).media;return(await(await f.request('observations',{cookie:a.cookie,method:'POST',body:{mediaId:media.id,speciesId:'indrol2',hotspotId:'L123',observedAt:'2026-10-23T09:00',notes:'Original',visibility:'public',hideExactLocation:true}})).json()).observation;};
+  const record=await publish(),path=`observations/${record.id}`;
+  const patch=body=>f.request(path,{cookie:a.cookie,method:'PATCH',body});
+  assert.equal(f.db.prepare('SELECT COUNT(*) AS count FROM sighting_alerts').get().count,1);assert.equal(f.db.prepare('SELECT COUNT(*) AS count FROM push_deliveries').get().count,1);
+  f.db.exec("CREATE TRIGGER fail_correction BEFORE DELETE ON sighting_alerts BEGIN SELECT RAISE(ABORT,'fixture'); END");
+  assert.equal((await patch({speciesId:'comkin1',notes:'Rollback fixture'})).status,500);
+  assert.equal(f.db.prepare('SELECT species_id FROM observations WHERE id=?').get(record.id).species_id,'indrol2');assert.equal(f.db.prepare('SELECT COUNT(*) AS count FROM sighting_alerts').get().count,1);
+  f.db.exec('DROP TRIGGER fail_correction');
+  assert.equal((await patch({speciesId:'comkin1'})).status,200);
+  assert.equal(f.db.prepare('SELECT COUNT(*) AS count FROM sighting_alerts').get().count,0);assert.equal(f.db.prepare('SELECT COUNT(*) AS count FROM push_deliveries').get().count,0,'corrected report does not become a fresh sighting notification');
+  hold=true;const entered=new Promise(resolve=>{enter=resolve;});const pending=patch({hotspotId:'L456'});await entered;
+  assert.equal((await patch({notes:'Concurrent note',visibility:'private',inLifeList:false})).status,200);
+  release();assert.equal((await pending).status,200);
+  const current=(await(await f.request(path,{cookie:a.cookie})).json()).observation;assert.equal(current.location,'Test Lake');assert.equal(current.notes,'Concurrent note');assert.equal(current.visibility,'private');assert.equal(current.inLifeList,false);
+  const second=await publish();hold=true;const deletionEntered=new Promise(resolve=>{enter=resolve;});const deleting=f.request(`observations/${second.id}`,{cookie:a.cookie,method:'PATCH',body:{speciesId:'comkin1'}});await deletionEntered;
+  assert.equal((await f.request(`observations/${second.id}`,{cookie:a.cookie,method:'DELETE'})).status,204);release();assert.equal((await deleting).status,404,'record deleted during lookup does not reappear');
+});
