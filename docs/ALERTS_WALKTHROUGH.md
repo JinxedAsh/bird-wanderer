@@ -1,6 +1,6 @@
 # Sighting alerts and optional Firebase push
 
-Updated 24 October 2026. This increment implements future user-sighting subscriptions. It does not claim seasonal monitoring, a forecast-opportunity scheduler, a verified sensitive-species classification or actual device delivery.
+Updated 24 October 2026. This increment implements future user-sighting subscriptions. It does not claim seasonal monitoring, a verified sensitive-species classification or actual device delivery. The separate forecast scheduler is explained in FORECAST_OPPORTUNITIES_WALKTHROUGH.md.
 
 ## What changed
 
@@ -44,7 +44,7 @@ The existing database column/client name `push_enabled`/`pushAlertsEnabled` is r
 
 98 local tests pass, including HTTP subscription/read persistence, duplicate matching, publication rollback, private/follower revocation, provider-unavailable unsubscription, simulated retry/failure cap, preference/session denial, invalid-token cleanup and logout revocation. TypeScript/production build pass; browser checks are recorded in Development Record Entry 33. Synthetic provider responses do not establish a real provider outage or delivery.
 
-Remaining: targeted forecast-opportunity scheduling, reviewed sensitivity classification, real Firebase configuration/permission/foreground/background/device evidence, pagination, production monitoring/backups and Android push acceptance. These remain incomplete rather than being hidden by a success badge.
+Forecast-opportunity scheduling is implemented in the next source increment; see its separate walkthrough/Entry34 for verification and delivery. Remaining: reviewed sensitivity classification, real Firebase configuration/permission/foreground/background/device evidence, pagination, production monitoring/backups and Android push acceptance. These remain incomplete rather than being hidden by a success badge.
 
 ## Viva Notes
 

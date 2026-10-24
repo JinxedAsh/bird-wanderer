@@ -170,6 +170,7 @@ export function observationsRouter(
   router.use('/social',communityRouter(db,{observation,canRead,serialize},now));
   const alerts = createAlerts(db, discovery, { observation, canRead }, now, push);
   router.dispatchPush = alerts.dispatchPush;
+  router.checkOpportunities = alerts.checkOpportunities;
   router.use('/alerts', alerts.router);
   router.get(
     '/profile',

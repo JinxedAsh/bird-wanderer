@@ -162,6 +162,7 @@ export interface JournalEntry {
 }
 
 export interface AppNotification {
+  opportunityId?: string;
   observationId?: string;
   speciesId?: string;
   hotspotId?: string | null;

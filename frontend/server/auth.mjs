@@ -146,5 +146,5 @@ export function createApp({ dbPath = ':memory:', origin = 'http://localhost:3000
     console.error('API error:', error.code || error.name);
     res.status(500).json({ error: 'Something went wrong. Please try again.' });
   });
-  return { app, db, dispatchPush:observations.dispatchPush };
+  return { app, db, dispatchPush:observations.dispatchPush,checkOpportunities:observations.checkOpportunities };
 }
