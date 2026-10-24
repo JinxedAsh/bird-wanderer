@@ -895,6 +895,7 @@ export default function App() {
 
           {currentScreen === 'settings' && (
             <SettingsScreen
+              onSessionExpired={resetSession}
               userProfile={userProfile}
               onUpdateProfile={handleUpdateProfile}
               onLogout={handleLogout}

@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useDialogFocus } from '../lib/useDialogFocus';
 import { UserProfile, ScreenType } from '../types';
+import { ChangePasswordSheet } from './ChangePasswordSheet';
+import packageInfo from '../../package.json' with { type: 'json' };
 
 interface SettingsScreenProps {
   email: string;
@@ -9,6 +11,7 @@ interface SettingsScreenProps {
   onLogout: () => void;
   onNavigate: (screen: ScreenType) => void;
   showToast: (message: string) => void;
+  onSessionExpired?: () => void;
 }
 
 export const SettingsScreen: React.FC<SettingsScreenProps> = ({
@@ -18,8 +21,10 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   onLogout,
   onNavigate,
   showToast,
+  onSessionExpired,
 }) => {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [changingPassword, setChangingPassword] = useState(false);
   const [selectedOption, setSelectedOption] = useState<'approximate' | 'hide' | 'private'>(
     userProfile.locationPrivacy
   );
@@ -59,6 +64,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
 
   return (
     <div className="flex flex-col w-full pb-28 pt-1">
+      {changingPassword && <ChangePasswordSheet onClose={()=>setChangingPassword(false)} onSessionExpired={onSessionExpired} showToast={showToast} />}
       {typeof navigator!=='undefined'&&navigator.userAgent.includes('BirdWandererAndroid/')&&<div className="mx-4 my-2 rounded-xl bg-white p-3 text-[12px] text-[#42493e]">
         <button type="button" onClick={()=>{window.location.href='birdwanderer://connection';}} className="min-h-11 font-semibold underline">Android server connection</button>
         <p>Choose the trusted server for this Android app. Changing servers signs this app out; records remain on their original server. Native push is not configured.</p>
@@ -120,7 +126,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             </button>
 
             <button
-              onClick={() => showToast('Password recovery is not connected yet. No email was sent.')}
+              onClick={() => setChangingPassword(true)}
               className="w-full px-4 py-3 flex items-center justify-between text-left active:bg-[#f1f4f9] transition-colors border-b border-[#f1f4f9]"
             >
               <div className="flex items-center gap-2.5">
@@ -292,18 +298,18 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
         <div className="flex flex-col">
           <div className="bg-white rounded-2xl shadow-xs flex flex-col overflow-hidden border border-[#f1f4f9]">
             <button
-              onClick={() => showToast('Bird Wanderer v1.0.4 • Designed for naturalists')}
+              onClick={() => showToast(`Bird Wanderer v${packageInfo.version} • Development preview • React interface and server-backed accounts`)}
               className="w-full px-4 py-3 flex items-center justify-between text-left active:bg-[#f1f4f9] transition-colors border-b border-[#f1f4f9]"
             >
               <div className="flex items-center gap-2.5">
                 <span className="material-symbols-outlined text-[#42493e] text-[20px]">info</span>
                 <span className="text-[13px] font-bold text-[#181c20]">About Bird Wanderer</span>
               </div>
-              <span className="text-[11px] text-[#72796e]">v1.0.4</span>
+              <span className="text-[11px] text-[#72796e]">v{packageInfo.version}</span>
             </button>
 
-            <button
-              onClick={() => showToast('Opening Field Guidelines & Ethics...')}
+            <a
+              href="https://www.aba.org/aba-code-of-birding-ethics/" target="_blank" rel="noopener noreferrer"
               className="w-full px-4 py-3 flex items-center justify-between text-left active:bg-[#f1f4f9] transition-colors border-b border-[#f1f4f9]"
             >
               <div className="flex items-center gap-2.5">
@@ -313,7 +319,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
               <span className="material-symbols-outlined text-[#72796e] text-[18px]">
                 chevron_right
               </span>
-            </button>
+            </a>
 
             <button
               onClick={onLogout}

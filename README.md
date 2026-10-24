@@ -127,3 +127,5 @@ All four phases and an Android APK are required. The original **20 October 2026*
 Design references come from the team's specification. Runtime prototype imagery uses external URLs and still needs a source/attribution review before public release. No project-wide open-source license has been selected; existing file-level notices are preserved.
 
 Current control checklist: [Final acceptance](docs/FINAL_ACCEPTANCE.md). Journal editor flow and Viva Notes: [Observation editing](docs/OBSERVATION_EDITING_WALKTHROUGH.md).
+
+Account control flow and Viva Notes: [Account Settings](docs/ACCOUNT_SETTINGS_WALKTHROUGH.md). Authenticated password changes are implemented; email-based password recovery remains unconfigured.
