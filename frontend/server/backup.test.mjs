@@ -1,0 +1,78 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { mkdtempSync, mkdirSync, copyFileSync, cpSync, readFileSync, writeFileSync, existsSync, rmSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { tmpdir } from 'node:os';
+import { createHash } from 'node:crypto';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+import sharp from 'sharp';
+import { createApp } from './auth.mjs';
+import { createBackup, verifyBackup } from '../scripts/backup.mjs';
+
+test('a verified database/media backup restores actual accounts, sessions, private observations and identical photographs',async t=>{
+  const directory=mkdtempSync(join(tmpdir(),'bird-backup-test-'));
+  const dbPath=join(directory,'source.sqlite'),mediaPath=join(directory,'media');
+  const discovery={catalogue:async()=>({species:[{id:'comkin1',name:'Common Kingfisher',scientificName:'Alcedo atthis'}],hotspots:[{id:'L123',name:'Synthetic Wetland'}]})};
+  let active=createApp({dbPath,mediaPath,discovery}),server;
+  const open=async()=>{server=active.app.listen(0,'127.0.0.1');await new Promise(resolve=>server.once('listening',resolve));};
+  const request=(path,body,cookie,type='application/json')=>fetch(`http://127.0.0.1:${server.address().port}/api/${path}`,{method:body===undefined?'GET':'POST',headers:{origin:'http://localhost:3000',...(cookie?{cookie}:{}),...(body===undefined?{}:{'Content-Type':type})},body:body===undefined?undefined:type==='application/json'?JSON.stringify(body):body});
+  t.after(async()=>{if(server?.listening)await new Promise(resolve=>server.close(resolve));if(active.db.isOpen)active.db.close();assert.equal(dirname(directory),tmpdir());rmSync(directory,{recursive:true,force:true});});
+  await open();
+  const registered=await request('auth/register',{name:'Backup Fixture',email:'backup@example.test',password:'synthetic-backup-passphrase'});
+  assert.equal(registered.status,201);const cookie=registered.headers.get('set-cookie').split(';')[0];
+  const image=await sharp({create:{width:10,height:10,channels:3,background:'#123456'}}).jpeg().toBuffer();
+  const upload=await request('observations/media',image,cookie,'image/jpeg');assert.equal(upload.status,201);
+  const media=(await upload.json()).media;
+  const published=await request('observations',{mediaId:media.id,speciesId:'comkin1',hotspotId:'L123',observedAt:'2026-10-23T09:00',notes:'Private backup fixture',visibility:'private',hideExactLocation:true},cookie);
+  assert.equal(published.status,201);const before=(await published.json()).observation;
+  const originalBytes=Buffer.from(await(await request(`observations/media/${media.id}`,undefined,cookie)).arrayBuffer());
+  await new Promise(resolve=>server.close(resolve));
+  // No app writes occur. Keep the idle connection open to prove SQLite's backup
+  // reads committed WAL content rather than copying only the main database file.
+  active.db.exec("INSERT INTO auth_limits VALUES ('backup-wal-fixture',1,9999999999999)");
+  const destination=join(directory,'snapshot');
+  const result=await createBackup({databasePath:dbPath,mediaPath,destination,serverStopped:true});
+  assert.deepEqual(result.counts,{users:1,observations:1,media:1});
+  const manifest=verifyBackup(destination);assert.equal(manifest.media.length,1);
+  const cli=fileURLToPath(new URL('../scripts/backup.mjs',import.meta.url));
+  const env={...process.env,DOTENV_CONFIG_PATH:join(directory,'unused.env'),DATABASE_PATH:dbPath,MEDIA_PATH:mediaPath};
+  const cliCreated=spawnSync(process.execPath,[cli,'create',join(directory,'cli-snapshot'),'--server-stopped'],{env,encoding:'utf8'});
+  assert.equal(cliCreated.status,0,cliCreated.stderr);assert.match(cliCreated.stdout,/created and verified/);
+  const cliVerified=spawnSync(process.execPath,[cli,'verify',join(directory,'cli-snapshot')],{env,encoding:'utf8'});
+  assert.equal(cliVerified.status,0,cliVerified.stderr);assert.match(cliVerified.stdout,/Backup verified/);
+  assert.equal(existsSync(join(destination,'.env')),false);
+  assert.equal(JSON.stringify(manifest).includes('backup@example.test'),false);
+  await assert.rejects(()=>createBackup({databasePath:dbPath,mediaPath,destination,serverStopped:true}),/NEW backup directory/);
+  active.db.close();
+  const restored=join(directory,'restored');mkdirSync(restored);
+  copyFileSync(join(destination,'bird-wanderer.sqlite'),join(restored,'app.sqlite'));
+  cpSync(join(destination,'media'),join(restored,'media'),{recursive:true,errorOnExist:true});
+  active=createApp({dbPath:join(restored,'app.sqlite'),mediaPath:join(restored,'media'),discovery});await open();
+  assert.equal((await request('auth/me',undefined,cookie)).status,200);
+  const restoredRecord=await request(`observations/${before.id}`,undefined,cookie);assert.equal(restoredRecord.status,200);
+  assert.deepEqual((await restoredRecord.json()).observation,before);
+  assert.equal(active.db.prepare("SELECT attempts FROM auth_limits WHERE key='backup-wal-fixture'").get().attempts,1);
+  assert.equal((await request(`observations/${before.id}`)).status,401);
+  const restoredBytes=Buffer.from(await(await request(`observations/media/${media.id}`,undefined,cookie)).arrayBuffer());
+  assert.deepEqual(restoredBytes,originalBytes);
+  assert.equal(manifest.media[0].sha256,createHash('sha256').update(restoredBytes).digest('hex'));
+  writeFileSync(join(destination,'media',manifest.media[0].file),'corrupted');
+  assert.throws(()=>verifyBackup(destination),/checksum\/size/);
+  assert.throws(()=>verifyBackup(join(directory,'does-not-exist')));
+});
+
+test('backup rejects unconfirmed live copying, project destinations, missing media and incomplete archives',async t=>{
+  const directory=mkdtempSync(join(tmpdir(),'bird-backup-test-'));
+  const active=createApp({dbPath:join(directory,'source.sqlite'),mediaPath:join(directory,'media')});
+  t.after(()=>{if(active.db.isOpen)active.db.close();assert.equal(dirname(directory),tmpdir());rmSync(directory,{recursive:true,force:true});});
+  const input={databasePath:join(directory,'source.sqlite'),mediaPath:join(directory,'media'),destination:join(directory,'snapshot')};
+  await assert.rejects(()=>createBackup(input),/Stop every app process/);
+  await assert.rejects(()=>createBackup({...input,destination:join(process.cwd(),'.unsafe-backup'),serverStopped:true}),/outside the repository/);
+  const output=await createBackup({...input,serverStopped:true});assert.equal(verifyBackup(output.directory).counts.media,0);
+  writeFileSync(join(output.directory,'INCOMPLETE.txt'),'incomplete');assert.throws(()=>verifyBackup(output.directory),/incomplete/);
+  active.db.prepare('INSERT INTO users VALUES (?,?,?,?,?,?)').run('fixture','Fixture','fixture@example.test','hash','salt',Date.now());
+  active.db.prepare('INSERT INTO media VALUES (?,?,?,?,?,?,?,?,?)').run('fixture','fixture','11111111-1111-1111-1111-111111111111.jpg',20,'{}',null,null,0,Date.now());
+  await assert.rejects(()=>createBackup({...input,destination:join(directory,'missing-media'),serverStopped:true}));
+  assert.equal(existsSync(join(directory,'missing-media')),false);
+});

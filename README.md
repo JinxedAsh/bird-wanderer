@@ -131,3 +131,5 @@ Current control checklist: [Final acceptance](docs/FINAL_ACCEPTANCE.md). Journal
 Account control flow and Viva Notes: [Account Settings](docs/ACCOUNT_SETTINGS_WALKTHROUGH.md). Authenticated password changes are implemented; email-based password recovery remains unconfigured.
 
 Destination links and Viva Notes: [Navigation and sharing](docs/NAVIGATION_SHARING_WALKTHROUGH.md).
+
+Operations, backup/restore, demo steps and Viva Notes: [Release runbook](docs/RELEASE_RUNBOOK.md). Backups must use a new private directory outside this repository after stopping app writers.

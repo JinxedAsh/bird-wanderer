@@ -16,7 +16,7 @@ const digest = (value) => createHash('sha256').update(value).digest('hex');
 const publicUser = (row) => ({ id: row.id, name: row.name, email: row.email });
 const passwordOptions = { N: 32768, r: 8, p: 3, maxmem: 64 * 1024 * 1024 };
 
-export function createApp({ dbPath = ':memory:', origin = 'http://localhost:3000', additionalOrigins = [], secureCookies = false, now = Date.now, rateLimit = 30, discovery = createDiscoveryService(), mediaPath, imageProcessor, push } = {}) {
+export function createApp({ dbPath = ':memory:', origin = 'http://localhost:3000', additionalOrigins = [], secureCookies = false, trustProxyLoopback = false, now = Date.now, rateLimit = 30, discovery = createDiscoveryService(), mediaPath, imageProcessor, push } = {}) {
   const allowedOrigins = new Set([origin, ...additionalOrigins]);
   if (dbPath !== ':memory:') mkdirSync(dirname(dbPath), { recursive: true });
   const db = new DatabaseSync(dbPath);
@@ -37,6 +37,7 @@ export function createApp({ dbPath = ':memory:', origin = 'http://localhost:3000
     );
   `);
   const app = express();
+  if(trustProxyLoopback)app.set('trust proxy','loopback');
   app.disable('x-powered-by');
   app.use('/api', (req, res, next) => {
     res.set({ 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
