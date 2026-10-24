@@ -96,9 +96,9 @@ The frontend and backend currently share one package under `frontend/`. Keeping 
 | Phase | Scope | Status |
 | --- | --- | --- |
 | 1 — Core | Refined UI, authentication, species discovery, hotspots, photography logistics | In progress; checkpoint 6 October 2026 |
-| 2 — Community | Persistent profiles, photo uploads, EXIF extraction, community interactions | Delivered core; native upload/device and list pagination checks remain |
+| 2 — Community | Persistent profiles, photo uploads, EXIF extraction, community interactions | Delivered core and list pagination; native/physical acceptance continues |
 | 3 — Alerts | Subscriptions, sighting notifications, conservation privacy filters | Sighting and forecast in-app alerts delivered; optional Firebase source, real push unconfigured |
-| 4 — Retention | Quiz and engagement features, remaining required interactions | Quiz/challenges delivered; messaging/search completion in progress |
+| 4 — Retention | Quiz and engagement features, remaining required interactions | Quiz/challenges and messaging/search delivered; integrated acceptance continues |
 
 All four phases and an Android APK are required. The original **20 October 2026** deadline is historical; full-cycle completion was authorized on 23 October without a replacement deadline. Seasonal statistical imports, measured difficulty/historical environment matching, complete operator-confirmed access, production hosting, physical-device/push and exact visual acceptance remain unresolved. Multi-photo comparisons and labelled forecast heuristics are implemented. The Android debug and unsigned release APKs build locally; initial emulator installation/launch passes. Native-flow verification, signing/distribution and physical acceptance remain in progress. See the completion plan for current status rather than treating historical presentation checks as final acceptance.
 
