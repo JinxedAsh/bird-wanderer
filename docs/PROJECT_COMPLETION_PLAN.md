@@ -28,7 +28,7 @@ Screen -> request -> backend -> storage -> result examples will accompany each s
 
 ## Immediate slice in progress
 
-Journal record editing on PR #32: validated owned partial updates, preserved media/EXIF, stale sighting retraction, confirmed action feedback, latest100-comment disclosure and lazy-code recovery.115 tests/type/build and scoped browser editing/privacy/failure/retry/recovery/mobile acceptance pass; PR #32 merged at564ce92 after four exact-head checks passed; merged-main checks pending. Android preview #31 is delivered. Authenticated password changes and Settings guideline/version fixes are implemented locally with118 tests/type/build passing; browser/focused delivery pending (Entry40). Native push adaptation and actual provider/device receipt remain incomplete.
+Journal record editing on PR #32: validated owned partial updates, preserved media/EXIF, stale sighting retraction, confirmed action feedback, latest100-comment disclosure and lazy-code recovery.115 tests/type/build and scoped browser editing/privacy/failure/retry/recovery/mobile acceptance pass; PR #32 merged at564ce92 after four exact-head checks passed; merged-main web/Android checks passed. Android preview #31 is delivered. Authenticated password changes and Settings guideline/version fixes are implemented locally with118 tests/type/build passing; scoped browser/control and independent API checks passed; PR #33 final delivery pending, with interactive password submission manually unverified (Entry40). Native push adaptation and actual provider/device receipt remain incomplete.
 
 ## Next implementation priorities
 
