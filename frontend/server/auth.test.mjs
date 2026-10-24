@@ -14,9 +14,9 @@ async function fixture(options = {}) {
   const base = `http://127.0.0.1:${server.address().port}/api/auth/`;
   return {
     db,
-    request: (path, body, cookie, requestOrigin = origin) => fetch(base + path, {
+    request: (path, body, cookie, requestOrigin = origin, forwardedFor) => fetch(base + path, {
       method: body === undefined ? 'GET' : 'POST',
-      headers: { origin: requestOrigin, ...(body === undefined ? {} : { 'Content-Type': 'application/json' }), ...(cookie ? { cookie } : {}) },
+      headers: { origin: requestOrigin, ...(body === undefined ? {} : { 'Content-Type': 'application/json' }), ...(cookie ? { cookie } : {}), ...(forwardedFor ? {'X-Forwarded-For':forwardedFor}:{}) },
       body: body === undefined ? undefined : JSON.stringify(body),
     }),
     close: () => new Promise((resolve) => server.close(() => { db.close(); resolve(); })),
@@ -199,4 +199,19 @@ test('a session expiring during password hashing cannot change credentials',asyn
     assert.equal((await f.request('change-password',{currentPassword:account.password,newPassword:'expiry-new-long-password'},session)).status,401);
     assert.deepEqual(f.db.prepare('SELECT password_hash,salt FROM users').get(),before);
   }finally{await f.close();}
+});
+
+test('only an explicitly trusted loopback proxy supplies client IPs and spoofed earlier hops cannot evade limits',async()=>{
+  const proxied=await fixture({rateLimit:2,trustProxyLoopback:true});
+  try{
+    const attempt=(email,forwarded)=>proxied.request('login',{email,password:'incorrect'},undefined,origin,forwarded);
+    assert.equal((await attempt('one@example.test','198.51.100.1, 192.0.2.20')).status,401);
+    assert.equal((await attempt('two@example.test','198.51.100.2, 192.0.2.20')).status,401);
+    assert.equal((await attempt('three@example.test','198.51.100.3, 192.0.2.20')).status,429);
+    assert.equal((await attempt('four@example.test','192.0.2.21')).status,401,'another actual client has its own IP bucket');
+  }finally{await proxied.close();}
+  const direct=await fixture({rateLimit:2});
+  try{
+    for(let i=0;i<3;i++)assert.equal((await direct.request('login',{email:`direct${i}@example.test`,password:'incorrect'},undefined,origin,`192.0.2.${i+1}`)).status,i<2?401:429,'default server ignores forwarded headers');
+  }finally{await direct.close();}
 });
