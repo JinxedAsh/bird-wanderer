@@ -68,8 +68,8 @@ async function request(path: string, signal: AbortSignal, method = 'GET', body?:
 }
 export const observations = {
   get: async (id:string,signal:AbortSignal):Promise<Observation> => (await request(`/${encodeURIComponent(id)}`,signal)).observation,
-  people: async (signal: AbortSignal): Promise<PublicBirder[]> =>
-    (await request('/social/people', signal)).people,
+  people: async (signal: AbortSignal,q=''): Promise<PublicBirder[]> =>
+    (await request(`/social/people?q=${encodeURIComponent(q)}`, signal)).people,
   person: async (id: string, signal: AbortSignal): Promise<PublicBirder> =>
     (await request(`/social/people/${encodeURIComponent(id)}`, signal)).person,
   follow: (id: string, following: boolean, signal: AbortSignal) =>
