@@ -65,6 +65,12 @@ export default function App() {
   const [posts, setPosts] = useState<CommunityPost[]>([]);
   const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
   const [birders,setBirders] = useState<PublicBirder[]>([]);
+  const [ownPages,setOwnPages]=useState(1);
+  const [feedPages,setFeedPages]=useState(1);
+  const [peoplePages,setPeoplePages]=useState(1);
+  const [ownNext,setOwnNext]=useState<number|null>(null);
+  const [feedNext,setFeedNext]=useState<number|null>(null);
+  const [peopleNext,setPeopleNext]=useState<number|null>(null);
   const [recordsAttempt, setRecordsAttempt] = useState(0);
   const [recordsLoading, setRecordsLoading] = useState(false);
   const [recordsError, setRecordsError] = useState('');
@@ -75,9 +81,10 @@ export default function App() {
   const [subscriptions, setSubscriptions] = useState<AlertSubscription[]>([]);
   const [alertsError, setAlertsError] = useState('');
   const [alertsAttempt, setAlertsAttempt] = useState(0);
+  const [personTarget,setPersonTarget]=useState<{id:string;request:number}|null>(null);
   const [alertPost, setAlertPost] = useState<{ id: string; request: number } | null>(null);
   useEffect(() => {
-    if (currentScreen !== 'community') setAlertPost(null);
+    if (currentScreen !== 'community') {setAlertPost(null);setPersonTarget(null);}
   }, [currentScreen]);
   const [opportunitiesEnabled,setOpportunitiesEnabled]=useState(false);
   const [opportunityChecks,setOpportunityChecks]=useState<Array<{id:string;checkedAt:number;status:'ok'|'unavailable'}>>([]);
@@ -209,17 +216,32 @@ export default function App() {
     const owner=sessionUser.id, controller=new AbortController();
     recordsController.current?.abort(); recordsController.current=controller;
     setRecordsLoading(true); setRecordsError('');
-    Promise.all([observations.load(controller.signal),observations.load(controller.signal,true),observations.people(controller.signal)]).then(([own,feed,people])=>{
+    const records=async(feed:boolean,pages:number)=>{
+      const result=await observations.load(controller.signal,feed);
+      for(let page=1;page<pages&&result.nextOffset!==null;page++){
+        const next=await observations.load(controller.signal,feed,result.nextOffset);result.observations.push(...next.observations);result.nextOffset=next.nextOffset;
+      }return result;
+    };
+    const peopleResults=async()=>{
+      const result=await observations.peoplePage(controller.signal);
+      for(let page=1;page<peoplePages&&result.nextOffset!==null;page++){
+        const next=await observations.peoplePage(controller.signal,'',result.nextOffset);result.people.push(...next.people);result.nextOffset=next.nextOffset;
+      }return result;
+    };
+    Promise.all([records(false,ownPages),records(true,feedPages),peopleResults(),alertPost?observations.get(alertPost.id,controller.signal).catch(error=>{if(error instanceof SessionExpiredError)throw error;return null;}):Promise.resolve(null)]).then(([own,feed,people,target])=>{
       if(controller.signal.aborted||recordsOwner.current!==owner)return;
-      setBirders(people);setUserProfile(own.profile);setJournalEntries(own.observations.map(observationEntry));setPosts(feed.observations.map(observationPost));
+      setOwnNext(own.nextOffset);setFeedNext(feed.nextOffset);setPeopleNext(people.nextOffset);
+      setBirders(people.people);setUserProfile(own.profile);setJournalEntries(own.observations.map(observationEntry));setPosts((target?[target,...feed.observations.filter(row=>row.id!==target.id)]:feed.observations).map(observationPost));
+      if(alertPost&&!target){setAlertPost(null);showToast('This observation is no longer available.');}
     }).catch(error=>{
       if(controller.signal.aborted||recordsOwner.current!==owner)return;
       if(error instanceof SessionExpiredError)resetSession();else setRecordsError(error.message||'Field records could not load.');
     }).finally(()=>{if(!controller.signal.aborted&&recordsOwner.current===owner)setRecordsLoading(false);});
     return()=>controller.abort();
-  },[sessionUser?.id,recordsAttempt]);
+  },[sessionUser?.id,recordsAttempt,ownPages,feedPages,peoplePages]);
 
   const acceptSession = (user: AuthUser) => {
+    setOwnPages(1);setFeedPages(1);setPeoplePages(1);setOwnNext(null);setFeedNext(null);setPeopleNext(null);setPersonTarget(null);
     alertsController.current?.abort();alertMutation.current=false;recordsController.current?.abort();recordsOwner.current=user.id;setBirders([]);recordMutation.current=false;setRecordsError('');
     setLocation(null);
     setLocationPickerOpen(false);
@@ -544,10 +566,16 @@ export default function App() {
   const handleMarkAllNotificationsRead = () => {
     void changeAlert((signal) => alerts.read(null, signal));
   };
+  const handleOpenPerson=(id:string)=>{setPersonTarget({id,request:Date.now()});navigateTo('community');};
+  const handleOpenObservation=(id:string)=>{
+    const request=recordsController.current;if(!request)return;
+    void observations.get(id,request.signal).then(row=>{if(request.signal.aborted)return;setPosts(previous=>[observationPost(row),...previous.filter(p=>p.id!==row.id)]);setAlertPost({id:row.id,request:Date.now()});navigateTo('community');}).catch(error=>{if(!request.signal.aborted){if(error instanceof SessionExpiredError)resetSession();else showToast(error instanceof Error?error.message:'Observation unavailable.');}});
+  };
   const handleSelectNotification = (notif: AppNotification) => {
     void changeAlert(async (signal) => {
       await alerts.read(notif.id, signal);
       if(notif.opportunityId&&notif.hotspotId){handleSelectHotspotById(notif.hotspotId);return;}
+      if(notif.personId){handleOpenPerson(notif.personId);return;}
       if (!notif.observationId) return;
       const row = await observations.get(notif.observationId, signal);
       if (signal.aborted) return;
@@ -568,6 +596,7 @@ export default function App() {
   const unreadNotifsCount = notifications.filter((n) => n.isUnread).length;
 
   function resetSession() {
+    setOwnPages(1);setFeedPages(1);setPeoplePages(1);setOwnNext(null);setFeedNext(null);setPeopleNext(null);
     alertsController.current?.abort();alertMutation.current=false;recordsController.current?.abort();recordsOwner.current=null;setBirders([]);recordMutation.current=false;setRecordsError('');setRecordsLoading(false);
     setLocation(null);
     setLocationPickerOpen(false);
@@ -579,6 +608,7 @@ export default function App() {
     setActivityReady(false);
     setActivityBusy(false);
     setActivityError('');
+    setPersonTarget(null);
     setSessionUser(null);
     setSessionError('');
     setUserProfile(INITIAL_USER_PROFILE);
@@ -652,6 +682,8 @@ export default function App() {
             </div>
           )}
           {sessionUser && (recordsLoading || recordsError) && <div role={recordsError?'alert':'status'} className="mx-4 mt-2 rounded-xl bg-[#f1f4f9] p-3 text-[12px] text-[#42493e]">{recordsError||'Loading your field records…'}{recordsError&&<button type="button" onClick={()=>setRecordsAttempt(value=>value+1)} className="min-h-11 ml-2 underline">Retry field records</button>}</div>}
+          {['journal','life-list','profile'].includes(currentScreen)&&ownNext!==null&&<button disabled={recordsLoading} onClick={()=>setOwnPages(n=>n+1)} className="mx-4 min-h-11 underline">Load older field records</button>}
+          {currentScreen==='community'&&<div className="mx-4 flex gap-4">{feedNext!==null&&<button disabled={recordsLoading} onClick={()=>setFeedPages(n=>n+1)} className="min-h-11 underline">Load older community posts</button>}{peopleNext!==null&&<button disabled={recordsLoading} onClick={()=>setPeoplePages(n=>n+1)} className="min-h-11 underline">Load more birders</button>}</div>}
           {['explore', 'search', 'hotspots'].includes(currentScreen) && (
             <div role="status" className="mx-4 mt-2 rounded-xl bg-[#f1f4f9] p-3 text-[12px] text-[#42493e]">
               {discoveryLoading ? 'Loading birds and hotspots from eBird...' : discoveryError || (discovery ? `eBird - ${discovery.coverageLabel || discovery.region}. Retrieved ${new Date(discovery.fetchedAt).toLocaleString()}. Recent reports: past 14 days. ${discovery.cached ? 'Using server cache.' : ''}` : 'External discovery has not loaded.')}
@@ -685,6 +717,7 @@ export default function App() {
 
           {currentScreen === 'community' && (
             <CommunityScreen
+              openPerson={personTarget}
               openPost={alertPost}
               people={birders}
               onToggleFollow={(id,following)=>changeRecord(signal=>observations.follow(id,following,signal))}
@@ -804,14 +837,11 @@ export default function App() {
           )}
 
           {currentScreen === 'messages' && (
-            <FieldChatScreen key={sessionUser?.id} onNavigate={navigateTo} showToast={showToast} hotspots={externalHotspots} onSessionExpired={resetSession} onOpenHotspot={handleSelectHotspotById} onOpenObservation={id=>{
-              const request=recordsController.current;if(!request)return;
-              void observations.get(id,request.signal).then(row=>{if(request.signal.aborted)return;setPosts(previous=>[observationPost(row),...previous.filter(p=>p.id!==row.id)]);setAlertPost({id:row.id,request:Date.now()});navigateTo('community');}).catch(error=>{if(!request.signal.aborted){if(error instanceof SessionExpiredError)resetSession();else showToast(error instanceof Error?error.message:'Observation unavailable.');}});
-            }} />
+            <FieldChatScreen key={sessionUser?.id} onNavigate={navigateTo} showToast={showToast} hotspots={externalHotspots} onSessionExpired={resetSession} onOpenHotspot={handleSelectHotspotById} onOpenObservation={handleOpenObservation} />
           )}
 
           {currentScreen === 'search' && (
-            <GlobalSearchScreen
+            <GlobalSearchScreen key={sessionUser?.id} onOpenPerson={handleOpenPerson} onOpenPost={handleOpenObservation}
               recentSearches={discoveryActivity.searches}
               savedSpeciesIds={discoveryActivity.saves.filter((item) => item.kind === 'species').map((item) => item.id)}
               historyDisabled={saveDisabled}

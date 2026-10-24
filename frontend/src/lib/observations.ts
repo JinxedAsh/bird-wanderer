@@ -67,6 +67,8 @@ async function request(path: string, signal: AbortSignal, method = 'GET', body?:
   return data;
 }
 export const observations = {
+  search:(q:string,signal:AbortSignal,peopleOffset=0,postsOffset=0):Promise<{people:PublicBirder[];observations:Observation[];nextPeopleOffset:number|null;nextPostsOffset:number|null}>=>request(`/social/search?q=${encodeURIComponent(q)}&peopleOffset=${peopleOffset}&postsOffset=${postsOffset}`,signal),
+  peoplePage:(signal:AbortSignal,q='',offset=0):Promise<{people:PublicBirder[];nextOffset:number|null}>=>request(`/social/people?q=${encodeURIComponent(q)}&offset=${offset}`,signal),
   get: async (id:string,signal:AbortSignal):Promise<Observation> => (await request(`/${encodeURIComponent(id)}`,signal)).observation,
   people: async (signal: AbortSignal,q=''): Promise<PublicBirder[]> =>
     (await request(`/social/people?q=${encodeURIComponent(q)}`, signal)).people,
@@ -84,8 +86,8 @@ export const observations = {
     request(`/social/comments/${encodeURIComponent(id)}`, signal, 'DELETE'),
   report: (id: string, reason: string, detail: string, signal: AbortSignal) =>
     request(`/social/posts/${encodeURIComponent(id)}/reports`, signal, 'POST', { reason, detail }),
-  load: (signal: AbortSignal, feed = false): Promise<{ observations: Observation[]; profile: UserProfile }> =>
-    request(feed ? '?scope=feed' : '', signal),
+  load: (signal: AbortSignal, feed = false,offset=0): Promise<{ observations: Observation[]; profile: UserProfile;nextOffset:number|null }> =>
+    request(`?scope=${feed?'feed':'own'}&offset=${offset}`, signal),
   upload: async (file: File, signal: AbortSignal): Promise<UploadedPhoto> =>
     (await request('/media', signal, 'POST', file)).media,
   publish: (

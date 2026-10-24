@@ -88,7 +88,7 @@ test('sighting subscriptions deduplicate, persist read state and recheck revoked
   assert.equal(result.notifications.length, 1, 'species AND hotspot create one alert');
   assert.equal(result.push.configured, false);
   assert.equal((await state(c.cookie)).notifications.length, 0, 'disabled master preference');
-  assert.equal((await state(a.cookie)).notifications.length, 0, 'no self alert');
+  assert.equal((await state(a.cookie)).notifications.filter(n=>n.category==='alerts').length, 0, 'no self sighting alert');
   const alert = result.notifications[0];
   assert.equal(alert.observationId, record.id);
   assert.equal(alert.isUnread, true);
