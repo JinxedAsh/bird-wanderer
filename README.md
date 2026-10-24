@@ -129,3 +129,5 @@ Design references come from the team's specification. Runtime prototype imagery 
 Current control checklist: [Final acceptance](docs/FINAL_ACCEPTANCE.md). Journal editor flow and Viva Notes: [Observation editing](docs/OBSERVATION_EDITING_WALKTHROUGH.md).
 
 Account control flow and Viva Notes: [Account Settings](docs/ACCOUNT_SETTINGS_WALKTHROUGH.md). Authenticated password changes are implemented; email-based password recovery remains unconfigured.
+
+Destination links and Viva Notes: [Navigation and sharing](docs/NAVIGATION_SHARING_WALKTHROUGH.md).

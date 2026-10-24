@@ -2,8 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { CommunityPost, ScreenType } from '../types';
 import { useDialogFocus } from '../lib/useDialogFocus';
 import type { PublicBirder } from '../lib/observations';
+import { routeQuery, shareAppLink } from '../lib/navigation';
 
 interface CommunityScreenProps {
+  onEntityChange?: (entity: {post?:string;person?:string}|null) => void;
   openPerson?: {id:string;request:number}|null;
   openPost?: {id:string;request:number}|null;
   people?: PublicBirder[];
@@ -23,6 +25,7 @@ interface CommunityScreenProps {
 }
 
 export const CommunityScreen: React.FC<CommunityScreenProps> = ({
+  onEntityChange,
   openPerson,
   openPost,
   people = [],
@@ -47,7 +50,7 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
 
   // Selected post for details sheet
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
-  useEffect(()=>{if(openPost)setSelectedPostId(openPost.id);},[openPost]);
+  useEffect(()=>{setSelectedPostId(openPost?.id||null);},[openPost]);
   const selectedPostForDetails = posts.find((post) => post.id === selectedPostId);
   const [newCommentInput, setNewCommentInput] = useState('');
   const [reportReason, setReportReason] = useState('identification');
@@ -73,10 +76,11 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
     isFollowing?: boolean;
   } | null>(null);
 
-  const postDialogRef = useDialogFocus(Boolean(selectedPostForDetails), () => setSelectedPostId(null));
-  const photographerDialogRef = useDialogFocus(Boolean(selectedPhotographer), () =>
-    setSelectedPhotographer(null),
-  );
+  const openPostDetails=(id:string)=>{setSelectedPostId(id);onEntityChange?.({post:id});};
+  const closePost=()=>{setSelectedPostId(null);onEntityChange?.(null);};
+  const closePerson=()=>{setSelectedPhotographer(null);onEntityChange?.(null);};
+  const postDialogRef = useDialogFocus(Boolean(selectedPostForDetails), closePost);
+  const photographerDialogRef = useDialogFocus(Boolean(selectedPhotographer), closePerson);
   const isFollowing = (handle: string) =>
     selectedPhotographer?.handle===handle ? !!selectedPhotographer.isFollowing :
     people.find((person) => person.handle === handle)?.following ??
@@ -107,7 +111,7 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
     return true;
   });
 
-  const showPerson = (person: PublicBirder) =>
+  const showPerson = (person: PublicBirder, updateLink=true) => {
     setSelectedPhotographer({
       id: person.id,
       isSelf: person.isSelf,
@@ -121,9 +125,12 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
       bio: person.bio || 'No biography shared.',
       isFollowing: person.following,
     });
+    if(updateLink)onEntityChange?.({person:person.id});
+  };
   useEffect(()=>{
-    if(!openPerson||!onPersonDetails)return;let active=true;
-    void onPersonDetails(openPerson.id).then(person=>{if(active)showPerson(person);}).catch(error=>{if(active)showToast(error instanceof Error?error.message:'Birder unavailable.');});
+    if(!openPerson){setSelectedPhotographer(null);return;}
+    if(!onPersonDetails)return;let active=true;
+    void onPersonDetails(openPerson.id).then(person=>{if(active)showPerson(person,false);}).catch(error=>{if(active)showToast(error instanceof Error?error.message:'Birder unavailable.');});
     return ()=>{active=false;};
   },[openPerson?.request]);
   const openPhotographerBio = async (post: CommunityPost) => {
@@ -310,7 +317,7 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
 
                 <button
                   aria-label="Post options"
-                  onClick={() => setSelectedPostId(post.id)}
+                  onClick={() => openPostDetails(post.id)}
                   className="w-8 h-8 rounded-full flex items-center justify-center text-[#42493e] hover:bg-[#ebeef3] transition-colors"
                 >
                   <span className="material-symbols-outlined text-[18px]">more_horiz</span>
@@ -320,7 +327,7 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
               {/* Bird Image with Tap to Open Details */}
               <div
                 className="relative w-full aspect-[4/3] bg-[#ebeef3] cursor-pointer overflow-hidden group"
-                onClick={() => setSelectedPostId(post.id)}
+                onClick={() => openPostDetails(post.id)}
               >
                 <button
                   type="button"
@@ -399,7 +406,7 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
 
                     <button
                       aria-label="Open sighting comments"
-                      onClick={() => setSelectedPostId(post.id)}
+                      onClick={() => openPostDetails(post.id)}
                       className="flex items-center gap-1.5 text-[#42493e] hover:text-[#154212] transition-colors"
                     >
                       <span className="material-symbols-outlined text-[20px]">chat_bubble_outline</span>
@@ -408,20 +415,7 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
 
                     <button
                       onClick={() => {
-                        if (navigator.share) {
-                          navigator
-                            .share({
-                              title: post.speciesName,
-                              text: post.caption,
-                              url: window.location.href,
-                            })
-                            .catch((error) => {
-                              if (error.name !== 'AbortError')
-                                showToast('Could not share this sighting. Please try again.');
-                            });
-                        } else {
-                          showToast('Sharing is not supported by this browser yet.');
-                        }
+                        void shareAppLink(`${window.location.origin}${window.location.pathname}${routeQuery({screen:'community',post:post.id})}`,showToast);
                       }}
                       aria-label="Share sighting"
                       className="text-[#42493e] hover:text-[#154212] transition-colors"
@@ -470,7 +464,7 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
       {/* OVERLAY 1: Post Details, EXIF & Comments Bottom Sheet */}
       {selectedPostForDetails && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-xs transition-opacity animate-in fade-in duration-200">
-          <div className="absolute inset-0" onClick={() => setSelectedPostId(null)}></div>
+          <div className="absolute inset-0" onClick={closePost}></div>
 
           <div
             ref={postDialogRef}
@@ -485,7 +479,7 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
               type="button"
               aria-label="Close sighting details"
               className="min-h-11 w-full pt-3 pb-2 flex items-center justify-center cursor-pointer"
-              onClick={() => setSelectedPostId(null)}
+              onClick={closePost}
             >
               <span className="w-10 h-1.5 rounded-full bg-[#e0e3e8]"></span>
             </button>
@@ -502,7 +496,7 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
               </div>
               <button
                 aria-label="Close sighting details"
-                onClick={() => setSelectedPostId(null)}
+                onClick={closePost}
                 className="w-8 h-8 rounded-full bg-[#ebeef3] flex items-center justify-center text-[#181c20] hover:bg-[#e0e3e8]"
               >
                 <span className="material-symbols-outlined text-[20px]">close</span>
@@ -686,7 +680,7 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
       {/* OVERLAY 2: Photographer Bio Quick Sheet */}
       {selectedPhotographer && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-xs transition-opacity animate-in fade-in duration-200">
-          <div className="absolute inset-0" onClick={() => setSelectedPhotographer(null)}></div>
+          <div className="absolute inset-0" onClick={closePerson}></div>
 
           <div
             ref={photographerDialogRef}
@@ -751,7 +745,7 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
               </button>
 
               <button
-                onClick={() => setSelectedPhotographer(null)}
+                onClick={closePerson}
                 className="h-11 px-5 bg-[#ebeef3] text-[#181c20] font-semibold text-[14px] rounded-xl hover:bg-[#e0e3e8] transition-colors"
               >
                 Close

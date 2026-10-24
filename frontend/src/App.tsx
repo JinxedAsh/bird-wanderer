@@ -5,6 +5,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { auth, SessionExpiredError, type AuthUser } from './lib/auth';
+import { readRoute, routeQuery, writeRoute, type AppRoute } from './lib/navigation';
 import { observations, observationEntry, observationPost, type PublicBirder } from './lib/observations';
 import { alerts, type AlertSubscription } from './lib/alerts';
 import { activity, type DiscoveryActivity, type SaveKind } from './lib/activity';
@@ -45,18 +46,13 @@ import { NotificationsScreen } from './components/NotificationsScreen';
 import { SettingsScreen } from './components/SettingsScreen';
 import { AuthScreen } from './components/AuthScreen';
 
-interface NavigationEntry {
-  screen: ScreenType;
-  species?: BirdSpecies;
-  hotspot?: Hotspot;
-}
-
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState<ScreenType>('auth');
   const [sessionUser, setSessionUser] = useState<AuthUser | null>(null);
   const [checkingSession, setCheckingSession] = useState(true);
   const [sessionError, setSessionError] = useState('');
-  const [navigationHistory, setNavigationHistory] = useState<NavigationEntry[]>([{ screen: 'explore' }]);
+  const [pendingRoute, setPendingRoute] = useState<AppRoute | null>(null);
+  const [routeError, setRouteError] = useState('');
 
   // Data states
   const [userProfile, setUserProfile] = useState<UserProfile>(INITIAL_USER_PROFILE);
@@ -260,8 +256,8 @@ export default function App() {
     setNotifications([]);setSubscriptions([]);setAlertsError('');setAlertPost(null);setDeviceRegistered(false);setPushConfigured(false);setPushBusy(false);setOpportunitiesEnabled(false);setOpportunityChecks([]);
     setSpeciesList(SPECIES_DATABASE);
     setHotspotsList(HOTSPOTS_DATA);
-    setNavigationHistory([{ screen: 'explore' }]);
-    setCurrentScreen(new URLSearchParams(window.location.search).has('notifications')?'notifications':'explore');
+    setCurrentScreen('explore');
+    requestCurrentRoute();
   };
 
   useEffect(() => {
@@ -374,31 +370,70 @@ export default function App() {
     }, 2600);
   };
 
-  const navigateTo = (screen: ScreenType, selection?: { species?: BirdSpecies; hotspot?: Hotspot }) => {
-    if (!sessionUser && screen !== 'auth') return;
-    if (screen === currentScreen) return;
-    setNavigationHistory((prev) => [...prev, {
-      screen,
-      species: screen === 'species-detail' ? selection?.species || selectedSpecies : undefined,
-      hotspot: screen === 'hotspot-detail' ? selection?.hotspot || selectedHotspot : undefined,
-    }]);
+  function requestCurrentRoute() {
+    setLocationPickerOpen(false);
+    try { setPendingRoute(readRoute(window.location.search));setRouteError(''); }
+    catch(error) { setPendingRoute(null);setCurrentScreen(current=>current==='auth'?'auth':'explore');setRouteError(error instanceof Error?error.message:'This app link is invalid.'); }
+  }
+  useEffect(()=>{
+    if(!Number.isSafeInteger(window.history.state?.birdWandererIndex))
+      window.history.replaceState({birdWandererIndex:0},'',window.location.href);
+    const pop=()=>requestCurrentRoute();
+    window.addEventListener('popstate',pop);
+    return()=>window.removeEventListener('popstate',pop);
+  },[]);
+  useEffect(()=>{
+    if(!sessionUser||!pendingRoute)return;
+    const route=pendingRoute,controller=new AbortController();
+    if(route.species||route.hotspot){
+      if(!discovery){setRouteError(discoveryError?'This link needs the discovery catalogue. Retry discovery to open it.':'');return;}
+      const bird=route.species?discovery.species.find(row=>row.id===route.species):undefined;
+      const site=route.hotspot?discovery.hotspots.find(row=>row.id===route.hotspot):undefined;
+      if((route.species&&!bird)||(route.hotspot&&!site)){
+        setPendingRoute(null);setCurrentScreen('explore');setRouteError('This destination is not available in the configured discovery region.');return;
+      }
+      if(bird)setSelectedSpecies(bird);
+      if(site)setSelectedHotspot(site);
+    }
+    const apply=()=>{
+      if(controller.signal.aborted)return;
+      setAlertPost(route.post?{id:route.post,request:Date.now()}:null);
+      setPersonTarget(route.person?{id:route.person,request:Date.now()}:null);
+      setCurrentScreen(route.screen);setPendingRoute(null);setRouteError('');
+      writeRoute(route,true);window.scrollTo({top:0,behavior:'instant'});
+    };
+    if(route.post){
+      void observations.get(route.post,controller.signal).then(row=>{
+        if(controller.signal.aborted)return;
+        setPosts(previous=>[observationPost(row),...previous.filter(post=>post.id!==row.id)]);
+        apply();setRecordsAttempt(value=>value+1);
+      }).catch(error=>{if(!controller.signal.aborted){if(error instanceof SessionExpiredError)resetSession();else{setPendingRoute(null);setRouteError(error instanceof Error?error.message:'Observation unavailable.');}}});
+    }else apply();
+    return()=>controller.abort();
+  },[sessionUser?.id,pendingRoute,discovery,discoveryError]);
+
+  const navigateTo = (screen: ScreenType, selection?: { species?: BirdSpecies; hotspot?: Hotspot; post?: string; person?: string }) => {
+    if (!sessionUser || screen==='auth') return;
+    const route:AppRoute={screen,
+      ...(screen==='species-detail'?{species:(selection?.species||selectedSpecies).id}:{}),
+      ...(screen==='hotspot-detail'?{hotspot:(selection?.hotspot||selectedHotspot).id}:{}),
+      ...(screen==='community'?{post:selection?.post,person:selection?.person}:{}),
+    };
+    if(selection?.species)setSelectedSpecies(selection.species);
+    if(selection?.hotspot)setSelectedHotspot(selection.hotspot);
+    if(screen==='community'){
+      setAlertPost(selection?.post?{id:selection.post,request:Date.now()}:null);
+      setPersonTarget(selection?.person?{id:selection.person,request:Date.now()}:null);
+    }
+    setPendingRoute(null);setRouteError('');
+    if(window.location.search!==routeQuery(route))writeRoute(route);
     setCurrentScreen(screen);
-    window.scrollTo({ top: 0, behavior: 'instant' });
+    window.scrollTo({top:0,behavior:'instant'});
   };
 
   const handleBack = () => {
-    if (navigationHistory.length > 1) {
-      const nextHistory = [...navigationHistory];
-      nextHistory.pop(); // Remove current screen
-      const previous = nextHistory[nextHistory.length - 1];
-      setNavigationHistory(nextHistory);
-      if (previous.species) setSelectedSpecies(previous.species);
-      if (previous.hotspot) setSelectedHotspot(previous.hotspot);
-      setCurrentScreen(previous.screen);
-    } else {
-      setCurrentScreen('explore');
-    }
-    window.scrollTo({ top: 0, behavior: 'instant' });
+    if(Number.isSafeInteger(window.history.state?.birdWandererIndex)&&window.history.state.birdWandererIndex>0)window.history.back();
+    else {writeRoute({screen:'explore'},true);setPendingRoute(null);setRouteError('');setCurrentScreen('explore');}
   };
 
   // Quick navigation handlers
@@ -567,10 +602,10 @@ export default function App() {
   const handleMarkAllNotificationsRead = () => {
     void changeAlert((signal) => alerts.read(null, signal));
   };
-  const handleOpenPerson=(id:string)=>{setPersonTarget({id,request:Date.now()});navigateTo('community');};
+  const handleOpenPerson=(id:string)=>{setPersonTarget({id,request:Date.now()});navigateTo('community',{person:id});};
   const handleOpenObservation=(id:string)=>{
     const request=recordsController.current;if(!request)return;
-    void observations.get(id,request.signal).then(row=>{if(request.signal.aborted)return;setPosts(previous=>[observationPost(row),...previous.filter(p=>p.id!==row.id)]);setAlertPost({id:row.id,request:Date.now()});navigateTo('community');}).catch(error=>{if(!request.signal.aborted){if(error instanceof SessionExpiredError)resetSession();else showToast(error instanceof Error?error.message:'Observation unavailable.');}});
+    void observations.get(id,request.signal).then(row=>{if(request.signal.aborted)return;setPosts(previous=>[observationPost(row),...previous.filter(p=>p.id!==row.id)]);setAlertPost({id:row.id,request:Date.now()});navigateTo('community',{post:row.id});}).catch(error=>{if(!request.signal.aborted){if(error instanceof SessionExpiredError)resetSession();else showToast(error instanceof Error?error.message:'Observation unavailable.');}});
   };
   const handleSelectNotification = (notif: AppNotification) => {
     void changeAlert(async (signal) => {
@@ -582,7 +617,7 @@ export default function App() {
       if (signal.aborted) return;
       setPosts((previous) => [observationPost(row), ...previous.filter((post) => post.id !== row.id)]);
       setAlertPost({ id: row.id, request: Date.now() });
-      navigateTo('community');
+      navigateTo('community',{post:row.id});
     });
   };
 
@@ -623,7 +658,7 @@ export default function App() {
     setSpeciesLocations({ id: '' });
     setHotspotDetails({ id: '' });
     setHotspotWeather({ id: '' });
-    setNavigationHistory([{ screen: 'auth' }]);
+    setPendingRoute(null);setRouteError('');
     setCurrentScreen('auth');
     setToastMessage(null);
   }
@@ -673,6 +708,7 @@ export default function App() {
             currentScreen !== 'auth' ? 'pt-16' : ''
           }`}
         >
+          {sessionUser&&(pendingRoute||routeError)&&<div role={routeError?'alert':'status'} className="mx-4 mt-2 rounded-xl bg-[#f1f4f9] p-3 text-sm">{routeError||'Opening linked destination…'}{routeError&&<button type="button" className="min-h-11 ml-2 underline" onClick={()=>{setDiscovery(null);setDiscoveryAttempt(value=>value+1);requestCurrentRoute();}}>Retry link</button>}</div>}
           {sessionUser && locationPickerOpen && ['explore', 'hotspots'].includes(currentScreen) && (
             <LocationPicker location={location} onSelect={setLocation} onClose={() => setLocationPickerOpen(false)} />
           )}
@@ -719,6 +755,7 @@ export default function App() {
 
           {currentScreen === 'community' && (
             <CommunityScreen
+              onEntityChange={entity=>{const route:AppRoute={screen:'community',...entity};if(window.location.search!==routeQuery(route))writeRoute(route);}}
               openPerson={personTarget}
               openPost={alertPost}
               people={birders}

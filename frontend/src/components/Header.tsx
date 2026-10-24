@@ -1,5 +1,6 @@
 import React from 'react';
 import { ScreenType, UserProfile } from '../types';
+import { readRoute, routeQuery, shareAppLink } from '../lib/navigation';
 
 interface HeaderProps {
   currentScreen: ScreenType;
@@ -107,17 +108,8 @@ export const Header: React.FC<HeaderProps> = ({
           {isStackScreen ? (
             <button
               onClick={() => {
-                if (navigator.share) {
-                  navigator.share({
-                    title: 'Bird Wanderer',
-                    text: 'Explore avian observations with Bird Wanderer',
-                    url: window.location.href,
-                  }).catch((error) => {
-                    if (error.name !== 'AbortError') showToast('Could not share this page. Please try again.');
-                  });
-                } else {
-                  showToast('Sharing is not supported by this browser yet.');
-                }
+                try { void shareAppLink(`${window.location.origin}${window.location.pathname}${routeQuery(readRoute(window.location.search))}`,showToast); }
+                catch { showToast('Open a valid destination before sharing this link.'); }
               }}
               aria-label="Share observation"
               className="w-11 h-11 shrink-0 flex items-center justify-center rounded-xl text-[#42493e] hover:text-[#181c20] hover:bg-[#ebeef3] transition-colors"

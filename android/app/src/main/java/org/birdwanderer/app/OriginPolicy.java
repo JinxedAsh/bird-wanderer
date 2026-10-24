@@ -3,6 +3,10 @@ package org.birdwanderer.app;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Locale;
+import java.util.HashMap;
+import java.util.Map;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 
 /** Pure Java origin validation, also covered by local unit tests. */
 final class OriginPolicy {
@@ -39,6 +43,28 @@ final class OriginPolicy {
         } catch (URISyntaxException | IllegalArgumentException failure) {
             return false;
         }
+    }
+
+    static boolean shareable(String input, String origin, boolean debug) {
+        if(input==null||input.length()>2048||!sameOrigin(input,origin,debug))return false;
+        try {
+            URI url=new URI(input);
+            if(!"/".equals(url.getRawPath())||url.getRawFragment()!=null||url.getRawQuery()==null)return false;
+            Map<String,String> fields=new HashMap<>();
+            for(String part:url.getRawQuery().split("&")){
+                String[] pair=part.split("=",2);
+                if(pair.length!=2)return false;
+                String key=URLDecoder.decode(pair[0],StandardCharsets.UTF_8.name());
+                String value=URLDecoder.decode(pair[1],StandardCharsets.UTF_8.name());
+                if(fields.put(key,value)!=null)return false;
+            }
+            String screen=fields.remove("screen");
+            if(screen==null||!java.util.Arrays.asList("explore","community","hotspots","journal","profile","species-detail","hotspot-detail","log-observation","life-list","quiz","messages","search","notifications","settings").contains(screen))return false;
+            String required="species-detail".equals(screen)?"species":"hotspot-detail".equals(screen)?"hotspot":null;
+            if(required!=null)return fields.size()==1&&fields.get(required)!=null&&fields.get(required).matches("[A-Za-z0-9_-]{1,80}");
+            if(!"community".equals(screen))return fields.isEmpty();
+            return fields.isEmpty()||(fields.size()==1&&(fields.containsKey("post")||fields.containsKey("person"))&&fields.values().iterator().next().matches("[A-Za-z0-9_-]{1,80}"));
+        }catch(java.io.UnsupportedEncodingException|URISyntaxException|IllegalArgumentException failure){return false;}
     }
 
     private static boolean localHost(String host) {

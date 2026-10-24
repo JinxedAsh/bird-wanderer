@@ -28,7 +28,7 @@ Screen -> request -> backend -> storage -> result examples will accompany each s
 
 ## Immediate slice in progress
 
-Journal record editing on PR #32: validated owned partial updates, preserved media/EXIF, stale sighting retraction, confirmed action feedback, latest100-comment disclosure and lazy-code recovery.115 tests/type/build and scoped browser editing/privacy/failure/retry/recovery/mobile acceptance pass; PR #32 merged at564ce92 after four exact-head checks passed; merged-main web/Android checks passed. Android preview #31 is delivered. Authenticated password changes and Settings guideline/version fixes are implemented locally with118 tests/type/build passing; scoped browser/control and independent API checks passed; PR #33 final delivery pending, with interactive password submission manually unverified (Entry40). Native push adaptation and actual provider/device receipt remain incomplete.
+Journal record editing on PR #32: validated owned partial updates, preserved media/EXIF, stale sighting retraction, confirmed action feedback, latest100-comment disclosure and lazy-code recovery.115 tests/type/build and scoped browser editing/privacy/failure/retry/recovery/mobile acceptance pass; PR #32 merged at564ce92 after four exact-head checks passed; merged-main web/Android checks passed. Android preview #31 is delivered. Authenticated password changes and Settings guideline/version fixes are implemented locally with118 tests/type/build passing; scoped browser/control and independent API checks passed; PR #33 merged atbf3910a after exact-head/main checks passed, with interactive password submission manually unverified (Entry40). Native push adaptation and actual provider/device receipt remain incomplete.
 
 ## Next implementation priorities
 
@@ -42,3 +42,5 @@ Internal coordination, runtime paths and recovery checkpoints belong in the igno
 ## External/manual inputs
 
 Legitimate eBird histogram export with metadata/denominators; reliable measured difficulty/environment evidence; current operator/entrance confirmation; final user design approval; Android physical device and any unavailable SDK/provider/hosting credentials. Investigate once, record exact blockers and continue independent work. Never request passwords in chat.
+
+Source-ID route/history/sharing work is implemented locally in Entry41 with121 web tests/type/build; native/browser/delivery checks pending. See FINAL_ACCEPTANCE.md and NAVIGATION_SHARING_WALKTHROUGH.md.

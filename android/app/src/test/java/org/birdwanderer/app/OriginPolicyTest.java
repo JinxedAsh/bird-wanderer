@@ -24,5 +24,12 @@ public class OriginPolicyTest {
         assertTrue(OriginPolicy.sameOrigin("https://example.test:443/",origin,false));
         for(String url:new String[]{"https://example.test.evil.test/","https://evil.test/?next=https://example.test","http://example.test/","https://example.test:8443/","https://user@example.test/","file:///https://example.test"})assertFalse(url,OriginPolicy.sameOrigin(url,origin,false));
     }
+    @Test public void sharingAcceptsOnlyBoundedAppDestinationsWithoutPrivatePayloads() {
+        String origin="https://example.test";
+        for(String query:new String[]{"screen=explore","screen=species-detail&species=comkin1","screen=hotspot-detail&hotspot=L123","screen=community&post=abc-123","screen=community&person=abc-123"})
+            assertTrue(query,OriginPolicy.shareable(origin+"/?"+query,origin,false));
+        for(String url:new String[]{"https://evil.test/?screen=explore",origin+"/api/auth/me?screen=explore",origin+"/?screen=explore&token=secret",origin+"/?screen=community&post=abc&person=def",origin+"/?screen=species-detail",origin+"/?screen=auth",origin+"/?screen=explore&screen=profile",origin+"/?screen=hotspot-detail&hotspot=12.2,77.1",origin+"/?screen=explore#private",origin+"/?screen=community&post=%26notes%3Dprivate"})
+            assertFalse(url,OriginPolicy.shareable(url,origin,false));
+    }
     private static void reject(String url,boolean debug){try{OriginPolicy.normalize(url,debug);fail("Accepted "+url);}catch(IllegalArgumentException expected){assertNotNull(expected.getMessage());}}
 }
