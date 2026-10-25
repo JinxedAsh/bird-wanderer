@@ -31,6 +31,7 @@ const { app, db, dispatchPush,checkOpportunities } = createApp({
   origin: process.env.APP_ORIGIN || 'http://localhost:3000',
   additionalOrigins,
   secureCookies: production,
+  trustProxyLoopback: production,
   discovery: createDiscoveryService({ apiKey: process.env.EBIRD_API_KEY, region: discoveryRegion, additionalRegions }),
 });
 if (production) {

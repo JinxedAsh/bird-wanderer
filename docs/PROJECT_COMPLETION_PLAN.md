@@ -1,10 +1,12 @@
 # Bird Wanderer — full-project completion plan
 
-Updated 25 October 2026. The user authorized the full development cycle on23 October2026; this supersedes the previous Phase-1-only increment and Android deferral. Live SRS re-read through Drive on 23 October; last modified 5 October. Preserve final designs and React/Express/SQLite architecture. No paid services or invented evidence. Original 20 October deadline is historical; no new deadline is assumed.
+Updated 26 October 2026. The user authorized the full development cycle on23 October2026; this supersedes the previous Phase-1-only increment and Android deferral. Live SRS re-read through Drive on 23 October; last modified 5 October. Preserve final designs and React/Express/SQLite architecture. No paid services or invented evidence. Original 20 October deadline is historical; no new deadline is assumed.
 
 ## Current delivery
 
-PR #22 merged at a990239 with passing merged CI, confirmed 23 October; its Phase 1 evidence remains dated 13 October. Documentation refresh #23/bef622e is merged. First persistent slice #24/28218af is now merged: actual photo upload/EXIF, metadata-free images, owned observations, journal/life-list/profile/settings storage and server media privacy. Its 93 tests/type/build and scoped browser/live HTTP checks passed; native file-picker and physical device acceptance remain pending; positive follow UI was subsequently verified in #25. Community PR #25/50d6d7d is now merged with passing exact-head and merged-main CI. Sighting alerts and optional Firebase integration are delivered in PR #26/e8aab1e after exact-head and merged-main CI passed (98 tests/type/build and scoped browser QA). Forecast opportunities are delivered in PR #27/196f251 after exact-head ba0d0c2 and merged-main CI passed;101 tests/type/build and scoped live-controls/controlled-forecast browser QA passed. Retention quiz/challenges are delivered in PR #28/089edcd after passing exact-head and merged-main CI, 104 tests/type/build and scoped browser QA. Messaging is delivered in PR #29/e085f4e after 107 tests/type/build, scoped browser QA and exact-head/main CI passed. Global search/social notifications/pagination are local with 110 tests/type/build and scoped browser QA passed; PR #30/da676b7 delivered after exact-head/main CI passed. Android native host source is local:4 unit tests, lint0errors2warnings and debug/unsigned-release assembly pass; debug APK installed/launched in owned API35 emulator. PR #31/47cbef4 is merged after exact-head and main web/Android checks passed. Scoped native picker/privacy/back/connection and targeted permission-guard checks passed; successful GPS/physical/HTTPS release acceptance remains pending.
+Persistent four-phase cores and the installable Android preview are delivered through #34/328582f. Observation upload/privacy, community, sighting/forecast/social in-app alerts, quizzes/challenges, messaging/search, owned-record editing, authenticated password changes and ID-based navigation/sharing have exact-head/main CI evidence recorded in Entries31–41. Android debug/unsigned-release builds and scoped emulator flows pass; physical/release/push acceptance remains separate.
+
+Release reliability #35 is open: offline database/media backup/verify, actual-app restore rehearsal and production loopback-proxy client-IP trust pass124 tests/type/build. Independent integrated rehearsal completed26 October: source-ID discovery, generated photos, persisted private journal edit, public-only feed, second-account sighting target/read, comment and message persistence, and private404. Fixtures are explicitly synthetic; prior quiz/native evidence is reused rather than claimed rerun. Final documentation/exact-head delivery is pending.
 
 ## Acceptance matrix and execution order
 
@@ -26,21 +28,17 @@ One writer updates code/docs; Test chat performs authorized independent browser 
 
 Screen -> request -> backend -> storage -> result examples will accompany each slice. Test missing/bad inputs and account ownership before happy-path screenshots. Real provider outage, push dispatch and physical-device claims require actual evidence; controlled fixtures are labelled.
 
-## Immediate slice in progress
+## Immediate slice and next priorities
 
-Journal record editing on PR #32: validated owned partial updates, preserved media/EXIF, stale sighting retraction, confirmed action feedback, latest100-comment disclosure and lazy-code recovery.115 tests/type/build and scoped browser editing/privacy/failure/retry/recovery/mobile acceptance pass; PR #32 merged at564ce92 after four exact-head checks passed; merged-main web/Android checks passed. Android preview #31 is delivered. Authenticated password changes and Settings guideline/version fixes are implemented locally with118 tests/type/build passing; scoped browser/control and independent API checks passed; PR #33 merged atbf3910a after exact-head/main checks passed, with interactive password submission manually unverified (Entry40). Native push adaptation and actual provider/device receipt remain incomplete.
+1. Deliver #35 release reliability after the final documentation commit passes exact-head checks; verify merged-main checks.
+2. Implement the native Firebase source adapter, permission/opt-in/session binding, token lifecycle and generic notification handling. This does not create a Firebase project or prove provider/device delivery.
+3. Finish the finite live-spec/control audit and any confirmed defects; preserve delivered functionality/designs. Exact-species audio and recovery-email controls remain honestly tracked, not quietly considered complete.
+4. Run checks affected by subsequent changes and targeted latest-APK emulator regression. Actual hosting/off-host operation, physical-device/HTTPS release, provider receipt and scientific evidence require their own inputs; do not fabricate them.
 
-## Next implementation priorities
-
-1. Finish Journal browser verification, documentation and exact-head delivery; see FINAL_ACCEPTANCE.md for the finite control checklist.
-2. Preserve delivered messaging/quiz/community behavior during integrated checks.
-3. Complete remaining native push adaptation, shareable entity navigation and release/deployment preparation; distinguish available source/build evidence from provider/physical acceptance.
-4. Run integrated regressions and the remaining Phase1 responsive/failure/tunnel/manual acceptance checks. Keep blocked scientific/provider requirements explicit.
-
-Internal coordination, runtime paths and recovery checkpoints belong in the ignored private context file, not shared documentation.
+One integrated rehearsal has passed with the stated fixture limits. Do not repeat broad unchanged checks merely to increase a test count. Private coordination/recovery details do not belong in this document.
 
 ## External/manual inputs
 
 Legitimate eBird histogram export with metadata/denominators; reliable measured difficulty/environment evidence; current operator/entrance confirmation; final user design approval; Android physical device and any unavailable SDK/provider/hosting credentials. Investigate once, record exact blockers and continue independent work. Never request passwords in chat.
 
-Source-ID route/history/sharing work is implemented locally in Entry41 with121 web tests/type/build; native5tests/lint0errors1warning/bothAPK builds and scoped browser/history/privacy/retry plus fresh-debug-emulator chooser/cancel passed; PR #34 final delivery pending. Desktop-browser share completion, physical/release/OS app-link and recipient acceptance remain unverified. See FINAL_ACCEPTANCE.md and NAVIGATION_SHARING_WALKTHROUGH.md.
+See FINAL_ACCEPTANCE.md for current delivered controls, remaining source work and manual/provider gaps; RELEASE_RUNBOOK.md for tested backup/restore and setup/Viva explanations.
