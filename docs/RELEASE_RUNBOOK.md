@@ -1,6 +1,6 @@
 # Running, backing up and restoring Bird Wanderer
 
-Updated 25 October 2026. These are deployment instructions and a verified synthetic restore rehearsal, not evidence that a public production service exists. The Android APK connects to the same server; it does not contain Express, SQLite or an offline copy of the project.
+Updated 26 October 2026. These are deployment instructions and a verified synthetic restore rehearsal, not evidence that a public production service exists. The Android APK connects to the same server; it does not contain Express, SQLite or an offline copy of the project.
 
 ## Local demo
 
@@ -76,3 +76,5 @@ An isolated actual-app rehearsal created an account/session, uploaded a generate
 4. **Why use checksums?** They detect changed/missing bytes after creation or transfer. They do not authenticate a maliciously rewritten archive.
 5. **Why restore to new paths?** It allows verification and rollback without destroying the current data or the archive.
 6. **Why trust only the local proxy?** Rate limits need the real client's IP, but accepting arbitrary forwarded headers would let callers invent addresses to bypass limits.
+
+Integrated rehearsal completed26 October with controlled data: existing login/source-ID discovery, generated photo/journal persistence, public-only feed, second-account sighting target/read, comment/message persistence and private404. Earlier quiz/native evidence was reused; no fresh quiz or native audit is implied.

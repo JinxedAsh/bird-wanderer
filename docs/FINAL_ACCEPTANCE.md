@@ -1,6 +1,6 @@
 # Final acceptance — requirements and remaining controls
 
-Updated 25 October 2026. This is a shared implementation/verification checklist for the team. It is not a claim that the application is fully complete. The living specification and supplied designs remain authoritative. It was reread on25 October; its textual screen accounting does not mention password recovery or audio, but those visible controls are tracked below rather than silently called functional.
+Updated 26 October 2026. This is a shared implementation/verification checklist for the team. It is not a claim that the application is fully complete. The living specification and supplied designs remain authoritative. It was reread on26 October; its textual screen accounting does not mention password recovery or audio, but those visible controls are tracked below rather than silently called functional.
 
 ## Delivered and currently implemented
 
@@ -32,7 +32,7 @@ Updated 25 October 2026. This is a shared implementation/verification checklist 
 ## Remaining finite engineering/control queue
 
 1. **Native push source integration:** Android still needs the Firebase adapter/session binding, permission/opt-in/disable, token-refresh handling and generic notification processing. Source work is distinct from unavailable project/app configuration and actual device/provider receipt. No project/account/paid service is created automatically.
-2. **Integrated release checks:** offline backup/verify, actual-app synthetic restore and production loopback-proxy trust are implemented locally in Entry42 with124 tests/type/build; independent integrated QA and focused delivery pending. Continue one integrated account→discovery→record→community→alerts→quiz rehearsal, secret/dependency/build review and latest-commit CI gates. Actual production uptime/off-host backup and physical/provider checks require their own evidence.
+2. **Integrated release checks:** offline backup/verify, actual-app synthetic restore and production loopback-proxy trust are implemented locally in Entry42 with124 tests/type/build; independent integrated rehearsal passed26 October: discovery/record/privacy/feed/second-account sighting/comment/message persistence, with prior quiz/native evidence reused. PR #35 final exact-head delivery pending. Complete remaining secret/dependency/build review and checks affected by later changes. Actual production uptime/off-host backup and physical/provider checks require their own evidence.
 
 ## Unavailable evidence / external or manual inputs
 
