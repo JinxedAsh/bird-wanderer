@@ -45,9 +45,11 @@ public class MainActivity extends Activity {
     private GeolocationPermissions.Callback locationCallback;
     private String locationOrigin;
     private boolean connected;
+    private NativePush nativePush;
 
     @Override public void onCreate(Bundle savedState) {
         super.onCreate(savedState);
+        nativePush = new NativePush(this);
         origin = getPreferences(MODE_PRIVATE).getString("serverOrigin", "");
         if (Build.VERSION.SDK_INT >= 33) {
             getOnBackInvokedDispatcher().registerOnBackInvokedCallback(0, this::handleBack);
@@ -99,7 +101,7 @@ public class MainActivity extends Activity {
         address.setContentDescription("Bird Wanderer server origin");
         address.setMinHeight(dp(48)); page.addView(address);
         page.addView(text(BuildConfig.DEBUG ? "Debug demo: HTTPS, localhost or private IPv4 HTTP only. Your server must allow that exact origin. Local HTTP is not a secure public deployment." : "Release: HTTPS is required. Use only a server you trust with your account.", 13));
-        page.addView(text("Changing servers signs this app out and clears its web cache. Records stay on their original server. Android WebView push delivery is not configured.", 13));
+        page.addView(text("Changing servers signs this app out and clears its web cache. Records stay on their original server. Push requires matching Firebase configuration and notification permission.", 13));
         Button open = new Button(this); open.setText(R.string.save_and_open); open.setMinHeight(dp(48));
         open.setOnClickListener(view -> {
             try {
@@ -108,6 +110,7 @@ public class MainActivity extends Activity {
                 origin = next;
                 getPreferences(MODE_PRIVATE).edit().putString("serverOrigin", origin).apply();
                 if (changing) {
+                    nativePush.cancel(); NativePush.clear(this);
                     WebStorage.getInstance().deleteAllData();
                     CookieManager.getInstance().removeAllCookies(value -> { CookieManager.getInstance().flush(); openApp(); });
                 } else openApp();
@@ -137,13 +140,16 @@ public class MainActivity extends Activity {
         settings.setGeolocationEnabled(true);
         settings.setSupportMultipleWindows(true);
         settings.setJavaScriptCanOpenWindowsAutomatically(false);
-        settings.setUserAgentString(settings.getUserAgentString() + " BirdWandererAndroid/0.1");
+        settings.setUserAgentString(settings.getUserAgentString() + " BirdWandererAndroid/0.1 BirdWandererPush/1");
         CookieManager.getInstance().setAcceptCookie(true);
         CookieManager.getInstance().setAcceptThirdPartyCookies(webView, false);
         webView.setWebViewClient(new WebViewClient() {
             @Override public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 if (!request.isForMainFrame()) return false;
                 String url = request.getUrl().toString();
+                if ("birdwanderer".equals(request.getUrl().getScheme()) && "push".equals(request.getUrl().getHost())) {
+                    nativePush.handle(request.getUrl(),request.hasGesture()); return true;
+                }
                 if (url.equals("birdwanderer://connection") && request.hasGesture() && trusted()) {
                     view.post(() -> {if(webView==view)showConnection("");}); return true;
                 }
@@ -184,7 +190,7 @@ public class MainActivity extends Activity {
         });
         webView.setWebChromeClient(new WebChromeClient() {
             @Override public boolean onShowFileChooser(WebView view, ValueCallback<Uri[]> callback, FileChooserParams params) {
-                if (view != webView || !trusted() || !hasWindowFocus() || photoCallback != null || params.getMode() != FileChooserParams.MODE_OPEN) return false;
+                if (view != webView || !trusted() || !canStartNativePrompt() || params.getMode() != FileChooserParams.MODE_OPEN) return false;
                 photoCallback = callback;
                 Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
                 intent.addCategory(Intent.CATEGORY_OPENABLE); intent.setType("image/*");
@@ -195,7 +201,7 @@ public class MainActivity extends Activity {
             }
             @Override public void onGeolocationPermissionsShowPrompt(String requestedOrigin, GeolocationPermissions.Callback callback) {
                 // Keep the first Android permission request; never queue a second dialog behind it.
-                if (!trusted() || !hasWindowFocus() || locationCallback != null || !OriginPolicy.sameOrigin(requestedOrigin, origin, BuildConfig.DEBUG)) { callback.invoke(requestedOrigin, false, false); return; }
+                if (!trusted() || !canStartNativePrompt() || !OriginPolicy.sameOrigin(requestedOrigin, origin, BuildConfig.DEBUG)) { callback.invoke(requestedOrigin, false, false); return; }
                 locationCallback = callback; locationOrigin = requestedOrigin;
                 if (checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) finishLocationPermission();
                 else requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, LOCATION_PERMISSION);
@@ -217,7 +223,9 @@ public class MainActivity extends Activity {
         LinearLayout root = new LinearLayout(this); root.setOrientation(LinearLayout.VERTICAL);
         root.addView(webView,new LinearLayout.LayoutParams(-1,-1));
         setContentView(root); fitSystemBars(root);
-        webView.loadUrl(origin + "/");
+        boolean notifications=getIntent().getBooleanExtra("notifications",false);
+        getIntent().removeExtra("notifications");
+        webView.loadUrl(origin + (notifications?"/?screen=notifications":"/"));
     }
 
     private void connectionError(WebView failed, String problem) {
@@ -230,7 +238,24 @@ public class MainActivity extends Activity {
         webView.stopLoading(); webView.destroy(); webView = null;
     }
 
-    private boolean trusted() { return connected && webView != null && OriginPolicy.sameOrigin(webView.getUrl(),origin,BuildConfig.DEBUG); }
+    boolean trusted() { return connected && webView != null && OriginPolicy.sameOrigin(webView.getUrl(),origin,BuildConfig.DEBUG); }
+    String serverOrigin() { return origin; }
+    boolean canStartNativePrompt() { return hasWindowFocus() && photoCallback==null && locationCallback==null && (nativePush==null||!nativePush.busy()); }
+    void emitNativePush(String id,org.json.JSONObject result) {
+        if(!trusted())return;
+        try { result.put("requestId",id); }
+        catch(org.json.JSONException impossible){return;}
+        webView.evaluateJavascript("window.dispatchEvent(new CustomEvent('bird-native-push',{detail:"+result.toString()+"}));",null);
+    }
+    void nativePushChanged() {
+        if(trusted())webView.evaluateJavascript("window.dispatchEvent(new Event('bird-push'));",null);
+    }
+    @Override protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);setIntent(intent);
+        if(trusted()&&intent.getBooleanExtra("notifications",false)){
+            intent.removeExtra("notifications");webView.loadUrl(origin+"/?screen=notifications");
+        }
+    }
 
     private void openExternal(Uri uri) {
         if (!("https".equals(uri.getScheme()) || "http".equals(uri.getScheme())) || uri.getHost() == null || uri.getUserInfo() != null) return;
@@ -260,6 +285,7 @@ public class MainActivity extends Activity {
     @Override public void onRequestPermissionsResult(int request,String[] permissions,int[] results) {
         super.onRequestPermissionsResult(request,permissions,results);
         if (request == LOCATION_PERMISSION) finishLocationPermission();
+        if (request == NativePush.PERMISSION_REQUEST) nativePush.permissionResult();
     }
 
     private void finishLocationPermission() {
@@ -270,6 +296,7 @@ public class MainActivity extends Activity {
     }
 
     private void cancelPendingPermissions() {
+        if(nativePush!=null)nativePush.cancel();
         if (photoCallback != null) { photoCallback.onReceiveValue(null); photoCallback=null; }
         if (locationCallback != null) { locationCallback.invoke(locationOrigin,false,false); locationCallback=null; locationOrigin=null; }
     }
@@ -286,7 +313,7 @@ public class MainActivity extends Activity {
     // Only API26–32 uses this fallback; API33+ registers OnBackInvokedDispatcher in onCreate.
     @android.annotation.SuppressLint("GestureBackNavigation")
     @Override public void onBackPressed() { handleBack(); }
-    @Override protected void onPause() { if(webView!=null)webView.onPause();CookieManager.getInstance().flush();super.onPause(); }
-    @Override protected void onResume() { super.onResume();if(webView!=null)webView.onResume(); }
+    @Override protected void onPause() { NativePush.detach(this);if(webView!=null)webView.onPause();CookieManager.getInstance().flush();super.onPause(); }
+    @Override protected void onResume() { super.onResume();NativePush.attach(this);if(webView!=null)webView.onResume(); }
     @Override protected void onDestroy() { cancelPendingPermissions();destroyWebView();super.onDestroy(); }
 }

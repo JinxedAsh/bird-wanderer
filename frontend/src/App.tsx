@@ -6,6 +6,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { auth, SessionExpiredError, type AuthUser } from './lib/auth';
 import { readRoute, routeQuery, writeRoute, type AppRoute } from './lib/navigation';
+import { isNativeAndroid, nativePushRequest, clearNativePush, reconcileNativePush } from './lib/native-push';
 import { observations, observationEntry, observationPost, type PublicBirder } from './lib/observations';
 import { alerts, type AlertSubscription } from './lib/alerts';
 import { activity, type DiscoveryActivity, type SaveKind } from './lib/activity';
@@ -43,7 +44,7 @@ const BirdQuizScreen=React.lazy(()=>import('./components/BirdQuizScreen').then(m
 import { FieldChatScreen } from './components/FieldChatScreen';
 import { GlobalSearchScreen } from './components/GlobalSearchScreen';
 import { NotificationsScreen } from './components/NotificationsScreen';
-import { SettingsScreen } from './components/SettingsScreen';
+const SettingsScreen=React.lazy(()=>import('./components/SettingsScreen').then(module=>({default:module.SettingsScreen})));
 import { AuthScreen } from './components/AuthScreen';
 
 export default function App() {
@@ -82,6 +83,11 @@ export default function App() {
   useEffect(() => {
     if (currentScreen !== 'community') {setAlertPost(null);setPersonTarget(null);}
   }, [currentScreen]);
+  useEffect(()=>{
+    const changed=()=>{clearNativePush();setDeviceRegistered(false);setAlertsAttempt(value=>value+1);};
+    window.addEventListener('bird-session-changed',changed);
+    return()=>window.removeEventListener('bird-session-changed',changed);
+  },[]);
   const [opportunitiesEnabled,setOpportunitiesEnabled]=useState(false);
   const [opportunityChecks,setOpportunityChecks]=useState<Array<{id:string;checkedAt:number;status:'ok'|'unavailable'}>>([]);
   const [deviceRegistered, setDeviceRegistered] = useState(false);
@@ -100,7 +106,7 @@ export default function App() {
       if (loading || document.hidden) return;
       loading = true;
       try {
-        const state = await alerts.load(controller.signal);
+        const state = await reconcileNativePush(await alerts.load(controller.signal),owner,controller.signal);
         if (!controller.signal.aborted && recordsOwner.current === owner) {
           setSubscriptions(state.subscriptions);
           setNotifications(state.notifications);
@@ -284,6 +290,7 @@ export default function App() {
       try {
         const user = await auth.me();
         if (active && !user) resetSession();
+        else if(active&&user&&user.id!==sessionUser.id)acceptSession(user);
       } catch { /* Keep the session UI during a temporary network failure. */ }
       finally { pending = false; }
     };
@@ -621,8 +628,13 @@ export default function App() {
     });
   };
 
-  const handleUpdateProfile = (updated: Partial<UserProfile>) => {
-    return changeRecord(signal=>observations.profile(updated,signal));
+  const handleUpdateProfile = async (updated: Partial<UserProfile>) => {
+    const owner=recordsOwner.current;
+    const changed=await changeRecord(signal=>observations.profile(updated,signal));
+    if(changed&&owner&&recordsOwner.current===owner&&updated.pushAlertsEnabled===false){
+      clearNativePush(owner);setDeviceRegistered(false);setAlertsAttempt(value=>value+1);
+    }
+    return changed;
   };
 
   const isMainTab = ['explore', 'community', 'hotspots', 'journal', 'profile'].includes(
@@ -632,6 +644,7 @@ export default function App() {
   const unreadNotifsCount = notifications.filter((n) => n.isUnread).length;
 
   function resetSession() {
+    clearNativePush();
     setOwnPages(1);setFeedPages(1);setPeoplePages(1);setOwnNext(null);setFeedNext(null);setPeopleNext(null);
     alertsController.current?.abort();alertMutation.current=false;recordsController.current?.abort();recordsOwner.current=null;setBirders([]);recordMutation.current=false;setRecordsError('');setRecordsLoading(false);
     setLocation(null);
@@ -914,12 +927,13 @@ export default function App() {
               onTogglePush={()=>{
                 if(pushBusy)return;
                 // Ask during the actual click, before imports/network lose the browser's user gesture.
-                const permission=!deviceRegistered&&typeof Notification!=='undefined'?Notification.requestPermission().catch(()=>'denied' as const):Promise.resolve('granted' as const);
+                const permission=!isNativeAndroid()&&!deviceRegistered&&typeof Notification!=='undefined'?Notification.requestPermission().catch(()=>'denied' as const):Promise.resolve('granted' as const);
                 setPushBusy(true);
                 void changeAlert(async signal=>{
+                  const nativeToken=!deviceRegistered&&isNativeAndroid()?nativePushRequest('token',sessionUser!.id,signal).catch(error=>({error:error instanceof Error?error.message:'Android push failed.'})):undefined;
                   const client=await import('./lib/push');
                   if(signal.aborted)return;
-                  if(deviceRegistered)await client.disablePush(signal);else await client.enablePush(signal,permission);
+                  if(deviceRegistered)await client.disablePush(signal,sessionUser!.id);else await client.enablePush(signal,permission,nativeToken,sessionUser!.id);
                 }).finally(()=>setPushBusy(false));
               }}
               pushStatus={pushStatus}
@@ -931,7 +945,7 @@ export default function App() {
           )}
 
           {currentScreen === 'settings' && (
-            <SettingsScreen
+            <React.Suspense fallback={<p role="status" className="p-4 text-sm">Loading Settings…</p>}><SettingsScreen
               onSessionExpired={resetSession}
               userProfile={userProfile}
               onUpdateProfile={handleUpdateProfile}
@@ -939,7 +953,7 @@ export default function App() {
               email={sessionUser?.email || ''}
               onNavigate={navigateTo}
               showToast={showToast}
-            />
+            /></React.Suspense>
           )}
         </main>
 

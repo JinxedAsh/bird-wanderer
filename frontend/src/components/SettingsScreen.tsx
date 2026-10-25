@@ -67,7 +67,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
       {changingPassword && <ChangePasswordSheet onClose={()=>setChangingPassword(false)} onSessionExpired={onSessionExpired} showToast={showToast} />}
       {typeof navigator!=='undefined'&&navigator.userAgent.includes('BirdWandererAndroid/')&&<div className="mx-4 my-2 rounded-xl bg-white p-3 text-[12px] text-[#42493e]">
         <button type="button" onClick={()=>{window.location.href='birdwanderer://connection';}} className="min-h-11 font-semibold underline">Android server connection</button>
-        <p>Choose the trusted server for this Android app. Changing servers signs this app out; records remain on their original server. Native push is not configured.</p>
+        <p>Choose the trusted server for this Android app. Changing servers signs this app out; records remain on their original server. Push requires matching Firebase setup and notification permission; see Notifications for status.</p>
       </div>}
       {/* Field Naturalist Identity Snippet */}
       <div className="px-4 pt-2 pb-2">

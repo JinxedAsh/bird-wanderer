@@ -1,4 +1,5 @@
 import { readFileSync, realpathSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { relative, isAbsolute } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -108,7 +109,7 @@ export function createPush(db, { canRead, observation, opportunityCanRead }, opt
         // Each earlier send awaited the network, so re-read session, alert and privacy now.
         const device = db
           .prepare(
-            `SELECT v.user_id,s.expires_at FROM push_devices v JOIN sessions s ON s.token_hash=v.session_hash WHERE v.token=?`,
+            `SELECT v.user_id,v.session_hash,s.expires_at FROM push_devices v JOIN sessions s ON s.token_hash=v.session_hash WHERE v.token=?`,
           )
           .get(row.device_token);
         const alert = row.alert_id
@@ -153,8 +154,12 @@ export function createPush(db, { canRead, observation, opportunityCanRead }, opt
               kind: row.alert_id ? 'sighting' : 'forecast',
               title: 'Bird Wanderer',
               body: 'New subscribed activity. Open the app to check current access.',
+              // Opaque double-hash lets Android discard already-in-flight events
+              // after a server/account/session change without exposing a cookie.
+              binding: createHash('sha256').update(device.session_hash).digest('hex'),
+              project: options.webConfig.projectId,
             },
-            android: { ttl: 3600000 },
+            android: { ttl: 3600000, priority: 'high' },
             webpush: { headers: { TTL: '3600' } },
           });
           db.prepare("UPDATE push_deliveries SET status='sent',last_code='provider-accepted' WHERE id=?").run(
@@ -196,7 +201,7 @@ export function createPush(db, { canRead, observation, opportunityCanRead }, opt
             webConfig: options.webConfig,
             vapidKey: options.vapidKey,
             message:
-              'Firebase configured. Enable push on this browser to register a device; delivery still requires permission and network.',
+              'Firebase configured. Enable push on this device; matching client setup, permission and network are still required.',
           }
         : {
             configured: false,

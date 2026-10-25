@@ -1,5 +1,12 @@
 plugins { id 'com.android.application' }
 
+// Public Android Firebase values are optional and remain local. No service-account
+// key belongs in an APK. Unconfigured builds never request a Firebase token.
+def firebaseSettings = new Properties()
+def firebaseFile = rootProject.file('firebase.properties')
+if (firebaseFile.exists()) firebaseFile.withInputStream { firebaseSettings.load(it) }
+def firebaseValue = { key -> groovy.json.JsonOutput.toJson(firebaseSettings.getProperty(key, '')) }
+
 android {
     namespace 'org.birdwanderer.app'
     compileSdk 36
@@ -9,11 +16,20 @@ android {
         targetSdk 36
         versionCode 1
         versionName '0.1.0'
+        buildConfigField 'String', 'FIREBASE_PROJECT_ID', firebaseValue('projectId')
+        buildConfigField 'String', 'FIREBASE_SENDER_ID', firebaseValue('senderId')
+        buildConfigField 'String', 'FIREBASE_API_KEY', firebaseValue('apiKey')
     }
     buildFeatures { buildConfig true }
     buildTypes {
-        debug { applicationIdSuffix '.debug'; versionNameSuffix '-debug' }
-        release { minifyEnabled false }
+        debug {
+            applicationIdSuffix '.debug'; versionNameSuffix '-debug'
+            buildConfigField 'String', 'FIREBASE_APP_ID', firebaseValue('debugAppId')
+        }
+        release {
+            minifyEnabled false
+            buildConfigField 'String', 'FIREBASE_APP_ID', firebaseValue('releaseAppId')
+        }
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
@@ -21,4 +37,8 @@ android {
     }
     testOptions { unitTests.returnDefaultValues = false }
 }
-dependencies { testImplementation 'junit:junit:4.13.2' }
+dependencies {
+    implementation platform('com.google.firebase:firebase-bom:35.0.2')
+    implementation 'com.google.firebase:firebase-messaging'
+    testImplementation 'junit:junit:4.13.2'
+}

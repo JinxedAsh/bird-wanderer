@@ -21,18 +21,20 @@ let weatherHelpers;
 let referenceHelpers;
 let searchHelpers;
 let navigationHelpers;
+let nativePushHelpers;
+let pushClient;
 
 before(async () => {
   temporaryDirectory = mkdtempSync(join(root, '.stage1-render-'));
   const screens = {};
   const names = ['ChangePasswordSheet', 'EditObservationSheet', 'NotificationsScreen', 'FieldChatScreen', 'BirdQuizScreen', 'AuthScreen', 'LogObservationScreen', 'ProfileScreen', 'JournalScreen', 'LifeListScreen', 'GlobalSearchScreen', 'SettingsScreen', 'SpeciesDetailScreen', 'SpeciesPhoto', 'PhotoMetadata', 'PhotoPlanning', 'ReferenceComparisons', 'SpeciesInfoPanel', 'HotspotMap', 'HotspotWeatherPanel', 'HotspotDetailScreen', 'HotspotAccess', 'HotspotsScreen', 'ExploreScreen', 'LocationPicker', 'Header'];
   // Compile these existing TSX screens for Node rendering; no browser or new test framework.
-  for (const relative of ['lib/navigation.ts', 'lib/useDialogFocus.ts', 'lib/maps.ts', 'lib/auth.ts', 'lib/discovery.ts', 'lib/activity.ts', 'lib/location.ts', 'lib/observations.ts', 'lib/alerts.ts', 'lib/retention.ts', 'lib/messages.ts', ...names.map((name) => `components/${name}.tsx`)]) {
+  for (const relative of ['lib/native-push.ts', 'lib/push.ts', 'lib/navigation.ts', 'lib/useDialogFocus.ts', 'lib/maps.ts', 'lib/auth.ts', 'lib/discovery.ts', 'lib/activity.ts', 'lib/location.ts', 'lib/observations.ts', 'lib/alerts.ts', 'lib/retention.ts', 'lib/messages.ts', ...names.map((name) => `components/${name}.tsx`)]) {
     const output = join(temporaryDirectory, relative.replace(/\.tsx?$/, '.mjs'));
     mkdirSync(dirname(output), { recursive: true });
     const source = readFileSync(join(root, 'src', relative), 'utf8');
     const { code } = transformSync(source, { loader: 'tsx', format: 'esm', jsx: 'automatic', target: 'node24' });
-    writeFileSync(output, code.replace('../lib/navigation"','../lib/navigation.mjs"').replace('./ChangePasswordSheet"', './ChangePasswordSheet.mjs"').replace('./EditObservationSheet"','./EditObservationSheet.mjs"').replace('../lib/messages"', '../lib/messages.mjs"').replace('../lib/useDialogFocus"', '../lib/useDialogFocus.mjs"').replace('../lib/maps"', '../lib/maps.mjs"').replace('./HotspotMap"', './HotspotMap.mjs"').replace('./HotspotAccess"', './HotspotAccess.mjs"').replace('./HotspotWeatherPanel"', './HotspotWeatherPanel.mjs"').replace('./SpeciesPhoto"', './SpeciesPhoto.mjs"').replace('./PhotoMetadata"', './PhotoMetadata.mjs"').replace('./PhotoPlanning"', './PhotoPlanning.mjs"').replace('./SpeciesInfoPanel"', './SpeciesInfoPanel.mjs"').replace('./ReferenceComparisons"', './ReferenceComparisons.mjs"').replace('../lib/discovery"', '../lib/discovery.mjs"').replace('../lib/auth"', '../lib/auth.mjs"').replace('../lib/retention"', '../lib/retention.mjs"').replace('./auth"', './auth.mjs"').replace('./maps"', './maps.mjs"').replace('../lib/location"', '../lib/location.mjs"').replace('../lib/observations"', '../lib/observations.mjs"'));
+    writeFileSync(output, code.replace('./native-push"','./native-push.mjs"').replace('./alerts"','./alerts.mjs"').replace('../lib/navigation"','../lib/navigation.mjs"').replace('./ChangePasswordSheet"', './ChangePasswordSheet.mjs"').replace('./EditObservationSheet"','./EditObservationSheet.mjs"').replace('../lib/messages"', '../lib/messages.mjs"').replace('../lib/useDialogFocus"', '../lib/useDialogFocus.mjs"').replace('../lib/maps"', '../lib/maps.mjs"').replace('./HotspotMap"', './HotspotMap.mjs"').replace('./HotspotAccess"', './HotspotAccess.mjs"').replace('./HotspotWeatherPanel"', './HotspotWeatherPanel.mjs"').replace('./SpeciesPhoto"', './SpeciesPhoto.mjs"').replace('./PhotoMetadata"', './PhotoMetadata.mjs"').replace('./PhotoPlanning"', './PhotoPlanning.mjs"').replace('./SpeciesInfoPanel"', './SpeciesInfoPanel.mjs"').replace('./ReferenceComparisons"', './ReferenceComparisons.mjs"').replace('../lib/discovery"', '../lib/discovery.mjs"').replace('../lib/auth"', '../lib/auth.mjs"').replace('../lib/retention"', '../lib/retention.mjs"').replace('./auth"', './auth.mjs"').replace('./maps"', './maps.mjs"').replace('../lib/location"', '../lib/location.mjs"').replace('../lib/observations"', '../lib/observations.mjs"'));
   }
   for (const name of names) {
     const module = await import(pathToFileURL(join(temporaryDirectory, 'components', `${name}.mjs`)).href);
@@ -47,6 +49,8 @@ before(async () => {
   planningHelpers = await import(pathToFileURL(join(temporaryDirectory, 'components/PhotoPlanning.mjs')).href);
   mapHelpers = await import(pathToFileURL(join(temporaryDirectory, 'lib/maps.mjs')).href);
   authClient = await import(pathToFileURL(join(temporaryDirectory, 'lib/auth.mjs')).href);
+  nativePushHelpers = await import(pathToFileURL(join(temporaryDirectory, 'lib/native-push.mjs')).href);
+  pushClient = await import(pathToFileURL(join(temporaryDirectory, 'lib/push.mjs')).href);
   navigationHelpers = await import(pathToFileURL(join(temporaryDirectory, 'lib/navigation.mjs')).href);
   locationHelpers = await import(pathToFileURL(join(temporaryDirectory, 'lib/location.mjs')).href);
   alertsClient = await import(pathToFileURL(join(temporaryDirectory, 'lib/alerts.mjs')).href);
@@ -687,5 +691,119 @@ test('share fallback contains only a canonical app ID link and never an observat
   }finally{
     if(priorWindow)Object.defineProperty(globalThis,'window',priorWindow);else delete globalThis.window;
     if(priorNavigator)Object.defineProperty(globalThis,'navigator',priorNavigator);else delete globalThis.navigator;
+  }
+});
+
+function nativeBrowserFixture(reply,agent='BirdWandererAndroid/0.1 BirdWandererPush/1'){
+  const priorWindow=Object.getOwnPropertyDescriptor(globalThis,'window'),priorNavigator=Object.getOwnPropertyDescriptor(globalThis,'navigator'),priorFetch=globalThis.fetch;
+  const events=new EventTarget(),commands=[];
+  const location={origin:'https://example.test',pathname:'/'};
+  Object.defineProperty(location,'href',{set(value){
+    const uri=new URL(value);commands.push(uri);
+    const result=reply?.(uri.searchParams.get('action'),uri.searchParams);
+    if(result!==undefined)queueMicrotask(()=>events.dispatchEvent(new CustomEvent('bird-native-push',{detail:{requestId:uri.searchParams.get('id'),...result}})));
+  }});
+  Object.defineProperty(globalThis,'window',{configurable:true,value:{location,addEventListener:events.addEventListener.bind(events),removeEventListener:events.removeEventListener.bind(events),setTimeout,clearTimeout}});
+  Object.defineProperty(globalThis,'navigator',{configurable:true,value:{userAgent:agent}});
+  return {events,commands,restore(){globalThis.fetch=priorFetch;if(priorWindow)Object.defineProperty(globalThis,'window',priorWindow);else delete globalThis.window;if(priorNavigator)Object.defineProperty(globalThis,'navigator',priorNavigator);else delete globalThis.navigator;}};
+}
+const nativeUser='11111111-1111-1111-1111-111111111111';
+const nativeBinding='a'.repeat(64);
+const nativeAlertState=()=>({subscriptions:[],notifications:[{id:'fixture-in-app-alert'}],push:{configured:true,deviceRegistered:true,message:'Configured',webConfig:{projectId:'bird-example'}}});
+
+test('older Android APKs and ordinary browsers retain in-app alerts without unsupported native actions',async()=>{
+  for(const agent of ['BirdWandererAndroid/0.1','Fixture Browser']){
+    const f=nativeBrowserFixture(undefined,agent);
+    try{
+      const source=nativeAlertState(),result=await nativePushHelpers.reconcileNativePush(source,nativeUser,new AbortController().signal);
+      assert.equal(result.notifications,source.notifications);assert.equal(f.commands.length,0);
+      if(agent.includes('Android')){assert.equal(result.push.configured,false);assert.match(result.push.message,/updated Android/);}else assert.equal(result,source);
+    }finally{f.restore();}
+  }
+});
+
+test('native responses match their request and aborted token requests cancel only their own pending ticket',async()=>{
+  const f=nativeBrowserFixture();
+  try{
+    const controller=new AbortController(),promise=nativePushHelpers.nativePushRequest('status',nativeUser,controller.signal);
+    const id=f.commands[0].searchParams.get('id');assert.match(id,/^[a-f0-9]{32}$/);
+    f.events.dispatchEvent(new CustomEvent('bird-native-push',{detail:{requestId:'wrong',active:true}}));
+    f.events.dispatchEvent(new CustomEvent('bird-native-push',{detail:{requestId:id,active:false}}));
+    assert.equal((await promise).active,false);
+    const tokenController=new AbortController(),pending=nativePushHelpers.nativePushRequest('token',nativeUser,tokenController.signal);
+    const tokenId=f.commands.at(-1).searchParams.get('id');tokenController.abort();
+    await assert.rejects(pending,error=>error.name==='AbortError');
+    assert.equal(f.commands.at(-1).searchParams.get('action'),'cancel');assert.equal(f.commands.at(-1).searchParams.get('ticket'),tokenId);
+  }finally{f.restore();}
+});
+
+test('native token rotation removes only the expected account/session registration and keeps the in-app inbox',async()=>{
+  const requests=[],f=nativeBrowserFixture(action=>action==='status'?{configured:true,active:false,needsRegistration:true,projectId:'bird-example',binding:nativeBinding}:{active:false});
+  try{
+    globalThis.fetch=async(path,options)=>{requests.push({path,...options});return new Response(null,{status:204});};
+    const source=nativeAlertState(),result=await nativePushHelpers.reconcileNativePush(source,nativeUser,new AbortController().signal);
+    assert.equal(source.push.deviceRegistered,true,'input state is not mutated');
+    assert.equal(result.push.deviceRegistered,false);assert.equal(result.push.configured,true);assert.equal(result.notifications,source.notifications);
+    assert.equal(requests.length,1);assert.equal(requests[0].method,'DELETE');assert.deepEqual(JSON.parse(requests[0].body),{binding:nativeBinding,userId:nativeUser});
+    assert.equal(f.commands.at(-1).searchParams.get('action'),'clear');assert.equal(f.commands.at(-1).searchParams.get('binding'),nativeBinding);
+  }finally{f.restore();}
+});
+
+test('native adapter failures and malformed status never hide in-app notifications or remove a registration',async()=>{
+  for(const reply of [{error:'Synthetic native unavailable'},{binding:nativeBinding}]){
+    let requests=0;const f=nativeBrowserFixture(()=>reply);
+    try{
+      globalThis.fetch=async()=>{requests++;throw new Error('No API mutation expected');};
+      const source=nativeAlertState(),result=await nativePushHelpers.reconcileNativePush(source,nativeUser,new AbortController().signal);
+      assert.equal(result.notifications,source.notifications);assert.equal(result.push.configured,false);assert.equal(requests,0);
+    }finally{f.restore();}
+  }
+});
+
+test('native enable waits for acknowledged server registration and matching-project native confirmation',async()=>{
+  const requests=[],f=nativeBrowserFixture((action,params)=>action==='token'?{token:'synthetic-native-token-123456789',projectId:'bird-example',binding:nativeBinding,ticket:params.get('id')}:{active:true});
+  try{
+    globalThis.fetch=async(path,options)=>{requests.push({path,...options});return path.endsWith('/config')?new Response(JSON.stringify({configured:true,webConfig:{projectId:'bird-example'}}),{status:200}):new Response(null,{status:204});};
+    const controller=new AbortController(),token=nativePushHelpers.nativePushRequest('token',nativeUser,controller.signal);
+    await pushClient.enablePush(controller.signal,Promise.resolve('denied'),token,nativeUser);
+    const registration=requests.find(row=>row.method==='PUT');assert.ok(registration);
+    assert.deepEqual(JSON.parse(registration.body),{token:'synthetic-native-token-123456789',binding:nativeBinding,userId:nativeUser});
+    assert.equal(f.commands.at(-1).searchParams.get('action'),'confirm');assert.equal(f.commands.at(-1).searchParams.get('ticket'),f.commands[0].searchParams.get('id'));
+  }finally{f.restore();}
+});
+
+test('native project mismatch cancels its own ticket without registering or deleting another device',async()=>{
+  const requests=[],f=nativeBrowserFixture((action,params)=>action==='token'?{token:'synthetic-native-token-123456789',projectId:'wrong-project',binding:nativeBinding,ticket:params.get('id')}:{active:false});
+  try{
+    globalThis.fetch=async(path,options)=>{requests.push({path,...options});return new Response(JSON.stringify({configured:true,webConfig:{projectId:'bird-example'}}),{status:200});};
+    const controller=new AbortController(),token=nativePushHelpers.nativePushRequest('token',nativeUser,controller.signal);
+    await assert.rejects(()=>pushClient.enablePush(controller.signal,Promise.resolve('granted'),token,nativeUser),/configurations must match/);
+    assert.equal(requests.some(row=>['PUT','DELETE'].includes(row.method)),false);
+    assert.equal(f.commands.at(-1).searchParams.get('action'),'clear');assert.equal(f.commands.at(-1).searchParams.get('ticket'),f.commands[0].searchParams.get('id'));
+  }finally{f.restore();}
+});
+
+test('failed native confirmation rolls back only the expected registration and never uses unguarded cleanup',async()=>{
+  const requests=[],f=nativeBrowserFixture((action,params)=>action==='token'?{token:'synthetic-native-token-123456789',projectId:'bird-example',binding:nativeBinding,ticket:params.get('id')}:action==='confirm'?{error:'Synthetic session changed'}:{active:false});
+  try{
+    globalThis.fetch=async(path,options)=>{requests.push({path,...options});return path.endsWith('/config')?new Response(JSON.stringify({configured:true,webConfig:{projectId:'bird-example'}}),{status:200}):options.method==='DELETE'?new Response(JSON.stringify({error:'Account changed'}),{status:409}):new Response(null,{status:204});};
+    const controller=new AbortController(),token=nativePushHelpers.nativePushRequest('token',nativeUser,controller.signal);
+    await assert.rejects(()=>pushClient.enablePush(controller.signal,Promise.resolve('granted'),token,nativeUser),/Synthetic session changed/);
+    const cleanup=requests.find(row=>row.method==='DELETE');assert.ok(cleanup);assert.deepEqual(JSON.parse(cleanup.body),{binding:nativeBinding,userId:nativeUser});
+    assert.equal(f.commands.at(-1).searchParams.get('action'),'clear');assert.equal(f.commands.at(-1).searchParams.get('ticket'),f.commands[0].searchParams.get('id'));
+  }finally{f.restore();}
+});
+
+test('native disable waits for guarded server removal and an aborted old session cannot clear a new native binding',async()=>{
+  for(const abortAfterRemoval of [false,true]){
+    const requests=[],controller=new AbortController(),f=nativeBrowserFixture(action=>action==='status'?{configured:true,active:true,needsRegistration:false,projectId:'bird-example',binding:nativeBinding}:{active:false});
+    try{
+      globalThis.fetch=async(path,options)=>{requests.push({path,...options});if(abortAfterRemoval)controller.abort();return new Response(null,{status:204});};
+      const pending=pushClient.disablePush(controller.signal,nativeUser);
+      if(abortAfterRemoval)await assert.rejects(pending,error=>error.name==='AbortError');else await pending;
+      assert.deepEqual(JSON.parse(requests[0].body),{binding:nativeBinding,userId:nativeUser});
+      assert.equal(f.commands.some(uri=>uri.searchParams.get('action')==='clear'),!abortAfterRemoval);
+      if(!abortAfterRemoval)assert.equal(f.commands.at(-1).searchParams.get('binding'),nativeBinding);
+    }finally{f.restore();}
   }
 });

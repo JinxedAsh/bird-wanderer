@@ -5,6 +5,7 @@ local.properties
 *.keystore
 keystore.properties
 google-services.json
+firebase.properties
 captures/
 .externalNativeBuild/
 .cxx/
