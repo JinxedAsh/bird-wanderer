@@ -27,14 +27,14 @@ let pushClient;
 before(async () => {
   temporaryDirectory = mkdtempSync(join(root, '.stage1-render-'));
   const screens = {};
-  const names = ['ChangePasswordSheet', 'EditObservationSheet', 'NotificationsScreen', 'FieldChatScreen', 'BirdQuizScreen', 'AuthScreen', 'LogObservationScreen', 'ProfileScreen', 'JournalScreen', 'LifeListScreen', 'GlobalSearchScreen', 'SettingsScreen', 'SpeciesDetailScreen', 'SpeciesPhoto', 'PhotoMetadata', 'PhotoPlanning', 'ReferenceComparisons', 'SpeciesInfoPanel', 'HotspotMap', 'HotspotWeatherPanel', 'HotspotDetailScreen', 'HotspotAccess', 'HotspotsScreen', 'ExploreScreen', 'LocationPicker', 'Header'];
+  const names = ['ChangePasswordSheet', 'EditObservationSheet', 'NotificationsScreen', 'FieldChatScreen', 'BirdQuizScreen', 'AuthScreen', 'LogObservationScreen', 'ProfileScreen', 'JournalScreen', 'LifeListScreen', 'GlobalSearchScreen', 'SettingsScreen', 'SpeciesDetailScreen', 'SpeciesPhoto', 'PhotoMetadata', 'PhotoPlanning', 'ReferenceComparisons', 'SpeciesInfoPanel', 'SpeciesRecording', 'HotspotMap', 'HotspotWeatherPanel', 'HotspotDetailScreen', 'HotspotAccess', 'HotspotsScreen', 'ExploreScreen', 'LocationPicker', 'Header'];
   // Compile these existing TSX screens for Node rendering; no browser or new test framework.
   for (const relative of ['lib/native-push.ts', 'lib/push.ts', 'lib/navigation.ts', 'lib/useDialogFocus.ts', 'lib/maps.ts', 'lib/auth.ts', 'lib/discovery.ts', 'lib/activity.ts', 'lib/location.ts', 'lib/observations.ts', 'lib/alerts.ts', 'lib/retention.ts', 'lib/messages.ts', ...names.map((name) => `components/${name}.tsx`)]) {
     const output = join(temporaryDirectory, relative.replace(/\.tsx?$/, '.mjs'));
     mkdirSync(dirname(output), { recursive: true });
     const source = readFileSync(join(root, 'src', relative), 'utf8');
     const { code } = transformSync(source, { loader: 'tsx', format: 'esm', jsx: 'automatic', target: 'node24' });
-    writeFileSync(output, code.replace('./native-push"','./native-push.mjs"').replace('./alerts"','./alerts.mjs"').replace('../lib/navigation"','../lib/navigation.mjs"').replace('./ChangePasswordSheet"', './ChangePasswordSheet.mjs"').replace('./EditObservationSheet"','./EditObservationSheet.mjs"').replace('../lib/messages"', '../lib/messages.mjs"').replace('../lib/useDialogFocus"', '../lib/useDialogFocus.mjs"').replace('../lib/maps"', '../lib/maps.mjs"').replace('./HotspotMap"', './HotspotMap.mjs"').replace('./HotspotAccess"', './HotspotAccess.mjs"').replace('./HotspotWeatherPanel"', './HotspotWeatherPanel.mjs"').replace('./SpeciesPhoto"', './SpeciesPhoto.mjs"').replace('./PhotoMetadata"', './PhotoMetadata.mjs"').replace('./PhotoPlanning"', './PhotoPlanning.mjs"').replace('./SpeciesInfoPanel"', './SpeciesInfoPanel.mjs"').replace('./ReferenceComparisons"', './ReferenceComparisons.mjs"').replace('../lib/discovery"', '../lib/discovery.mjs"').replace('../lib/auth"', '../lib/auth.mjs"').replace('../lib/retention"', '../lib/retention.mjs"').replace('./auth"', './auth.mjs"').replace('./maps"', './maps.mjs"').replace('../lib/location"', '../lib/location.mjs"').replace('../lib/observations"', '../lib/observations.mjs"'));
+    writeFileSync(output, code.replace('./SpeciesRecording"', './SpeciesRecording.mjs"').replace('./native-push"','./native-push.mjs"').replace('./alerts"','./alerts.mjs"').replace('../lib/navigation"','../lib/navigation.mjs"').replace('./ChangePasswordSheet"', './ChangePasswordSheet.mjs"').replace('./EditObservationSheet"','./EditObservationSheet.mjs"').replace('../lib/messages"', '../lib/messages.mjs"').replace('../lib/useDialogFocus"', '../lib/useDialogFocus.mjs"').replace('../lib/maps"', '../lib/maps.mjs"').replace('./HotspotMap"', './HotspotMap.mjs"').replace('./HotspotAccess"', './HotspotAccess.mjs"').replace('./HotspotWeatherPanel"', './HotspotWeatherPanel.mjs"').replace('./SpeciesPhoto"', './SpeciesPhoto.mjs"').replace('./PhotoMetadata"', './PhotoMetadata.mjs"').replace('./PhotoPlanning"', './PhotoPlanning.mjs"').replace('./SpeciesInfoPanel"', './SpeciesInfoPanel.mjs"').replace('./ReferenceComparisons"', './ReferenceComparisons.mjs"').replace('../lib/discovery"', '../lib/discovery.mjs"').replace('../lib/auth"', '../lib/auth.mjs"').replace('../lib/retention"', '../lib/retention.mjs"').replace('./auth"', './auth.mjs"').replace('./maps"', './maps.mjs"').replace('../lib/location"', '../lib/location.mjs"').replace('../lib/observations"', '../lib/observations.mjs"'));
   }
   for (const name of names) {
     const module = await import(pathToFileURL(join(temporaryDirectory, 'components', `${name}.mjs`)).href);
@@ -207,6 +207,27 @@ test('species information renders credited excerpts, missing sections, loading a
   assert.doesNotMatch(panel, /open=""/);
 });
 
+test('recording client rejects wrong identity and malformed media while allowing a genuine no-match', async () => {
+  const previous = globalThis.fetch;
+  const signal = new AbortController().signal;
+  const recording = { title: 'File:Call.ogg', scientificName: 'Test species', matchedEntityId: 'Q1', matchUrl: 'https://www.wikidata.org/wiki/Q1', audioUrl: 'https://upload.wikimedia.org/wikipedia/commons/a/ab/Call.ogg', sourceUrl: 'https://commons.wikimedia.org/wiki/File:Call.ogg', source: 'Wikimedia Commons', mime: 'audio/ogg', author: 'Recorder', license: 'CC BY 4.0', licenseUrl: 'https://creativecommons.org/licenses/by/4.0/', credit: '', attribution: '', restrictions: '' };
+  try {
+    globalThis.fetch = async () => Response.json({ speciesId: 'indrol2', recording });
+    assert.equal((await discoveryClient.loadSpeciesRecording('indrol2', signal)).recording.author, 'Recorder');
+    for (const invalid of [{ ...recording, audioUrl: 'https://evil.test/audio.ogg' }, { ...recording, author: null }, { ...recording, source: 'Unknown' }]) {
+      globalThis.fetch = async () => Response.json({ speciesId: 'indrol2', recording: invalid });
+      await assert.rejects(discoveryClient.loadSpeciesRecording('indrol2', signal), /Unexpected recording/);
+    }
+    globalThis.fetch = async () => Response.json({ speciesId: 'wrong', recording });
+    await assert.rejects(discoveryClient.loadSpeciesRecording('indrol2', signal), /Unexpected recording/);
+    globalThis.fetch = async () => Response.json({ speciesId: 'indrol2', recording: null });
+    assert.equal((await discoveryClient.loadSpeciesRecording('indrol2', signal)).recording, null);
+    const html = render('SpeciesRecording', {});
+    assert.match(html, /Avoid playback near wild birds/);
+    assert.doesNotMatch(html, /<audio|0:04|spectrogram|autoplay/);
+  } finally { globalThis.fetch = previous; }
+});
+
 test('species information client validates identity and section shape including a genuine no-match', async () => {
   const previous = globalThis.fetch;
   const profile = { title: 'Bird', scientificName: 'Test species', summary: 'Summary', identification: null, habitat: null, behaviour: null, seasonality: null, source: 'Wikipedia', sourceUrl: 'https://en.wikipedia.org/wiki/Bird', revisionUrl: 'https://en.wikipedia.org/w/index.php?oldid=123', historyUrl: 'https://en.wikipedia.org/w/index.php?action=history', revisionId: 123, matchUrl: 'https://www.wikidata.org/wiki/Q1', license: 'CC BY-SA 4.0', licenseUrl: 'https://creativecommons.org/licenses/by-sa/4.0/' };
@@ -325,7 +346,7 @@ test('hotspot weather presents sourced forecasts, genuine zeros, missing values,
 test('protected discovery rejects ended sessions distinctly from provider/network failures and incorrect passwords', async () => {
   const previousFetch = globalThis.fetch;
   const signal = new AbortController().signal;
-  const loads = [() => discoveryClient.loadDiscovery(signal), () => discoveryClient.loadSpeciesLocations('comkin1', signal), () => discoveryClient.loadHotspotDetails('L123', signal), () => discoveryClient.loadHotspotWeather('L123', signal), () => discoveryClient.loadSpeciesPhoto('comkin1', signal), () => discoveryClient.loadSpeciesInformation('comkin1', signal)];
+  const loads = [() => discoveryClient.loadDiscovery(signal), () => discoveryClient.loadSpeciesLocations('comkin1', signal), () => discoveryClient.loadHotspotDetails('L123', signal), () => discoveryClient.loadHotspotWeather('L123', signal), () => discoveryClient.loadSpeciesPhoto('comkin1', signal), () => discoveryClient.loadSpeciesInformation('comkin1', signal), () => discoveryClient.loadSpeciesRecording('comkin1', signal)];
   try {
     globalThis.fetch = async () => new Response(JSON.stringify({ error: 'Sign in required.' }), { status: 401 });
     for (const load of loads) await assert.rejects(load, authClient.SessionExpiredError);

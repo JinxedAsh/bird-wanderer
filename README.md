@@ -137,3 +137,5 @@ Operations, backup/restore, demo steps and Viva Notes: [Release runbook](docs/RE
 Native Firebase source, optional configuration and Viva Notes: [Android push adapter](docs/NATIVE_PUSH_WALKTHROUGH.md). The project/provider/device configuration and actual receipt remain unverified.
 
 Dependency fixes and Viva Notes: [Dependency audit](docs/DEPENDENCY_SECURITY_WALKTHROUGH.md).
+
+Sourced recording flow, provider limits and Viva Notes: [Species recordings](docs/RECORDINGS_WALKTHROUGH.md).

@@ -83,6 +83,23 @@ export interface SpeciesPhotoResponse {
   cached: boolean;
 }
 
+export interface SpeciesRecordingData {
+  speciesId: string;
+  recording: { title: string; scientificName: string; matchedEntityId: string; matchUrl: string; audioUrl: string; sourceUrl: string; source: 'Wikimedia Commons'; mime: string; author: string; license: string; licenseUrl: string; credit: string; attribution: string; restrictions: string } | null;
+  fetchedAt: string;
+  cached: boolean;
+}
+
+export async function loadSpeciesRecording(id: string, signal: AbortSignal): Promise<SpeciesRecordingData> {
+  const data = await request(`species/${encodeURIComponent(id)}/recording`, signal);
+  if (data?.speciesId !== id || !Object.hasOwn(data, 'recording')) throw new Error('Unexpected recording response.');
+  const recording = data.recording;
+  if (recording !== null && (!recording || recording.source !== 'Wikimedia Commons'
+    || ['title', 'scientificName', 'matchedEntityId', 'matchUrl', 'audioUrl', 'sourceUrl', 'mime', 'author', 'license', 'licenseUrl', 'credit', 'attribution', 'restrictions'].some((key) => typeof recording[key] !== 'string')
+    || !/^https:\/\/upload\.wikimedia\.org\/wikipedia\/commons\//.test(recording.audioUrl))) throw new Error('Unexpected recording response.');
+  return data;
+}
+
 export interface SpeciesInformation {
   speciesId: string;
   profile: {

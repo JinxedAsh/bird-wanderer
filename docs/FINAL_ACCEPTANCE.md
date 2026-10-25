@@ -1,6 +1,6 @@
 # Final acceptance — requirements and remaining controls
 
-Updated 26 October 2026. This is a shared implementation/verification checklist for the team. It is not a claim that the application is fully complete. The living specification and supplied designs remain authoritative. It was reread on26 October; its textual screen accounting does not mention password recovery or audio, but those visible controls are tracked below rather than silently called functional.
+Updated 26 October 2026. This is a shared implementation/verification checklist for the team. It is not a claim that the application is fully complete. The living specification and supplied designs remain authoritative. It was reread on 26 October; its textual screen accounting does not mention password recovery or audio, but those visible controls are tracked below rather than silently called functional.
 
 ## Delivered and currently implemented
 
@@ -18,7 +18,7 @@ Updated 26 October 2026. This is a shared implementation/verification checklist 
 | Notifications | Sighting/forecast matching, social follow/comment/mention events, individual/all-read state and ID targets | In-app delivery passed; actual Firebase browser/native receipt has not been established |
 | Quiz/challenges | Complete credited-photo practice, server grading/XP/streak, weekly progress from reported records | #28 automated/scoped browser checks; learning tools do not verify field identification/visits/photo quality |
 | Settings | Profile/location privacy, conservation preference and alert preferences persist; authenticated password change, actual ABA guidance link and package-version About are delivered in #33/Entry40 | Conservative coordinate protection applies to all species; no verified species sensitivity catalogue is claimed |
-| Android | Java/WebView project, trusted-server policy, native document picker/location/back/insets, debug/unsigned-release assembly | #31 installable preview delivered. Five native policy tests, lint0errors1warning and scoped API35 emulator flows passed. Granted GPS timed out; physical Oppo and HTTPS release acceptance pending |
+| Android | Java/WebView project, trusted-server policy, native document picker/location/back/insets, debug/unsigned-release assembly | #31 installable preview delivered. Latest #36 validation: nine native policy tests, lint0errors2warnings, debug/unsigned-release builds and scoped unconfigured API35 emulator flows passed. Granted GPS timed out; physical Oppo and HTTPS release acceptance pending |
 
 | Destination links/history/sharing | Canonical source-ID URLs, login/refresh restoration and browser Back/Forward; privacy-aware native/browser sharing | #34 scoped browser and fresh-debug-emulator chooser/cancel passed; browser-share/physical/release/OS-launch limits explicit |
 | Backup/restore | Offline SQLite/media snapshot, checksum verification and actual-app restore rehearsal | Local Entry42 with124 tests/type/build; no live/off-host/production recovery claim |
@@ -31,8 +31,9 @@ Updated 26 October 2026. This is a shared implementation/verification checklist 
 
 ## Remaining finite engineering/control queue
 
-1. **Native push source integration:** Native adapter/session binding, permission/opt-in/disable, token-refresh handling and generic notification processing are implemented locally in Entry43 with132 web tests/type/build and preceding native-policy/build checks. Nine native tests/lint0errors2warnings/both APK builds and targeted unconfigured-emulator QA passed; focused delivery pending. Source work is distinct from unavailable project/app configuration and actual device/provider receipt. No project/account/paid service is created automatically.
-2. **Integrated release checks:** offline backup/verify, actual-app synthetic restore and production loopback-proxy trust are implemented locally in Entry42 with124 tests/type/build; independent integrated rehearsal passed26 October: discovery/record/privacy/feed/second-account sighting/comment/message persistence, with prior quiz/native evidence reused. PR #35 merged atbec99cb after exact-head/main web/Android checks passed. Tracked secret/data filename review found no committed credentials/databases/APKs; dependency remediation is local in Entry44 with zero full-audit findings and no peer conflicts. Frozen install and final133 tests/type/build pass after the malformed-gzip regression; finish exact-head GitHub delivery. Actual production uptime/off-host backup and physical/provider checks require their own evidence.
+1. **Native push source integration:** delivered in PR #36/137bc5a with final133 web tests/type/build, nine native policy tests/lint0errors2warnings/both APK builds and targeted unconfigured-emulator QA. Four exact-head checks and merged-main web/Android checks passed. Configuration and actual provider/device receipt remain unavailable; no project/account/paid service was created.
+2. **Integrated release checks:** backup/verify, actual-app synthetic restore and loopback-proxy trust delivered #35/bec99cb, with scoped independent integrated rehearsal. Dependency remediation delivered #36/137bc5a: zero full pnpm audit findings, no peer conflicts, frozen install and133 tests/type/build pass. This is JavaScript dependency evidence, not a Maven vulnerability scan or penetration test. Production uptime/off-host backup and physical/provider acceptance remain separate.
+3. **Recorded calls:** exact-species Wikidata P51/Commons licensed audio service and real controls implemented in Entry45. 139 automated tests/type/build and scoped independent real-audio browser acceptance passed; focused PR #37 delivery in progress. No-match, unsupported codec and missing evidence are explicit; true page-hide/physical codec checks remain manual.
 
 ## Unavailable evidence / external or manual inputs
 
@@ -41,7 +42,7 @@ Updated 26 October 2026. This is a shared implementation/verification checklist 
 - A trusted production backend/HTTPS endpoint, signing/distribution decisions, production uptime/backups and physical-device checks. A debug emulator is not a physical phone or release deployment.
 - Operator-current access/entrance information, exact final-design approval, native date/time widget, source/maps external-app handoff and full physical keyboard/orientation/text-scale/permissions flows.
 - **Forgot password:** the visible login control explicitly says no reset email was sent. A secure email recovery flow and real delivery configuration are absent. This must be recorded as incomplete, never as successful email delivery.
-- **Recorded calls:** live external species do not pretend to play a recording. Exact-species licensed audio is not connected; sample-only simulated code must not count as live functionality. Its inclusion in final acceptance requires requirement/design reconciliation or real sourced implementation.
+- **Recorded calls:** source integration is implemented in Entry45; coverage depends on exact-species P51 claims and accepted Commons metadata. No supported recording is reported honestly; browser/physical/codec acceptance is tracked separately.
 
 ## Acceptance rule
 
