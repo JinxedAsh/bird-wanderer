@@ -31,7 +31,7 @@ Screen -> request -> backend -> storage -> result examples will accompany each s
 ## Immediate slice and next priorities
 
 1. Native Firebase source adapter and dependency remediation are delivered in #36/137bc5a after all four exact-head and merged-main web/Android checks passed. Final133 web tests/type/build, nine native tests/lint0errors2warnings/both builds and targeted unconfigured-emulator QA passed. No Firebase project exists; actual provider/device delivery is not established.
-2. Exact-species sourced recording integration is implemented in Entry45; finish affected checks, targeted browser acceptance and focused GitHub delivery. Missing linked/licensed audio remains unavailable rather than simulated.
+2. Exact-species sourced recording integration is implemented in Entry45; 139 tests/type/build and scoped real-audio browser acceptance passed; finish focused GitHub delivery. Missing linked/licensed audio remains unavailable rather than simulated.
 3. Reconcile remaining recovery-email control with secure implementation and unavailable delivery configuration. Do not silently consider it complete.
 4. Actual hosting/off-host operation, physical-device/HTTPS release, provider receipt and scientific evidence require their own inputs; do not fabricate them.
 
