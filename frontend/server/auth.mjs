@@ -173,6 +173,8 @@ export function createApp({ dbPath = ':memory:', origin = 'http://localhost:3000
   app.use((error, _req, res, _next) => {
     if (error.type === 'entity.parse.failed') return res.status(400).json({ error: 'Invalid JSON request.' });
     if (error.type === 'entity.too.large') return res.status(413).json({ error: 'Request is too large.' });
+    if(error.status===400&&['Z_DATA_ERROR','Z_BUF_ERROR'].includes(error.code))
+      return res.status(400).json({error:'Invalid compressed request body.'});
     // Do not log request bodies, passwords, or session cookies.
     console.error('API error:', error.code || error.name);
     res.status(500).json({ error: 'Something went wrong. Please try again.' });

@@ -4,6 +4,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, relative, isAbsolute } from 'node:path';
 import { createApp } from './auth.mjs';
+import { gzipSync } from 'node:zlib';
 
 const origin = 'http://localhost:3000';
 const account = { name: 'Test Birder', email: 'birder@example.test', password: 'test-only-long-password' };
@@ -14,6 +15,7 @@ async function fixture(options = {}) {
   const base = `http://127.0.0.1:${server.address().port}/api/auth/`;
   return {
     db,
+    url: base,
     request: (path, body, cookie, requestOrigin = origin, forwardedFor) => fetch(base + path, {
       method: body === undefined ? 'GET' : 'POST',
       headers: { origin: requestOrigin, ...(body === undefined ? {} : { 'Content-Type': 'application/json' }), ...(cookie ? { cookie } : {}), ...(forwardedFor ? {'X-Forwarded-For':forwardedFor}:{}) },
@@ -214,4 +216,18 @@ test('only an explicitly trusted loopback proxy supplies client IPs and spoofed 
   try{
     for(let i=0;i<3;i++)assert.equal((await direct.request('login',{email:`direct${i}@example.test`,password:'incorrect'},undefined,origin,`192.0.2.${i+1}`)).status,i<2?401:429,'default server ignores forwarded headers');
   }finally{await direct.close();}
+});
+
+test('valid gzip authentication works and malformed compressed bodies fail without disrupting later requests',async()=>{
+  const f=await fixture();
+  try{
+    assert.equal((await f.request('register',account)).status,201);
+    const compressed=gzipSync(JSON.stringify({email:account.email,password:account.password}));
+    const send=body=>fetch(f.url+'login',{method:'POST',headers:{Origin:origin,'Content-Type':'application/json','Content-Encoding':'gzip'},body});
+    assert.equal((await send(compressed)).status,200);
+    const invalid=await send(Buffer.concat([compressed,Buffer.from('not-a-gzip-trailer')]));
+    assert.equal(invalid.status,400);
+    assert.equal((await invalid.json()).error,'Invalid compressed request body.');
+    assert.equal((await f.request('login',account)).status,200,'malformed input leaves the API usable');
+  }finally{await f.close();}
 });

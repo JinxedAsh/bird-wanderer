@@ -31,7 +31,7 @@ Screen -> request -> backend -> storage -> result examples will accompany each s
 ## Immediate slice and next priorities
 
 1. Finish native Firebase source-adapter validation/emulator regression, documentation and exact-head delivery (Entry43). Release reliability #35 is delivered with passing main checks.
-2. Native Firebase source, permission/opt-in/session binding, token lifecycle and generic handling are implemented locally with132 web tests/type/build; final native/QA/delivery checks remain. This does not create a Firebase project or prove provider/device delivery.
+2. Native Firebase source, permission/opt-in/session binding, token lifecycle and generic handling are implemented locally with132 web tests/type/build; nine native tests/lint0errors2warnings/both APK builds and targeted unconfigured-emulator QA pass; delivery remains. Dependency remediation Entry44 has zero full-audit findings/no peer conflicts, with final133 tests/type/build pass; exact-head GitHub delivery pending. This does not create a Firebase project or prove provider/device delivery.
 3. Finish the finite live-spec/control audit and any confirmed defects; preserve delivered functionality/designs. Exact-species audio and recovery-email controls remain honestly tracked, not quietly considered complete.
 4. Run checks affected by subsequent changes and targeted latest-APK emulator regression. Actual hosting/off-host operation, physical-device/HTTPS release, provider receipt and scientific evidence require their own inputs; do not fabricate them.
 

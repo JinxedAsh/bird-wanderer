@@ -135,3 +135,5 @@ Destination links and Viva Notes: [Navigation and sharing](docs/NAVIGATION_SHARI
 Operations, backup/restore, demo steps and Viva Notes: [Release runbook](docs/RELEASE_RUNBOOK.md). Backups must use a new private directory outside this repository after stopping app writers.
 
 Native Firebase source, optional configuration and Viva Notes: [Android push adapter](docs/NATIVE_PUSH_WALKTHROUGH.md). The project/provider/device configuration and actual receipt remain unverified.
+
+Dependency fixes and Viva Notes: [Dependency audit](docs/DEPENDENCY_SECURITY_WALKTHROUGH.md).
