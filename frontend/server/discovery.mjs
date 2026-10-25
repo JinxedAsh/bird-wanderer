@@ -4,6 +4,7 @@ import { localSeasonalContext } from './seasonal.mjs';
 import { createWeatherService, WeatherError } from './weather.mjs';
 import { createPhotoService, PhotoError } from './photos.mjs';
 import { createSpeciesInfoService, SpeciesInfoError } from './species-info.mjs';
+import { createRecordingService, RecordingError } from './recordings.mjs';
 
 const placeholder = '/discovery-placeholder.svg';
 const unavailable = 'Not available from eBird';
@@ -14,7 +15,7 @@ export class DiscoveryError extends Error {
 
 // One regional catalogue, shared by all users. No credentials or private observations
 // are returned to the browser. Inject fetch/time in tests instead of contacting eBird.
-export function createDiscoveryService({ apiKey = '', region = 'IN-DL', additionalRegions = [], fetchImpl = fetch, now = Date.now, ttl = 15 * 60 * 1000, weather = createWeatherService(), photos = createPhotoService(), information = createSpeciesInfoService() } = {}) {
+export function createDiscoveryService({ apiKey = '', region = 'IN-DL', additionalRegions = [], fetchImpl = fetch, now = Date.now, ttl = 15 * 60 * 1000, weather = createWeatherService(), photos = createPhotoService(), information = createSpeciesInfoService(), recordings = createRecordingService() } = {}) {
   if (!/^[A-Z]{2}(?:-[A-Z0-9]{1,8}){0,2}$/.test(region)) throw new Error('EBIRD_REGION must be an eBird region code, for example IN-DL.');
   if (!Array.isArray(additionalRegions) || additionalRegions.length > 3 || additionalRegions.some((value) => typeof value !== 'string' || !/^[A-Z]{2}(?:-[A-Z0-9]{1,8}){0,2}$/.test(value))) throw new Error('Use at most three valid additional eBird region codes.');
   const regions = [...new Set([region, ...additionalRegions])];
@@ -125,6 +126,13 @@ export function createDiscoveryService({ apiKey = '', region = 'IN-DL', addition
       if (!Number.isFinite(latitude) || Math.abs(latitude) > 90 || !Number.isFinite(longitude) || Math.abs(longitude) > 180) throw new DiscoveryError(400, 'Valid location coordinates are required.');
       return weather.forecast(Number(latitude.toFixed(2)), Number(longitude.toFixed(2)));
     },
+    async speciesRecording(speciesId) {
+      if (!/^[a-z0-9]{3,16}$/.test(speciesId)) throw new DiscoveryError(400, 'Invalid species ID.');
+      const catalogue = await service.catalogue();
+      const species = catalogue.species.find((bird) => bird.id === speciesId);
+      if (!species) throw new DiscoveryError(404, 'Species not found in the eBird catalogue.');
+      return { ...await recordings.recording(species.scientificName), speciesId };
+    },
     async speciesInformation(speciesId) {
       if (!/^[a-z0-9]{3,16}$/.test(speciesId)) throw new DiscoveryError(400, 'Invalid species ID.');
       const catalogue = await service.catalogue();
@@ -199,7 +207,7 @@ export function discoveryRouter(service) {
   const send = (load) => async (req, res, next) => {
     try { res.json(await load(req)); }
     catch (error) {
-      if (error instanceof DiscoveryError || error instanceof WeatherError || error instanceof PhotoError || error instanceof SpeciesInfoError) return res.status(error.status).json({ error: error.message });
+      if (error instanceof DiscoveryError || error instanceof WeatherError || error instanceof PhotoError || error instanceof SpeciesInfoError || error instanceof RecordingError) return res.status(error.status).json({ error: error.message });
       next(error);
     }
   };
@@ -208,6 +216,7 @@ export function discoveryRouter(service) {
   router.get('/species/:speciesId/locations', send((req) => service.speciesLocations(req.params.speciesId)));
   router.get('/species/:speciesId/photo', send((req) => service.speciesPhoto(req.params.speciesId)));
   router.get('/species/:speciesId/references', send((req) => service.speciesReferences(req.params.speciesId)));
+  router.get('/species/:speciesId/recording', send((req) => service.speciesRecording(req.params.speciesId)));
   router.get('/species/:speciesId/info', send((req) => service.speciesInformation(req.params.speciesId)));
   router.get('/hotspots/:hotspotId', send((req) => service.hotspotDetails(req.params.hotspotId)));
   router.get('/hotspots/:hotspotId/weather', send((req) => service.hotspotWeather(req.params.hotspotId)));

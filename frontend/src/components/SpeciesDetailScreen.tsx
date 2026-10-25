@@ -1,9 +1,10 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { BirdSpecies, ScreenType } from '../types';
 import type { SpeciesLocations } from '../lib/discovery';
 import { SpeciesPhoto, type PhotoLoadState } from './SpeciesPhoto';
 import { PhotoPlanning } from './PhotoPlanning';
 import { SpeciesInfoPanel } from './SpeciesInfoPanel';
+import { SpeciesRecording } from './SpeciesRecording';
 
 interface SpeciesDetailScreenProps {
   subscribed?: boolean;
@@ -39,28 +40,8 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
 }) => {
   const [localBookmark, setIsBookmarked] = useState(false);
   const isBookmarked = saved ?? localBookmark;
-  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [isSightingsExpanded, setIsSightingsExpanded] = useState(true);
   const [photoState, setPhotoState] = useState<PhotoLoadState>({ speciesId: species.id, photo: null, loading: true, error: '' });
-  const audioTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => () => {
-    if (audioTimer.current) clearTimeout(audioTimer.current);
-  }, []);
-
-  const toggleAudio = () => {
-    const nextState = !isPlayingAudio;
-    if (audioTimer.current) clearTimeout(audioTimer.current);
-    setIsPlayingAudio(nextState);
-    if (nextState) {
-      showToast('Audio preview is simulated. Recorded calls are not connected yet.');
-      audioTimer.current = setTimeout(() => {
-        setIsPlayingAudio(false);
-        audioTimer.current = null;
-      }, 4000);
-    }
-  };
-
   const toggleBookmark = () => {
     if (onToggleBookmark) { onToggleBookmark(); return; }
     const next = !isBookmarked;
@@ -120,18 +101,8 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
             </span>
           </button>
 
-          <button
-            onClick={toggleAudio}
-            aria-label="Listen to call"
-            className={`w-11 h-11 shrink-0 rounded-full flex items-center justify-center transition-all ${
-              isPlayingAudio
-                ? 'bg-[#2d5a27] text-white'
-                : 'bg-[#ebeef3] text-[#181c20] hover:bg-[#e0e3e8]'
-            }`}
-          >
-            <span className="material-symbols-outlined text-[20px]">
-              {isPlayingAudio ? 'volume_up' : 'volume_down'}
-            </span>
+          <button type="button" onClick={() => focusSection('species-recording')} aria-label="Recorded calls" className="w-11 h-11 shrink-0 rounded-full flex items-center justify-center bg-[#ebeef3] text-[#181c20] hover:bg-[#e0e3e8]">
+            <span className="material-symbols-outlined text-[20px]">volume_down</span>
           </button>
         </div>
       </div>
@@ -146,15 +117,6 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
             <span>Verified Field Shot • 1/2500s ƒ/5.6</span>
           </div>}
 
-          {/* Audio Visualizer Overlay Pill */}
-          {isPlayingAudio && (
-            <div className="absolute top-3 right-3 px-3 py-1.5 rounded-full bg-[#2d5a27]/90 backdrop-blur-md text-white text-[11px] font-semibold flex items-center gap-1.5 animate-in fade-in">
-              <span className="inline-block w-1 h-3 bg-[#a1d494] animate-bounce rounded-full"></span>
-              <span className="inline-block w-1 h-4 bg-[#a1d494] animate-bounce [animation-delay:0.15s] rounded-full"></span>
-              <span className="inline-block w-1 h-2 bg-[#a1d494] animate-bounce [animation-delay:0.3s] rounded-full"></span>
-              <span className="ml-1">{species.audioCallDesc || "High whistle 'chee-kee'"}</span>
-            </div>
-          )}
         </SpeciesPhoto>
       </div>
 
@@ -284,37 +246,7 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
               '400mm+ recommended. Kingfishers dive rapidly from low perches; maintain shutter speed at 1/2000s or faster in morning light. Look for regular fishing perches 1–2 meters above stagnant river channels.'}
           </p>}
 
-          {/* Audio Spectrogram Bar Pattern */}
-          <div className="mt-3.5 bg-[#f1f4f9] rounded-xl p-2.5 flex items-center gap-2.5">
-            <button
-              onClick={toggleAudio}
-              aria-label="Play audio snippet"
-              className="w-8 h-8 rounded-full bg-[#2d5a27] text-white flex items-center justify-center flex-shrink-0"
-            >
-              <span className="material-symbols-outlined text-[18px]">
-                {isPlayingAudio ? 'pause' : 'play_arrow'}
-              </span>
-            </button>
-            <div className="flex-1 flex items-center gap-1 h-6 px-1">
-              <span className="w-1 bg-[#3b6934] h-2 rounded-full"></span>
-              <span className="w-1 bg-[#3b6934] h-4 rounded-full"></span>
-              <span className="w-1 bg-[#3b6934] h-5 rounded-full"></span>
-              <span className="w-1 bg-[#3b6934] h-3 rounded-full"></span>
-              <span className="w-1 bg-[#fe932c] h-6 rounded-full"></span>
-              <span className="w-1 bg-[#fe932c] h-5 rounded-full"></span>
-              <span className="w-1 bg-[#3b6934] h-2 rounded-full"></span>
-              <span className="w-1 bg-[#e0e3e8] h-3 rounded-full"></span>
-              <span className="w-1 bg-[#e0e3e8] h-2 rounded-full"></span>
-              <span className="w-1 bg-[#e0e3e8] h-1 rounded-full"></span>
-              <span className="w-1 bg-[#e0e3e8] h-3 rounded-full"></span>
-              <span className="w-1 bg-[#e0e3e8] h-4 rounded-full"></span>
-              <span className="w-1 bg-[#e0e3e8] h-2 rounded-full"></span>
-              <span className="w-1 bg-[#e0e3e8] h-1 rounded-full"></span>
-            </div>
-            <span className="text-[11px] font-semibold text-[#42493e] whitespace-nowrap">
-              {species.audioCallDuration || '0:04 call'}
-            </span>
-          </div>
+          <SpeciesRecording key={`recording-${species.id}`} speciesId={species.source ? species.id : undefined} onSessionExpired={onSessionExpired} />
         </div>
       </div>
 

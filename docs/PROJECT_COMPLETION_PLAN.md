@@ -6,7 +6,7 @@ Updated 26 October 2026. The user authorized the full development cycle on23 Oct
 
 Persistent four-phase cores and the installable Android preview are delivered through #34/328582f. Observation upload/privacy, community, sighting/forecast/social in-app alerts, quizzes/challenges, messaging/search, owned-record editing, authenticated password changes and ID-based navigation/sharing have exact-head/main CI evidence recorded in Entries31–41. Android debug/unsigned-release builds and scoped emulator flows pass; physical/release/push acceptance remains separate.
 
-Release reliability #35 is open: offline database/media backup/verify, actual-app restore rehearsal and production loopback-proxy client-IP trust pass124 tests/type/build. Independent integrated rehearsal completed26 October: source-ID discovery, generated photos, persisted private journal edit, public-only feed, second-account sighting target/read, comment and message persistence, and private404. Fixtures are explicitly synthetic; prior quiz/native evidence is reused rather than claimed rerun. PR #35/bec99cb is merged after exact-head and main web/Android checks passed.
+Release reliability #35 is delivered: offline database/media backup/verify, actual-app restore rehearsal and production loopback-proxy client-IP trust pass124 tests/type/build. Independent integrated rehearsal completed26 October: source-ID discovery, generated photos, persisted private journal edit, public-only feed, second-account sighting target/read, comment and message persistence, and private404. Fixtures are explicitly synthetic; prior quiz/native evidence is reused rather than claimed rerun. PR #35/bec99cb is merged after exact-head and main web/Android checks passed.
 
 ## Acceptance matrix and execution order
 
@@ -30,10 +30,10 @@ Screen -> request -> backend -> storage -> result examples will accompany each s
 
 ## Immediate slice and next priorities
 
-1. Finish native Firebase source-adapter validation/emulator regression, documentation and exact-head delivery (Entry43). Release reliability #35 is delivered with passing main checks.
-2. Native Firebase source, permission/opt-in/session binding, token lifecycle and generic handling are implemented locally with132 web tests/type/build; nine native tests/lint0errors2warnings/both APK builds and targeted unconfigured-emulator QA pass; delivery remains. Dependency remediation Entry44 has zero full-audit findings/no peer conflicts, with final133 tests/type/build pass; exact-head GitHub delivery pending. This does not create a Firebase project or prove provider/device delivery.
-3. Finish the finite live-spec/control audit and any confirmed defects; preserve delivered functionality/designs. Exact-species audio and recovery-email controls remain honestly tracked, not quietly considered complete.
-4. Run checks affected by subsequent changes and targeted latest-APK emulator regression. Actual hosting/off-host operation, physical-device/HTTPS release, provider receipt and scientific evidence require their own inputs; do not fabricate them.
+1. Native Firebase source adapter and dependency remediation are delivered in #36/137bc5a after all four exact-head and merged-main web/Android checks passed. Final133 web tests/type/build, nine native tests/lint0errors2warnings/both builds and targeted unconfigured-emulator QA passed. No Firebase project exists; actual provider/device delivery is not established.
+2. Exact-species sourced recording integration is implemented in Entry45; finish affected checks, targeted browser acceptance and focused GitHub delivery. Missing linked/licensed audio remains unavailable rather than simulated.
+3. Reconcile remaining recovery-email control with secure implementation and unavailable delivery configuration. Do not silently consider it complete.
+4. Actual hosting/off-host operation, physical-device/HTTPS release, provider receipt and scientific evidence require their own inputs; do not fabricate them.
 
 One integrated rehearsal has passed with the stated fixture limits. Do not repeat broad unchanged checks merely to increase a test count. Private coordination/recovery details do not belong in this document.
 

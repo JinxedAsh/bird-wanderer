@@ -9,7 +9,7 @@ const userAgent = 'BirdWanderer/0.1 (https://github.com/JinxedAsh/bird-wanderer)
 
 // Commons attribution fields contain HTML. Return text only; React renders it
 // as text, never executable markup. Preserve author/credit instead of truncating.
-function text(value) {
+export function text(value) {
   if (typeof value !== 'string' || value.length > 12000) return '';
   const entities = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' };
   return value.replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1>/gi, '')
@@ -21,7 +21,7 @@ function text(value) {
     }).replace(/\s+/g, ' ').trim();
 }
 
-function safeUrl(value, hosts, pathPrefix) {
+export function safeUrl(value, hosts, pathPrefix) {
   try {
     const url = new URL(value);
     if (url.protocol !== 'https:' || !hosts.includes(url.hostname) || url.username || url.password || url.port || !url.pathname.startsWith(pathPrefix)) return null;
