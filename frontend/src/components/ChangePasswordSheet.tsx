@@ -29,6 +29,7 @@ export function ChangePasswordSheet({ onClose, onSessionExpired, showToast }: {
     try {
       await auth.changePassword(current, password, request.signal);
       if (request.signal.aborted) return;
+      window.dispatchEvent(new Event('bird-session-changed'));
       showToast('Password changed. Other sessions and push registrations were removed; enable push again if needed.');
       onClose();
     } catch (failure) {

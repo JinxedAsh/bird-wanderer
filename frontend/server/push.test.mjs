@@ -4,6 +4,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import sharp from 'sharp';
+import { createHash } from 'node:crypto';
 import { createApp } from './auth.mjs';
 import { configuredPush } from './push.mjs';
 
@@ -81,6 +82,16 @@ test('push outbox retries generic payloads, rechecks privacy/preferences/session
   const token = 'fixture-token-that-is-not-a-real-device';
   const register = () => request(`${base}/push/device`, b.cookie, 'PUT', { token });
   assert.equal((await register()).status, 204);
+  const digest=value=>createHash('sha256').update(value).digest('hex');
+  const rawSession=b.cookie.split('=')[1],sessionHash=digest(rawSession),binding=digest(sessionHash);
+  const guarded={token,binding,userId:b.user.id};
+  assert.equal((await request(`${base}/push/device`,b.cookie,'PUT',guarded)).status,204);
+  for(const method of ['PUT','DELETE']){
+    assert.equal((await request(`${base}/push/device`,b.cookie,method,{...guarded,binding:'0'.repeat(64)})).status,409);
+    assert.equal((await request(`${base}/push/device`,b.cookie,method,{...guarded,userId:a.user.id})).status,409);
+    assert.equal((await request(`${base}/push/device`,a.cookie,method,guarded)).status,409);
+  }
+  assert.equal(current.db.prepare('SELECT COUNT(*) AS n FROM push_devices').get().n,1,'stale account/session actions leave the current registration intact');
   assert.equal((await request(`${base}/push/device`, b.cookie, 'PUT', { token: 'bad' })).status, 400);
   assert.equal((await (await request(base, b.cookie)).json()).push.deviceRegistered, true);
   await request('observations/profile', b.cookie, 'PATCH', { pushAlertsEnabled: true });
@@ -122,6 +133,12 @@ test('push outbox retries generic payloads, rechecks privacy/preferences/session
   delivery = current.db.prepare('SELECT * FROM push_deliveries').get();
   assert.equal(delivery.status, 'sent');
   assert.equal(delivery.last_code, 'provider-accepted');
+  assert.equal(calls.at(-1).data.binding,binding);
+  assert.equal(calls.at(-1).data.project,'fixture');
+  assert.equal(calls.at(-1).android.priority,'high');
+  assert.equal(Object.hasOwn(calls.at(-1),'notification'),false,'only the app data-only path may compose a generic preview');
+  assert.equal(JSON.stringify(calls).includes(rawSession),false);
+  assert.equal(JSON.stringify(calls).includes(sessionHash),false);
   assert.doesNotMatch(
     JSON.stringify(calls),
     /Indian Roller|Test Wetland|latitude|longitude|media|observationId/,

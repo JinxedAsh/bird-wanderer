@@ -53,7 +53,7 @@ export const NotificationsScreen: React.FC<NotificationsScreenProps> = ({
           {opportunityChecks.length===0&&<p>Checks pending. Subscribe to a hotspot first; weather results may be unavailable.</p>}
           {opportunityChecks.map(check=><p key={check.id} className="my-2 break-words">{subscriptions.find(row=>row.kind==='hotspot'&&row.id===check.id)?.label||check.id}: {check.status==='ok'?'Checked; alerts require a qualifying future forecast':'Weather unavailable; other sites still checked'} · {new Date(check.checkedAt).toLocaleString()}</p>)}
         </details>}
-        {pushConfigured&&<button type="button" disabled={pushBusy} onClick={onTogglePush} className="mt-2 min-h-11 rounded-lg bg-[#2d5a27] px-3 text-white">{pushBusy?'Updating push…':deviceRegistered?'Disable push on this browser':'Enable push on this browser'}</button>}
+        {pushConfigured&&<button type="button" disabled={pushBusy} onClick={onTogglePush} className="mt-2 min-h-11 rounded-lg bg-[#2d5a27] px-3 text-white">{pushBusy?'Updating push…':deviceRegistered?'Disable push on this device':'Enable push on this device'}</button>}
         <details className="mt-2"><summary className="min-h-11 cursor-pointer">Manage subscriptions ({subscriptions.length})</summary>
           {subscriptions.length===0&&<p>No subscriptions yet.</p>}
           {subscriptions.map(row=><div key={`${row.kind}:${row.id}`} className="flex items-center justify-between gap-2"><span className="min-w-0 break-words">{row.label} · {row.kind}</span><button type="button" onClick={()=>onRemoveSubscription?.(row.kind,row.id)} className="min-h-11 shrink-0 px-2 underline" aria-label={`Remove ${row.label} subscription`}>Remove</button></div>)}

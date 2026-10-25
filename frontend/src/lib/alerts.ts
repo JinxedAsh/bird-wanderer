@@ -13,7 +13,7 @@ export interface AlertState {
   };
   subscriptions: AlertSubscription[];
   notifications: AppNotification[];
-  push: { configured: boolean; message: string; deviceRegistered?: boolean };
+  push: { configured: boolean; message: string; deviceRegistered?: boolean; webConfig?: {projectId?:string} };
 }
 async function request(path: string, signal: AbortSignal, method = 'GET', body?: object) {
   let response: Response;
@@ -41,8 +41,8 @@ export const alerts = {
     signal: AbortSignal,
   ): Promise<{ configured: boolean; webConfig?: Record<string, string>; vapidKey?: string }> =>
     request('/push/config', signal),
-  registerDevice: (token: string, signal: AbortSignal) => request('/push/device', signal, 'PUT', { token }),
-  removeDevice: (signal: AbortSignal) => request('/push/device', signal, 'DELETE'),
+  registerDevice: (token: string, signal: AbortSignal, binding?: string, userId?: string) => request('/push/device', signal, 'PUT', { token, ...(binding?{binding}:{}), ...(userId?{userId}:{}) }),
+  removeDevice: (signal: AbortSignal, binding?: string, userId?: string) => request('/push/device', signal, 'DELETE',binding||userId?{...(binding?{binding}:{}),...(userId?{userId}:{})}:undefined),
   load: async (signal: AbortSignal): Promise<AlertState> => {
     const data = await request('', signal);
     if (

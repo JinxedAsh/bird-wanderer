@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { randomUUID } from 'node:crypto';
+import { randomUUID, createHash } from 'node:crypto';
 import { createPush } from './push.mjs';
 import { createOpportunities } from './opportunities.mjs';
 
@@ -142,6 +142,10 @@ export function createAlerts(db, discovery, { observation, canRead }, now = Date
   });
   router.get('/push/config', (_req, res) => res.json(push.publicConfig()));
   router.put('/push/device', (req, res) => {
+    if(req.body?.userId!==undefined&&req.body.userId!==req.userId)
+      return res.status(409).json({error:'Your account changed. Refresh Notifications before retrying push.'});
+    if(req.body?.binding!==undefined&&req.body.binding!==createHash('sha256').update(req.sessionHash).digest('hex'))
+      return res.status(409).json({error:'Your session changed. Refresh Notifications before retrying push.'});
     if (!push.configured) return res.status(503).json({ error: 'Firebase push is not configured.' });
     const token = req.body?.token;
     if (typeof token !== 'string' || !/^[A-Za-z0-9_:\-]{20,4096}$/.test(token))
@@ -162,6 +166,10 @@ export function createAlerts(db, discovery, { observation, canRead }, now = Date
     res.status(204).end();
   });
   router.delete('/push/device', (req, res) => {
+    if(req.body?.userId!==undefined&&req.body.userId!==req.userId)
+      return res.status(409).json({error:'Your account changed. Refresh Notifications before retrying push.'});
+    if(req.body?.binding!==undefined&&req.body.binding!==createHash('sha256').update(req.sessionHash).digest('hex'))
+      return res.status(409).json({error:'Your session changed. Refresh Notifications before retrying push.'});
     db.prepare('DELETE FROM push_devices WHERE user_id=? AND session_hash=?').run(
       req.userId,
       req.sessionHash,

@@ -1,0 +1,12 @@
+# Optional PUBLIC Android client configuration. Copy to firebase.properties
+# (ignored by Git) only after creating the Firebase apps in the same project
+# used by the server's FIREBASE_WEB_CONFIG/service account.
+# Never put service-account JSON, private keys or server credentials in an APK.
+projectId=
+senderId=
+apiKey=
+# Firebase Android application IDs, not package names or the web app ID:
+# debug package: org.birdwanderer.app.debug
+debugAppId=
+# release package: org.birdwanderer.app
+releaseAppId=
