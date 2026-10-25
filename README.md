@@ -128,7 +128,7 @@ Design references come from the team's specification. Runtime prototype imagery 
 
 Current control checklist: [Final acceptance](docs/FINAL_ACCEPTANCE.md). Journal editor flow and Viva Notes: [Observation editing](docs/OBSERVATION_EDITING_WALKTHROUGH.md).
 
-Account control flow and Viva Notes: [Account Settings](docs/ACCOUNT_SETTINGS_WALKTHROUGH.md). Authenticated password changes are implemented; email-based password recovery remains unconfigured.
+Account control flow and Viva Notes: [Account Settings](docs/ACCOUNT_SETTINGS_WALKTHROUGH.md). Authenticated password changes and optional email recovery source are implemented; actual SMTP/mailbox delivery remains unconfigured.
 
 Destination links and Viva Notes: [Navigation and sharing](docs/NAVIGATION_SHARING_WALKTHROUGH.md).
 
@@ -139,3 +139,5 @@ Native Firebase source, optional configuration and Viva Notes: [Android push ada
 Dependency fixes and Viva Notes: [Dependency audit](docs/DEPENDENCY_SECURITY_WALKTHROUGH.md).
 
 Sourced recording flow, provider limits and Viva Notes: [Species recordings](docs/RECORDINGS_WALKTHROUGH.md).
+
+Email setup, one-time link flow, limitations and Viva Notes: [Password recovery](docs/PASSWORD_RECOVERY_WALKTHROUGH.md).

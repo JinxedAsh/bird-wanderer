@@ -33,7 +33,8 @@ Updated 26 October 2026. This is a shared implementation/verification checklist 
 
 1. **Native push source integration:** delivered in PR #36/137bc5a with final133 web tests/type/build, nine native policy tests/lint0errors2warnings/both APK builds and targeted unconfigured-emulator QA. Four exact-head checks and merged-main web/Android checks passed. Configuration and actual provider/device receipt remain unavailable; no project/account/paid service was created.
 2. **Integrated release checks:** backup/verify, actual-app synthetic restore and loopback-proxy trust delivered #35/bec99cb, with scoped independent integrated rehearsal. Dependency remediation delivered #36/137bc5a: zero full pnpm audit findings, no peer conflicts, frozen install and133 tests/type/build pass. This is JavaScript dependency evidence, not a Maven vulnerability scan or penetration test. Production uptime/off-host backup and physical/provider acceptance remain separate.
-3. **Recorded calls:** exact-species Wikidata P51/Commons licensed audio service and real controls implemented in Entry45. 139 automated tests/type/build and scoped independent real-audio browser acceptance passed; focused PR #37 delivery in progress. No-match, unsupported codec and missing evidence are explicit; true page-hide/physical codec checks remain manual.
+3. **Email recovery:** optional source is implemented in Entry46;147 tests/type/build and frozen install/full-audit checks pass. Finish scoped browser verification and focused GitHub delivery; actual email/provider/device acceptance is separate.
+4. **Recorded calls:** exact-species Wikidata P51/Commons licensed audio service and real controls implemented in Entry45. 139 automated tests/type/build and scoped independent real-audio browser acceptance passed; PR #37/e7abb0f delivered after four exact-head and merged-main web/Android checks passed. No-match, unsupported codec and missing evidence are explicit; true page-hide/physical codec checks remain manual.
 
 ## Unavailable evidence / external or manual inputs
 
@@ -41,7 +42,7 @@ Updated 26 October 2026. This is a shared implementation/verification checklist 
 - Firebase project and appropriate web/Android app configuration, server credential outside Git and actual notification receipt. The user confirmed no project exists. Social events currently remain in-app; optional push queues cover sighting/forecast sources.
 - A trusted production backend/HTTPS endpoint, signing/distribution decisions, production uptime/backups and physical-device checks. A debug emulator is not a physical phone or release deployment.
 - Operator-current access/entrance information, exact final-design approval, native date/time widget, source/maps external-app handoff and full physical keyboard/orientation/text-scale/permissions flows.
-- **Forgot password:** the visible login control explicitly says no reset email was sent. A secure email recovery flow and real delivery configuration are absent. This must be recorded as incomplete, never as successful email delivery.
+- **Forgot password:** optional hashed-link recovery is implemented in Entry46 with147 web tests/type/build; focused browser/delivery work is ongoing. SMTP remains unconfigured, so the app explicitly reports no email was sent. Actual TLS provider acceptance, mailbox receipt and interactive new-password entry remain unverified.
 - **Recorded calls:** source integration is implemented in Entry45; coverage depends on exact-species P51 claims and accepted Commons metadata. No supported recording is reported honestly; browser/physical/codec acceptance is tracked separately.
 
 ## Acceptance rule

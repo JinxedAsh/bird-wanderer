@@ -8,6 +8,7 @@ import { discoveryRouter, createDiscoveryService } from './discovery.mjs';
 import { activityRouter } from './activity.mjs';
 import { observationsRouter } from './observations.mjs';
 import { retentionRouter } from './retention.mjs';
+import { registerRecovery } from './recovery.mjs';
 
 const scrypt = promisify(scryptCallback);
 const cookieName = 'bw_session';
@@ -16,7 +17,7 @@ const digest = (value) => createHash('sha256').update(value).digest('hex');
 const publicUser = (row) => ({ id: row.id, name: row.name, email: row.email });
 const passwordOptions = { N: 32768, r: 8, p: 3, maxmem: 64 * 1024 * 1024 };
 
-export function createApp({ dbPath = ':memory:', origin = 'http://localhost:3000', additionalOrigins = [], secureCookies = false, trustProxyLoopback = false, now = Date.now, rateLimit = 30, discovery = createDiscoveryService(), mediaPath, imageProcessor, push } = {}) {
+export function createApp({ dbPath = ':memory:', origin = 'http://localhost:3000', additionalOrigins = [], secureCookies = false, trustProxyLoopback = false, now = Date.now, rateLimit = 30, discovery = createDiscoveryService(), mediaPath, imageProcessor, push, recoveryMail } = {}) {
   const allowedOrigins = new Set([origin, ...additionalOrigins]);
   if (dbPath !== ':memory:') mkdirSync(dirname(dbPath), { recursive: true });
   const db = new DatabaseSync(dbPath);
@@ -159,11 +160,18 @@ export function createApp({ dbPath = ':memory:', origin = 'http://localhost:3000
       db.prepare('UPDATE users SET password_hash=?,salt=? WHERE id=?').run(hash.toString('hex'), salt, req.userId);
       // Cascades revoke session-bound push registrations and queued deliveries.
       db.prepare('DELETE FROM sessions WHERE user_id=?').run(req.userId);
+      db.prepare('DELETE FROM password_resets WHERE user_id=?').run(req.userId);
       startSession(req, res, req.userId);
       db.exec('COMMIT');
     } catch (error) { db.exec('ROLLBACK'); throw error; }
     res.json({ user: publicUser(user) });
   }));
+  registerRecovery(app, db, { now, origin, allowedOrigins, mail: recoveryMail, rateLimit,
+    hashPassword: async (password) => {
+      const salt = randomBytes(16).toString('hex');
+      return { salt, hash: (await scrypt(password, salt, 64, passwordOptions)).toString('hex') };
+    },
+  });
   app.use('/api/activity', requireSession, activityRouter(db, discovery, now));
   const observations = observationsRouter(db, discovery, { mediaPath, now, processImage: imageProcessor, push });
   app.use('/api/observations', requireSession, observations);
