@@ -39,7 +39,7 @@ Baseline: main d00be49, 80 tests/type/build passed 13 October. Unrelated deleted
 | Public tunnel | Actual HTTPS page/login/refresh/references/manual-location weather passed; DNS failure blocked final fresh-tab logout confirmation. No uptime/device-GPS claim. |
 | Physical phone | Previous user-reported opening/login only. Fresh touch/orientation/text scale/permissions/network acceptance still needed. |
 
-Full Phase 1 is **not certified complete** against all detailed requirements. Core search/detail/maps/external-data logistics are implemented, but the blocked evidence and manual criteria above are not silently waived. No Phase2–4 or APK work had been done in that13October increment; later full-cycle delivery is recorded separately.
+Full Phase 1 is **not certified complete** against all detailed requirements. Core search/detail/maps/external-data logistics are implemented, but the blocked evidence and manual criteria above are not silently waived. No Phases 2–4 or APK work had been done in that13October increment; later full-cycle delivery is recorded separately.
 
 ## Continuation and exact dependencies
 
@@ -70,13 +70,13 @@ Delivered: [PR #22](https://github.com/JinxedAsh/bird-wanderer/pull/22) is merge
 
 Private notes, .env credentials, databases and generated files are excluded. The final configured-key scan covered 126 shared/build files and found zero leaks. Last source verification: 89 tests, TypeScript and build passed. Browser-only and fixture-only evidence remain distinguished above.
 
-## Current checkpoint —26 October2026
+## Current checkpoint —26 October 2026
 
 The detailed rows above retain their original dates rather than silently turning old evidence into a new test run. Current project-wide source/delivery and exact verification limits are in [Final acceptance](FINAL_ACCEPTANCE.md) and Development Record Entries42–46.
 
 - Existing external discovery, exact-species references/EXIF, source information, dated local forecast/daylight planning and reviewed access remain implemented. No annual frequency, measured difficulty or historical-condition evidence has been manufactured.
 - Sourced species audio is delivered in PR #37/e7abb0f; real Commons decoding, credits, retry/no-match,320/390px and navigation pause passed. True page-hide and physical-phone codec behavior remain manual.
-- Optional hashed-link email recovery is implemented with148 web tests/type/build and scoped browser acceptance, including the already-signed-in same-document link regression. Real SMTP/mailbox receipt and interactive new-password submission remain manual/unconfigured.
-- Other phases and Android preview are now implemented under the later full-cycle authorization; they do not certify the unresolved scientific/access/physical/provider requirements of Phase1.
+- Optional hashed-link email recovery is implemented with 148 web tests/type/build and scoped browser acceptance, including the already-signed-in same-document link regression. Real SMTP/mailbox receipt and interactive new-password submission remain manual/unconfigured.
+- Other phases and Android preview are now implemented under the later full-cycle authorization; they do not certify the unresolved scientific/access/physical/provider requirements of Phase 1.
 
-**Phase1 is still not certified complete against every detailed requirement.** Minimum unresolved inputs are legitimate historical exports/denominators, reliable difficulty/historical-condition evidence, operator-current access confirmation, final design/physical-device acceptance and the previously interrupted genuine-tunnel logout check. Use labelled missing evidence in the demo, not sample replacements.
+**Phase 1 is still not certified complete against every detailed requirement.** Minimum unresolved inputs are legitimate historical exports/denominators, reliable difficulty/historical-condition evidence, operator-current access confirmation, final design/physical-device acceptance. The genuine-tunnel login/refresh/logout/fresh-tab 401 criterion passed 26 October in Entry 47; permanent hosting and provider outage are separate. Use labelled missing evidence in the demo, not sample replacements.

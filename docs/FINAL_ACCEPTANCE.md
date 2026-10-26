@@ -26,14 +26,14 @@ Updated 26 October 2026. This is a shared implementation/verification checklist 
 ## Closed engineering controls
 
 - Journal editing/confirmed action feedback and comment-boundary disclosure: #32/564ce92 with exact-head/main CI and scoped browser/mobile checks.
-- Authenticated password changes, real guidelines and version information: #33/bf3910a with exact-head/main CI,124-current-suite coverage and scoped browser/API checks. Interactive credential entry remains manual.
+- Authenticated password changes, real guidelines and version information: #33/bf3910a with exact-head/main CI,the recorded automated checkpoint coverage and scoped browser/API checks. Interactive credential entry remains manual.
 - Source-ID links/history/canonical browser/native sharing: #34/328582f with exact-head/main CI, scoped browser/privacy/retry checks and fresh-debug-emulator chooser/cancel. Desktop-browser share completion and external OS app-link launch remain unverified.
 
 ## Engineering delivery and evidence
 
 1. **Native push source integration:** delivered in PR #36/137bc5a with final133 web tests/type/build, nine native policy tests/lint0errors2warnings/both APK builds and targeted unconfigured-emulator QA. Four exact-head checks and merged-main web/Android checks passed. Configuration and actual provider/device receipt remain unavailable; no project/account/paid service was created.
 2. **Integrated release checks:** backup/verify, actual-app synthetic restore and loopback-proxy trust delivered #35/bec99cb, with scoped independent integrated rehearsal. Dependency remediation delivered #36/137bc5a: zero full pnpm audit findings, no peer conflicts, frozen install and133 tests/type/build pass. This is JavaScript dependency evidence, not a Maven vulnerability scan or penetration test. Production uptime/off-host backup and physical/provider acceptance remain separate.
-3. **Email recovery:** optional source is implemented in Entry46;148 tests/type/build and frozen install/full-audit checks pass. Scoped browser verification, including the signed-in fragment regression fix, passed; delivery record is [PR #38](https://github.com/JinxedAsh/bird-wanderer/pull/38); actual email/provider/device acceptance is separate.
+3. **Email recovery:** optional source is implemented in Entry 46;148 tests/type/build and frozen install/full-audit checks pass. Scoped browser verification, including the signed-in fragment regression fix, passed; delivered #38/4cc3507 after four exact-head d8009e6 checks and merged-main web/Android checks passed; actual email/provider/device acceptance is separate.
 4. **Recorded calls:** exact-species Wikidata P51/Commons licensed audio service and real controls implemented in Entry45. 139 automated tests/type/build and scoped independent real-audio browser acceptance passed; PR #37/e7abb0f delivered after four exact-head and merged-main web/Android checks passed. No-match, unsupported codec and missing evidence are explicit; true page-hide/physical codec checks remain manual.
 
 ## Unavailable evidence / external or manual inputs
@@ -42,9 +42,15 @@ Updated 26 October 2026. This is a shared implementation/verification checklist 
 - Firebase project and appropriate web/Android app configuration, server credential outside Git and actual notification receipt. The user confirmed no project exists. Social events currently remain in-app; optional push queues cover sighting/forecast sources.
 - A trusted production backend/HTTPS endpoint, signing/distribution decisions, production uptime/backups and physical-device checks. A debug emulator is not a physical phone or release deployment.
 - Operator-current access/entrance information, exact final-design approval, native date/time widget, source/maps external-app handoff and full physical keyboard/orientation/text-scale/permissions flows.
-- **Forgot password:** optional hashed-link recovery is implemented in Entry46 with148 web tests/type/build and scoped browser acceptance; delivery record is [PR #38](https://github.com/JinxedAsh/bird-wanderer/pull/38). SMTP remains unconfigured, so the app explicitly reports no email was sent. Actual TLS provider acceptance, mailbox receipt and interactive new-password entry remain unverified.
+- **Forgot password:** optional hashed-link recovery is implemented in Entry 46 with 148 web tests/type/build and scoped browser acceptance; delivered #38/4cc3507 with exact-head/main CI. SMTP remains unconfigured, so the app explicitly reports no email was sent. Actual TLS provider acceptance, mailbox receipt and interactive new-password entry remain unverified.
 - **Recorded calls:** source integration is implemented in Entry45; coverage depends on exact-species P51 claims and accepted Commons metadata. No supported recording is reported honestly; browser/physical/codec acceptance is tracked separately.
 
 ## Acceptance rule
 
 A merged slice is a delivery record, not proof every related requirement is complete. For each remaining criterion record source evidence, automated checks, browser/emulator evidence, external/manual gaps and exact commit separately. Continue independent engineering when one provider/manual input is unavailable. Keep credentials, private recovery notes, databases, builds and QA fixtures out of Git.
+
+## Genuine HTTPS preview and release boundary
+
+Entry 47 closes the previously interrupted public-tunnel logout check: real HTTPS login, refresh, live discovery/species/photo/EXIF/source information, logout/fresh-tab signed-out state,401 and second login/final logout passed 26 October with isolated synthetic storage. No manual origin/host setting was added. The owned preview is stopped; no lasting availability guarantee is implied.
+
+No confirmed defect remains in the completed recording/recovery/tunnel checks. This does not certify all requirements: historical seasonal denominators, measured difficulty and comparable historical conditions remain unsupported; access coverage is partial. Actual mail/push receipt, physical design/device/GPS/share/codec flows, signed HTTPS release, production backup operation/capacity and24/7 uptime require external/manual evidence. Local fault/restore tests do not prove zero possible data loss. Images are bounded processed JPEG derivatives; lossless original archival is not provided. The modular Express/SQLite implementation deliberately preserves the authorized simple architecture rather than implementing the estimation text's cloud/microservice terminology.
