@@ -6,6 +6,7 @@ import { createApp } from './auth.mjs';
 import { createDiscoveryService } from './discovery.mjs';
 import { tunnelOrigin } from '../scripts/tunnel-config.mjs';
 import { configuredPush } from './push.mjs';
+import { configuredRecoveryMail } from './recovery-mail.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const production = process.env.NODE_ENV === 'production';
@@ -26,6 +27,7 @@ if (production && !process.env.APP_ORIGIN?.startsWith('https://')) {
 }
 const { app, db, dispatchPush,checkOpportunities } = createApp({
   push: await configuredPush(),
+  recoveryMail: await configuredRecoveryMail(),
   dbPath: process.env.DATABASE_PATH || resolve(root, 'data/bird-wanderer.sqlite'),
   mediaPath: process.env.MEDIA_PATH || resolve(root, 'data/media'),
   origin: process.env.APP_ORIGIN || 'http://localhost:3000',

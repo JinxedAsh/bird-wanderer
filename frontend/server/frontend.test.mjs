@@ -27,14 +27,14 @@ let pushClient;
 before(async () => {
   temporaryDirectory = mkdtempSync(join(root, '.stage1-render-'));
   const screens = {};
-  const names = ['ChangePasswordSheet', 'EditObservationSheet', 'NotificationsScreen', 'FieldChatScreen', 'BirdQuizScreen', 'AuthScreen', 'LogObservationScreen', 'ProfileScreen', 'JournalScreen', 'LifeListScreen', 'GlobalSearchScreen', 'SettingsScreen', 'SpeciesDetailScreen', 'SpeciesPhoto', 'PhotoMetadata', 'PhotoPlanning', 'ReferenceComparisons', 'SpeciesInfoPanel', 'SpeciesRecording', 'HotspotMap', 'HotspotWeatherPanel', 'HotspotDetailScreen', 'HotspotAccess', 'HotspotsScreen', 'ExploreScreen', 'LocationPicker', 'Header'];
+  const names = ['RecoveryRequestSheet', 'ResetPasswordScreen', 'ChangePasswordSheet', 'EditObservationSheet', 'NotificationsScreen', 'FieldChatScreen', 'BirdQuizScreen', 'AuthScreen', 'LogObservationScreen', 'ProfileScreen', 'JournalScreen', 'LifeListScreen', 'GlobalSearchScreen', 'SettingsScreen', 'SpeciesDetailScreen', 'SpeciesPhoto', 'PhotoMetadata', 'PhotoPlanning', 'ReferenceComparisons', 'SpeciesInfoPanel', 'SpeciesRecording', 'HotspotMap', 'HotspotWeatherPanel', 'HotspotDetailScreen', 'HotspotAccess', 'HotspotsScreen', 'ExploreScreen', 'LocationPicker', 'Header'];
   // Compile these existing TSX screens for Node rendering; no browser or new test framework.
-  for (const relative of ['lib/native-push.ts', 'lib/push.ts', 'lib/navigation.ts', 'lib/useDialogFocus.ts', 'lib/maps.ts', 'lib/auth.ts', 'lib/discovery.ts', 'lib/activity.ts', 'lib/location.ts', 'lib/observations.ts', 'lib/alerts.ts', 'lib/retention.ts', 'lib/messages.ts', ...names.map((name) => `components/${name}.tsx`)]) {
+  for (const relative of ['lib/recovery.ts', 'lib/native-push.ts', 'lib/push.ts', 'lib/navigation.ts', 'lib/useDialogFocus.ts', 'lib/maps.ts', 'lib/auth.ts', 'lib/discovery.ts', 'lib/activity.ts', 'lib/location.ts', 'lib/observations.ts', 'lib/alerts.ts', 'lib/retention.ts', 'lib/messages.ts', ...names.map((name) => `components/${name}.tsx`)]) {
     const output = join(temporaryDirectory, relative.replace(/\.tsx?$/, '.mjs'));
     mkdirSync(dirname(output), { recursive: true });
     const source = readFileSync(join(root, 'src', relative), 'utf8');
     const { code } = transformSync(source, { loader: 'tsx', format: 'esm', jsx: 'automatic', target: 'node24' });
-    writeFileSync(output, code.replace('./SpeciesRecording"', './SpeciesRecording.mjs"').replace('./native-push"','./native-push.mjs"').replace('./alerts"','./alerts.mjs"').replace('../lib/navigation"','../lib/navigation.mjs"').replace('./ChangePasswordSheet"', './ChangePasswordSheet.mjs"').replace('./EditObservationSheet"','./EditObservationSheet.mjs"').replace('../lib/messages"', '../lib/messages.mjs"').replace('../lib/useDialogFocus"', '../lib/useDialogFocus.mjs"').replace('../lib/maps"', '../lib/maps.mjs"').replace('./HotspotMap"', './HotspotMap.mjs"').replace('./HotspotAccess"', './HotspotAccess.mjs"').replace('./HotspotWeatherPanel"', './HotspotWeatherPanel.mjs"').replace('./SpeciesPhoto"', './SpeciesPhoto.mjs"').replace('./PhotoMetadata"', './PhotoMetadata.mjs"').replace('./PhotoPlanning"', './PhotoPlanning.mjs"').replace('./SpeciesInfoPanel"', './SpeciesInfoPanel.mjs"').replace('./ReferenceComparisons"', './ReferenceComparisons.mjs"').replace('../lib/discovery"', '../lib/discovery.mjs"').replace('../lib/auth"', '../lib/auth.mjs"').replace('../lib/retention"', '../lib/retention.mjs"').replace('./auth"', './auth.mjs"').replace('./maps"', './maps.mjs"').replace('../lib/location"', '../lib/location.mjs"').replace('../lib/observations"', '../lib/observations.mjs"'));
+    writeFileSync(output, code.replace('./recovery"', './recovery.mjs"').replace('./RecoveryRequestSheet"', './RecoveryRequestSheet.mjs"').replace('../lib/recovery"', '../lib/recovery.mjs"').replace('./SpeciesRecording"', './SpeciesRecording.mjs"').replace('./native-push"','./native-push.mjs"').replace('./alerts"','./alerts.mjs"').replace('../lib/navigation"','../lib/navigation.mjs"').replace('./ChangePasswordSheet"', './ChangePasswordSheet.mjs"').replace('./EditObservationSheet"','./EditObservationSheet.mjs"').replace('../lib/messages"', '../lib/messages.mjs"').replace('../lib/useDialogFocus"', '../lib/useDialogFocus.mjs"').replace('../lib/maps"', '../lib/maps.mjs"').replace('./HotspotMap"', './HotspotMap.mjs"').replace('./HotspotAccess"', './HotspotAccess.mjs"').replace('./HotspotWeatherPanel"', './HotspotWeatherPanel.mjs"').replace('./SpeciesPhoto"', './SpeciesPhoto.mjs"').replace('./PhotoMetadata"', './PhotoMetadata.mjs"').replace('./PhotoPlanning"', './PhotoPlanning.mjs"').replace('./SpeciesInfoPanel"', './SpeciesInfoPanel.mjs"').replace('./ReferenceComparisons"', './ReferenceComparisons.mjs"').replace('../lib/discovery"', '../lib/discovery.mjs"').replace('../lib/auth"', '../lib/auth.mjs"').replace('../lib/retention"', '../lib/retention.mjs"').replace('./auth"', './auth.mjs"').replace('./maps"', './maps.mjs"').replace('../lib/location"', '../lib/location.mjs"').replace('../lib/observations"', '../lib/observations.mjs"'));
   }
   for (const name of names) {
     const module = await import(pathToFileURL(join(temporaryDirectory, 'components', `${name}.mjs`)).href);
@@ -205,6 +205,50 @@ test('species information renders credited excerpts, missing sections, loading a
   const panel = render('SpeciesInfoPanel', { speciesId: 'indrol2' });
   assert.match(panel, /<details id="species-information"/);
   assert.doesNotMatch(panel, /open=""/);
+});
+
+test('ordinary route refresh cannot discard a pending valid or malformed recovery fragment', () => {
+  const previous = globalThis.window;
+  const calls = [];
+  try {
+    globalThis.window = { location: { pathname: '/', hash: '#reset-password=' + 'a'.repeat(64) }, history: { state: {}, replaceState: (...args) => calls.push(args), pushState: (...args) => calls.push(args) } };
+    navigationHelpers.writeRoute({ screen: 'explore' }, true);
+    assert.equal(calls.length, 0);
+    globalThis.window.location.hash = '#reset-password=bad';
+    navigationHelpers.writeRoute({ screen: 'explore' });
+    assert.equal(calls.length, 0);
+    globalThis.window.location.hash = '';
+    navigationHelpers.writeRoute({ screen: 'community' });
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0][2], '/?screen=community');
+  } finally { globalThis.window = previous; }
+});
+
+test('recovery screens preserve password validation and distinguish invalid fragment links', async () => {
+  const module = await import(pathToFileURL(join(temporaryDirectory, 'lib/recovery.mjs')).href);
+  const valid = 'a'.repeat(64);
+  assert.equal(module.recoveryTokenFromHash(`#reset-password=${valid}`), valid);
+  for (const hash of ['#reset-password=bad', `#reset-password=${valid}&reset-password=${valid}`, `#reset-password=${valid}&other=value`]) assert.equal(module.recoveryTokenFromHash(hash), null);
+  assert.equal(module.recoveryTokenFromHash('#unrelated'), undefined);
+  const invalid = render('ResetPasswordScreen', { token: null });
+  assert.match(invalid, /reset link is invalid/); assert.doesNotMatch(invalid, /type="password"/);
+  const form = render('ResetPasswordScreen', { token: valid });
+  assert.match(form, /minLength="12"/); assert.match(form, /maxLength="128"/); assert.match(form, /autoComplete="new-password"/);
+  assert.doesNotMatch(form, new RegExp(valid));
+  const sheet = render('RecoveryRequestSheet', { initialEmail: 'demo@example.test', onClose: noop });
+  assert.match(sheet, /aria-modal="true"/); assert.match(sheet, /demo@example.test/);
+  const previous = globalThis.fetch;
+  const signal = new AbortController().signal;
+  try {
+    globalThis.fetch = async () => Response.json({ message: 'Generic request outcome' }, { status: 202 });
+    assert.equal(await module.recovery.request('demo@example.test', signal), 'Generic request outcome');
+    globalThis.fetch = async () => Response.json({ reset: true });
+    await module.recovery.reset(valid, 'synthetic-password-123', signal);
+    globalThis.fetch = async () => Response.json({});
+    await assert.rejects(module.recovery.reset(valid, 'synthetic-password-123', signal), /Unexpected recovery/);
+    globalThis.fetch = async () => Response.json({ error: 'Email not configured.' }, { status: 503 });
+    await assert.rejects(module.recovery.request('demo@example.test', signal), /not configured/);
+  } finally { globalThis.fetch = previous; }
 });
 
 test('recording client rejects wrong identity and malformed media while allowing a genuine no-match', async () => {

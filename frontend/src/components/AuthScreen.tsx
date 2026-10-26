@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { auth, type AuthUser } from '../lib/auth';
+import { RecoveryRequestSheet } from './RecoveryRequestSheet';
 
 interface AuthScreenProps {
   onLoginSuccess: (user: AuthUser) => void;
@@ -14,6 +15,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, showToas
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [recovering, setRecovering] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,13 +35,14 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, showToas
   };
 
   const handleForgotPassword = () => {
-    setError('Password recovery is not connected yet. No reset email has been sent.');
+    setRecovering(true);
   };
 
 
 
   return (
     <div className="flex flex-col w-full px-4 py-8 max-w-md mx-auto items-center justify-center min-h-[90vh]">
+      {recovering && <RecoveryRequestSheet initialEmail={email} onClose={() => setRecovering(false)} />}
       {/* Brand & Identity Header */}
       <header className="flex flex-col items-center text-center mt-2 mb-6">
         <div className="relative flex items-center justify-center w-20 h-20 rounded-2xl bg-[#ebeef3] mb-4 shadow-xs">
