@@ -846,6 +846,14 @@ The header logo now uses a bundled SVG following the supplied green bird emblem,
 
 **Team/Viva handover:** FINAL_ACCEPTANCE.md records current source and evidence gaps; RELEASE_RUNBOOK.md contains setup, demo, backup/restore and new-feature walkthrough links. For a Phase 1 demo, show discovery → species/source/photo metadata → reference comparison → selected hotspot/reports/access → dated weather/daylight; optional recorded calls may legitimately be unavailable. Never present general heuristics as proven optimal conditions. Recovery, native push and recording walkthroughs each explain their important functions, design reasons and likely developer questions.
 
+### Entry 48 — Verified Android preview artifact and lint disclosure
+
+**Date/group:** 26 October 2026 IST; deliverable provenance. The Android CI artifact from main source4cc3507, [run40280140795](https://github.com/JinxedAsh/bird-wanderer/actions/runs/40280140795), was downloaded outside Git. Its debug APK signature verifies under APK Signature Scheme v2; package org.birdwanderer.app.debug, version0.1.0-debug, minimum API26 and target API36. SHA-256: E7EBE3C74D38E02560BB390586D01A27B3E14D3E4998BE6CF4A8184FE5E25015. The unsigned release APK is a build output, not a signed distribution release. CI artifacts have14-day retention; a local downloaded copy was retained for handover. No APK/key/build output was committed.
+
+**Exact evidence:** the downloaded report records nine native tests, zero failures/ignored tests and100% pass rate. Its lint report has zero errors and four warnings: OldTargetApi, AndroidGradlePluginVersion, GradleDependency and SetJavaScriptEnabled. This differs from the earlier local two-warning checkpoint because CI also reports newer target/tool versions. SDK36, Gradle8.13 and Firebase BoM35.0.2 remain the tested pins; a version notice does not establish a runtime defect or a vulnerability. WebView JavaScript is required for React and remains bounded by trusted-origin checks. No Android dependency vulnerability audit or physical-device acceptance is claimed.
+
+**Source linkage:** the source artifact is from4cc3507; the subsequent acceptance-documentation merge #39/b9b4eb5 changes no Android, frontend or workflow input, verified with git diff. The artifact is therefore linked to the unchanged runtime source rather than mislabelled as a different build. No new emulator installation, signing-key creation, provider configuration or personal-device action occurred.
+
 ## 4. How the current application fits together
 
 The interface is what the user sees and interacts with. The backend is the program that receives requests and checks account information. The database is where persistent account information is saved.
