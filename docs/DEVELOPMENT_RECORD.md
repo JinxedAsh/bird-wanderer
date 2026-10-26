@@ -822,7 +822,7 @@ The header logo now uses a bundled SVG following the supplied green bird emblem,
 
 ### Entry 46 — Optional email recovery with one-time links
 
-**Date/group:**26 October2026 IST; account continuity. **Status:** implemented on account-recovery. Final148 full web tests, TypeScript and frozen install pass; production build486.03kB main (index-Chsrfl6x.js), full pnpm audit zero advisories. Independent scoped browser acceptance passed; focused GitHub delivery is tracked with this increment; no actual SMTP configuration or external mailbox delivery is claimed.
+**Date/group:**26 October2026 IST; account continuity. **Status:** implemented on account-recovery. Final148 full web tests, TypeScript and frozen install pass; production build486.03kB main (index-Chsrfl6x.js), full pnpm audit zero advisories. Independent scoped browser acceptance passed; delivery record: [PR #38](https://github.com/JinxedAsh/bird-wanderer/pull/38), including the exact-head checks and merge status; no actual SMTP configuration or external mailbox delivery is claimed.
 
 **What changed:** Forgot password now opens a request sheet, preserving the sign-in design and typed email. With optional SMTP settings, the API creates a random15-minute link, stores only its hash, dispatches through TLS SMTP and returns a generic request outcome. Without settings it still explicitly reports no email was sent. Only the newest link can work once; password changes invalidate pending links. A separate reset form consumes the fragment token from memory after immediately removing it from browser history. It validates confirmation and uses the existing scrypt password settings/fresh salt.
 
