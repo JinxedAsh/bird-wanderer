@@ -1,6 +1,6 @@
 # Bird Wanderer — full-project completion plan
 
-Updated 26 October 2026. The user authorized the full development cycle on23 October 2026; this supersedes the previous Phase-1-only increment and Android deferral. Live SRS re-read through Drive on 23 October; last modified 5 October. Preserve final designs and React/Express/SQLite architecture. No paid services or invented evidence. Original 20 October deadline is historical; no new deadline is assumed.
+Updated 26 October 2026. The user authorized the full development cycle on23 October 2026; this supersedes the previous Phase-1-only increment and Android deferral. Live SRS re-read through Drive on 26 October; the current evidence boundaries are recorded in Entry47. Preserve final designs and React/Express/SQLite architecture. No paid services or invented evidence. Original 20 October deadline is historical; no new deadline is assumed.
 
 ## Current delivery
 

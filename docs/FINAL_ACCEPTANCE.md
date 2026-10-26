@@ -26,7 +26,7 @@ Updated 26 October 2026. This is a shared implementation/verification checklist 
 ## Closed engineering controls
 
 - Journal editing/confirmed action feedback and comment-boundary disclosure: #32/564ce92 with exact-head/main CI and scoped browser/mobile checks.
-- Authenticated password changes, real guidelines and version information: #33/bf3910a with exact-head/main CI,124-current-suite coverage and scoped browser/API checks. Interactive credential entry remains manual.
+- Authenticated password changes, real guidelines and version information: #33/bf3910a with exact-head/main CI,the recorded automated checkpoint coverage and scoped browser/API checks. Interactive credential entry remains manual.
 - Source-ID links/history/canonical browser/native sharing: #34/328582f with exact-head/main CI, scoped browser/privacy/retry checks and fresh-debug-emulator chooser/cancel. Desktop-browser share completion and external OS app-link launch remain unverified.
 
 ## Engineering delivery and evidence
