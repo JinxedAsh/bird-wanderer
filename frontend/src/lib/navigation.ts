@@ -1,4 +1,5 @@
 import type { ScreenType } from '../types';
+import { recoveryTokenFromHash } from './recovery';
 
 export interface AppRoute {
   screen: Exclude<ScreenType, 'auth'>;
@@ -38,6 +39,9 @@ export function routeQuery(route: AppRoute): string {
 }
 
 export function writeRoute(route: AppRoute, replace = false) {
+  // Recovery owns its fragment until bootstrap/event handling consumes it.
+  // Ordinary route refreshes must not erase a newly opened reset link first.
+  if (recoveryTokenFromHash(window.location.hash || '') !== undefined) return;
   const state = window.history.state;
   const previous = Number.isSafeInteger(state?.birdWandererIndex) ? state.birdWandererIndex : 0;
   const index = replace ? previous : previous + 1;
