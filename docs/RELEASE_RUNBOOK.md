@@ -78,3 +78,11 @@ An isolated actual-app rehearsal created an account/session, uploaded a generate
 6. **Why trust only the local proxy?** Rate limits need the real client's IP, but accepting arbitrary forwarded headers would let callers invent addresses to bypass limits.
 
 Integrated rehearsal completed26 October with controlled data: existing login/source-ID discovery, generated photo/journal persistence, public-only feed, second-account sighting target/read, comment/message persistence and private404. Earlier quiz/native evidence was reused; no fresh quiz or native audit is implied.
+
+## Latest demo and verified increment
+
+26 October source:148 web tests/type/build,9 native policy tests/Android lint/debug+unsigned-release CI; source deliveries #36–38 have exact-head and merged-main success. Entry 47 also records a genuine isolated HTTPS preview passing login, refresh, live species/photo/EXIF/source details and logout/fresh-tab 401; that preview is now stopped. Do not reuse its retired hostname as a deployment.
+
+For Phase 1 presentation use the existing local/LAN or managed preview launcher with your private eBird configuration, then show search → species information → photograph/metadata/reference comparison → hotspot/reports/access → timezone-aware forecast/daylight planning. Inspect source/credit and retrieval dates. Missing seasonal statistics/difficulty or access facts must stay unavailable. Try Recorded calls only if a supported licensed recording exists; no autoplay or invented clip length is used.
+
+Optional recovery: Forgot password opens a request sheet; without SMTP it truthfully says no email was sent. Provider-backed email and Firebase push still need real configuration/receipt testing. [Password recovery](PASSWORD_RECOVERY_WALKTHROUGH.md), [species recordings](RECORDINGS_WALKTHROUGH.md) and [native push](NATIVE_PUSH_WALKTHROUGH.md) provide code flow, setup and Viva Notes. Physical Oppo/HTTPS release acceptance and signing remain operator checks. A CI debug APK may use a different debug certificate from an existing install; do not uninstall another install automatically. Uninstalling removes local session/server settings, though records remain on the backend.
