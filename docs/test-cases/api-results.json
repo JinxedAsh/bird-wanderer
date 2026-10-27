@@ -1,0 +1,86 @@
+{
+  "date": "26 October 2026",
+  "mode": "API integration tests against real application routes and SQLite, with synthetic external provider responses and photograph. Browser interaction has not been executed.",
+  "rows": [
+    {
+      "id": "BW-P01",
+      "title": "Discover species, hotspots and recent sightings",
+      "status": "Pass",
+      "http": 200,
+      "actual": "200 OK; Indian Roller joins to Demo Wetland and its recent report. Source IDs retained; API key absent."
+    },
+    {
+      "id": "BW-P02",
+      "title": "Upload a valid photograph and protect its metadata",
+      "status": "Pass",
+      "http": 201,
+      "actual": "201 Created; camera metadata extracted; private GPS detected; served JPEG has no embedded EXIF; one media record."
+    },
+    {
+      "id": "BW-P03",
+      "title": "Save a private observation to the journal",
+      "status": "Pass",
+      "http": 201,
+      "actual": "201 Created; owner journal contains one observation; photo and bird totals are 1; other account feed excludes it."
+    },
+    {
+      "id": "BW-P04",
+      "title": "Share an observation while withholding exact coordinates",
+      "status": "Pass",
+      "http": 200,
+      "actual": "200 OK; other account can read the public post and photo; hotspot name shown; privateLocation absent."
+    },
+    {
+      "id": "BW-P05",
+      "title": "Bookmark a catalogue species without duplicate records",
+      "status": "Pass",
+      "http": 200,
+      "actual": "200 OK; two save requests produce one saved reference; later read retains it; viewer has no bookmark."
+    },
+    {
+      "id": "BW-N01",
+      "title": "Reject a corrupt photograph and allow a valid replacement",
+      "status": "Pass",
+      "http": 422,
+      "error": "Cannot decode this photograph. Use a valid single-frame JPEG/PNG of at most 40 megapixels.",
+      "actual": "422 Unprocessable Entity; corrupt JPEG creates no media row or file; valid replacement returns 201.",
+      "recovery": "Choose a valid JPEG/PNG. A valid retry succeeded."
+    },
+    {
+      "id": "BW-N02",
+      "title": "Reject an upload above the 10 MB limit",
+      "status": "Pass",
+      "http": 413,
+      "error": "Request is too large.",
+      "actual": "413 Payload Too Large; 10,485,761-byte upload rejected; file/row totals unchanged; smaller valid retry returns 201.",
+      "recovery": "Resize/compress the photo below the limit. A smaller valid upload succeeded."
+    },
+    {
+      "id": "BW-N03",
+      "title": "Reject an impossible future observation date",
+      "status": "Pass",
+      "http": 400,
+      "error": "Enter a valid observation date/time (camera/local clock; timezone unverified).",
+      "actual": "400 Bad Request; 2099 date creates no observation; correcting only the date returns 201 with the same staged photo.",
+      "recovery": "Correct the date to the actual observation time. Corrected submission succeeded without re-upload."
+    },
+    {
+      "id": "BW-N04",
+      "title": "Block another account from a private record and its photograph",
+      "status": "Pass",
+      "http": 404,
+      "error": "Observation not found.",
+      "actual": "404 for private record, photo and delete attempt from viewer; owner still reads the unchanged record with 200.",
+      "recovery": "Use the owning account or ask the owner to change visibility. Owner access succeeded."
+    },
+    {
+      "id": "BW-N05",
+      "title": "Handle a bird-data provider outage and recover on retry",
+      "status": "Pass",
+      "http": 503,
+      "error": "Cannot reach eBird. Please try again.",
+      "actual": "503 Service Unavailable; explicit error instead of fake empty data; journal remains readable; provider recovery returns 200.",
+      "recovery": "Restore provider connectivity and retry. Catalogue retry succeeded; local journal remained available."
+    }
+  ]
+}
