@@ -1,6 +1,6 @@
 # Bird Wanderer — Development Record
 
-- **Last updated:** 26 October 2026, India Standard Time (Asia/Kolkata).
+- **Last updated:** 27 October 2026, India Standard Time (Asia/Kolkata).
 - **Current project phase:** Phase 1 delivered foundation; full-project completion now authorized across Phases 1–4 and Android.
 - **Required final deliverable:** an Android application/APK.
 - **Audience:** team members, evaluators and the developer; no code knowledge is required for the main sections.
@@ -853,6 +853,18 @@ The header logo now uses a bundled SVG following the supplied green bird emblem,
 **Exact evidence:** the downloaded report records nine native tests, zero failures/ignored tests and100% pass rate. Its lint report has zero errors and four warnings: OldTargetApi, AndroidGradlePluginVersion, GradleDependency and SetJavaScriptEnabled. This differs from the earlier local two-warning checkpoint because CI also reports newer target/tool versions. SDK36, Gradle8.13 and Firebase BoM35.0.2 remain the tested pins; a version notice does not establish a runtime defect or a vulnerability. WebView JavaScript is required for React and remains bounded by trusted-origin checks. No Android dependency vulnerability audit or physical-device acceptance is claimed.
 
 **Source linkage:** the source artifact is from4cc3507; the subsequent acceptance-documentation merge #39/b9b4eb5 changes no Android, frontend or workflow input, verified with git diff. The artifact is therefore linked to the unchanged runtime source rather than mislabelled as a different build. No new emulator installation, signing-key creation, provider configuration or personal-device action occurred.
+
+### Entry 49 — Community pull-to-refresh and manual refresh
+
+**Date/group:** 27 October 2026 IST; scoped demo usability. **Status:** implemented locally; delivery/browser evidence follows below.
+
+**Problem and result:** Community had no direct way to request new posts without navigating away or reloading the application. Pull down at the top of the feed until "Release to refresh" appears, then release, or use the accessible Refresh community button beside Upload. A busy indicator prevents duplicate requests. Successful completion is reported only after data returns; a failure keeps existing content and uses the existing retry message.
+
+**Implementation:** the gesture is confined to Community and ignores short, sideways, upward, cancelled/multiple-finger, nested-scroll, form/control and open-dialog gestures. It reuses the existing authenticated own-record/feed/people load path and account/abort checks, retaining filters, search text and loaded-page counts. Refresh waits for an in-flight write instead of aborting it. No API, schema, dependency, Android source or authentication changes were made.
+
+**Files/checks:** App.tsx, CommunityScreen.tsx, new lib/pullToRefresh.ts and frontend.test.mjs. All 150 automated tests, TypeScript and production build passed. New tests cover gesture boundaries, disabled/busy state, control preservation and listener cleanup. Independent browser/mobile checks are pending; touch-event regression tests alone do not establish physical-phone gesture acceptance.
+
+**Plain flow/Viva:** touch gesture or Refresh button -> existing App reload request -> authenticated records API -> replace displayed records on success. This refreshes server data without a full page reload or forced sign-out; it is separate from live push delivery. Current Android preview loads this frontend from its selected server, so no APK change is required for this increment.
 
 ## 4. How the current application fits together
 

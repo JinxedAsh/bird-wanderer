@@ -1,10 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { CommunityPost, ScreenType } from '../types';
 import { useDialogFocus } from '../lib/useDialogFocus';
 import type { PublicBirder } from '../lib/observations';
 import { routeQuery, shareAppLink } from '../lib/navigation';
+import { attachPullToRefresh } from '../lib/pullToRefresh';
 
 interface CommunityScreenProps {
+  onRefresh?: () => void;
+  refreshing?: boolean;
   onEntityChange?: (entity: {post?:string;person?:string}|null) => void;
   openPerson?: {id:string;request:number}|null;
   openPost?: {id:string;request:number}|null;
@@ -25,6 +28,8 @@ interface CommunityScreenProps {
 }
 
 export const CommunityScreen: React.FC<CommunityScreenProps> = ({
+  onRefresh,
+  refreshing = false,
   onEntityChange,
   openPerson,
   openPost,
@@ -81,6 +86,17 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
   const closePerson=()=>{setSelectedPhotographer(null);onEntityChange?.(null);};
   const postDialogRef = useDialogFocus(Boolean(selectedPostForDetails), closePost);
   const photographerDialogRef = useDialogFocus(Boolean(selectedPhotographer), closePerson);
+  const feedRef = useRef<HTMLDivElement>(null);
+  const [pullDistance, setPullDistance] = useState(0);
+  const refreshState = useRef({ onRefresh, refreshing, blocked: false });
+  refreshState.current = { onRefresh, refreshing, blocked: Boolean(selectedPostId || selectedPhotographer) };
+  useEffect(() => {
+    const feed = feedRef.current;
+    if (!feed) return;
+    return attachPullToRefresh(feed,
+      () => Boolean(refreshState.current.onRefresh) && !refreshState.current.refreshing && !refreshState.current.blocked,
+      () => refreshState.current.onRefresh?.(), setPullDistance);
+  }, []);
   const isFollowing = (handle: string) =>
     selectedPhotographer?.handle===handle ? !!selectedPhotographer.isFollowing :
     people.find((person) => person.handle === handle)?.following ??
@@ -166,11 +182,15 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
   };
 
   return (
-    <div className="community-screen flex flex-col w-full pb-28 pt-1">
+    <div ref={feedRef} className="community-screen flex flex-col w-full pb-28 pt-1">
+      {pullDistance > 0 && <div role="status" className="flex items-center justify-center gap-2 text-[12px] text-[#154212]" style={{ height: pullDistance }}>
+        <span aria-hidden="true" className="material-symbols-outlined text-[20px]">{pullDistance >= 64 ? 'refresh' : 'arrow_downward'}</span>
+        {pullDistance >= 64 ? 'Release to refresh' : 'Pull to refresh'}
+      </div>}
       {/* Search and Action Hub */}
       <div className="px-4 pt-2 pb-2 flex flex-col gap-2.5 bg-[#f7f9ff] sticky top-16 z-20">
         <div className="flex items-center gap-2">
-          <div className="relative flex-1">
+          <div className="relative flex-1 min-w-0">
             <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#42493e] text-[20px] pointer-events-none">
               search
             </span>
@@ -193,6 +213,9 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
             )}
           </div>
 
+          {onRefresh && <button type="button" onClick={onRefresh} disabled={refreshing} aria-label={refreshing ? 'Refreshing community' : 'Refresh community'} title="Refresh community" className="h-11 w-11 shrink-0 rounded-xl bg-white text-[#154212] shadow-sm disabled:opacity-50">
+            <span aria-hidden="true" className={`material-symbols-outlined text-[22px] ${refreshing ? 'animate-spin motion-reduce:animate-none' : ''}`}>refresh</span>
+          </button>}
           <button
             onClick={() => onNavigate('log-observation')}
             aria-label="Upload field photo"

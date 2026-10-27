@@ -70,6 +70,7 @@ export default function App() {
   const [peopleNext,setPeopleNext]=useState<number|null>(null);
   const [recordsAttempt, setRecordsAttempt] = useState(0);
   const [recordsLoading, setRecordsLoading] = useState(false);
+  const manualRefreshPending = useRef(false);
   const [recordsError, setRecordsError] = useState('');
   const recordsOwner = useRef<string|null>(null);
   const recordsController = useRef<AbortController|null>(null);
@@ -234,15 +235,17 @@ export default function App() {
       if(controller.signal.aborted||recordsOwner.current!==owner)return;
       setOwnNext(own.nextOffset);setFeedNext(feed.nextOffset);setPeopleNext(people.nextOffset);
       setBirders(people.people);setUserProfile(own.profile);setJournalEntries(own.observations.map(observationEntry));setPosts((target?[target,...feed.observations.filter(row=>row.id!==target.id)]:feed.observations).map(observationPost));
+      if (manualRefreshPending.current) showToast('Community refreshed');
       if(alertPost&&!target){setAlertPost(null);showToast('This observation is no longer available.');}
     }).catch(error=>{
       if(controller.signal.aborted||recordsOwner.current!==owner)return;
       if(error instanceof SessionExpiredError)resetSession();else setRecordsError(error.message||'Field records could not load.');
-    }).finally(()=>{if(!controller.signal.aborted&&recordsOwner.current===owner)setRecordsLoading(false);});
+    }).finally(()=>{if(!controller.signal.aborted&&recordsOwner.current===owner){manualRefreshPending.current=false;setRecordsLoading(false);}});
     return()=>controller.abort();
   },[sessionUser?.id,recordsAttempt,ownPages,feedPages,peoplePages]);
 
   const acceptSession = (user: AuthUser) => {
+    manualRefreshPending.current = false;
     setOwnPages(1);setFeedPages(1);setPeoplePages(1);setOwnNext(null);setFeedNext(null);setPeopleNext(null);setPersonTarget(null);
     alertsController.current?.abort();alertMutation.current=false;recordsController.current?.abort();recordsOwner.current=user.id;setBirders([]);recordMutation.current=false;setRecordsError('');
     setLocation(null);
@@ -768,6 +771,14 @@ export default function App() {
 
           {currentScreen === 'community' && (
             <CommunityScreen
+              refreshing={recordsLoading}
+              onRefresh={() => {
+                if (recordsLoading || manualRefreshPending.current || !recordsOwner.current) return;
+                if (recordMutation.current) { showToast('Please wait for your current change to finish.'); return; }
+                manualRefreshPending.current = true;
+                setRecordsLoading(true);
+                setRecordsAttempt(value => value + 1);
+              }}
               onEntityChange={entity=>{const route:AppRoute={screen:'community',...entity};if(window.location.search!==routeQuery(route))writeRoute(route);}}
               openPerson={personTarget}
               openPost={alertPost}
