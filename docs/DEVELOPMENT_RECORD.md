@@ -856,13 +856,13 @@ The header logo now uses a bundled SVG following the supplied green bird emblem,
 
 ### Entry 49 — Community pull-to-refresh and manual refresh
 
-**Date/group:** 27 October 2026 IST; scoped demo usability. **Status:** implemented locally; delivery/browser evidence follows below.
+**Date/group:** 27 October 2026 IST; scoped demo usability. **Status:** implemented; source commit dbaa923 pushed in PR #41. Final exact-head CI/merge remains pending.
 
 **Problem and result:** Community had no direct way to request new posts without navigating away or reloading the application. Pull down at the top of the feed until "Release to refresh" appears, then release, or use the accessible Refresh community button beside Upload. A busy indicator prevents duplicate requests. Successful completion is reported only after data returns; a failure keeps existing content and uses the existing retry message.
 
 **Implementation:** the gesture is confined to Community and ignores short, sideways, upward, cancelled/multiple-finger, nested-scroll, form/control and open-dialog gestures. It reuses the existing authenticated own-record/feed/people load path and account/abort checks, retaining filters, search text and loaded-page counts. Refresh waits for an in-flight write instead of aborting it. No API, schema, dependency, Android source or authentication changes were made.
 
-**Files/checks:** App.tsx, CommunityScreen.tsx, new lib/pullToRefresh.ts and frontend.test.mjs. All 150 automated tests, TypeScript and production build passed. New tests cover gesture boundaries, disabled/busy state, control preservation and listener cleanup. Independent browser/mobile checks are pending; touch-event regression tests alone do not establish physical-phone gesture acceptance.
+**Files/checks:** App.tsx, CommunityScreen.tsx, new lib/pullToRefresh.ts and frontend.test.mjs. All 150 automated tests, TypeScript and production build passed. New tests cover gesture boundaries, disabled/busy state, control preservation and listener cleanup. Independent QA reran all 62 frontend tests and extra gesture cases: a 127px drag does not refresh, 128px does, and busy/control/dialog/non-top/detached cases suppress refresh. Browser control failed before opening any tab because its local runtime assets were missing; reset/fresh-tab retry also failed. No DOM test runtime was installed. Actual rendered updates/error recovery, 320/390px layout and physical-phone gesture acceptance remain unverified in this increment; filter/search/draft retention was source-reviewed. No browser-tool repair or dependency change was attempted before the demo.
 
 **Plain flow/Viva:** touch gesture or Refresh button -> existing App reload request -> authenticated records API -> replace displayed records on success. This refreshes server data without a full page reload or forced sign-out; it is separate from live push delivery. Current Android preview loads this frontend from its selected server, so no APK change is required for this increment.
 
