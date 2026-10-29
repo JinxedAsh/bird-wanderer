@@ -14,6 +14,12 @@ export async function configuredRecoveryMail(env = process.env, transportFactory
     disableFileAccess: true, disableUrlAccess: true, logger: false, debug: false });
   return {
     origin: env.RECOVERY_ORIGIN || undefined,
+    async sendVerification({ email, url }) {
+      if (!plainMailbox(email)) throw new Error('Verification requires one plain recipient email address.');
+      const result = await transport.sendMail({ from: { name: 'Bird Wanderer', address: env.SMTP_FROM }, to: { address: email },
+        subject: 'Verify your Bird Wanderer email', text: `Confirm this email address for your Bird Wanderer account.\n\nOpen this link within 15 minutes, then press Verify email:\n${url}\n\nOnly the latest link works, once. This does not change your password or sign you in. If you did not create this account, ignore this email.` });
+      if (!result.accepted?.some((recipient) => (typeof recipient === 'string' ? recipient : recipient?.address)?.toLowerCase() === email)) throw new Error('Verification mail was not accepted.');
+    },
     async send({ email, url }) {
       if (!plainMailbox(email)) throw new Error('Recovery requires one plain recipient email address.');
       const result = await transport.sendMail({ from: { name: 'Bird Wanderer', address: env.SMTP_FROM }, to: { address: email },

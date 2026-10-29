@@ -9,12 +9,12 @@ import { activityRouter } from './activity.mjs';
 import { observationsRouter } from './observations.mjs';
 import { retentionRouter } from './retention.mjs';
 import { registerRecovery } from './recovery.mjs';
+import { registerVerification } from './verification.mjs';
 
 const scrypt = promisify(scryptCallback);
 const cookieName = 'bw_session';
 const sessionDuration = 7 * 24 * 60 * 60 * 1000;
 const digest = (value) => createHash('sha256').update(value).digest('hex');
-const publicUser = (row) => ({ id: row.id, name: row.name, email: row.email });
 const passwordOptions = { N: 32768, r: 8, p: 3, maxmem: 64 * 1024 * 1024 };
 
 export function createApp({ dbPath = ':memory:', origin = 'http://localhost:3000', additionalOrigins = [], secureCookies = false, trustProxyLoopback = false, now = Date.now, rateLimit = 30, discovery = createDiscoveryService(), mediaPath, imageProcessor, push, recoveryMail } = {}) {
@@ -38,6 +38,7 @@ export function createApp({ dbPath = ':memory:', origin = 'http://localhost:3000
     );
   `);
   const app = express();
+  const publicUser = (row) => ({ id: row.id, name: row.name, email: row.email, emailVerified: verification.isVerified(row.id) });
   if(trustProxyLoopback)app.set('trust proxy','loopback');
   app.disable('x-powered-by');
   app.use('/api', (req, res, next) => {
@@ -100,7 +101,7 @@ export function createApp({ dbPath = ':memory:', origin = 'http://localhost:3000
     }
     const salt = randomBytes(16).toString('hex');
     const hash = await scrypt(input.password, salt, 64, passwordOptions);
-    const user = { id: randomUUID(), name, email: input.email };
+    const user = { id: randomUUID(), name, email: input.email, emailVerified: false };
     // The UNIQUE constraint also protects concurrent registrations.
     try {
       db.prepare('INSERT INTO users VALUES (?, ?, ?, ?, ?, ?)').run(user.id, name, input.email, hash.toString('hex'), salt, now());
@@ -109,6 +110,9 @@ export function createApp({ dbPath = ':memory:', origin = 'http://localhost:3000
       throw error;
     }
     startSession(req, res, user.id);
+    // Optional dispatch never gates account creation. Resend/status stay in Settings.
+    try { verification.enqueue(user); }
+    catch { console.error('Registration verification could not be queued; use Settings to retry.'); }
     res.status(201).json({ user });
   }));
   app.post('/api/auth/login', limited, asyncRoute(async (req, res) => {
@@ -166,6 +170,7 @@ export function createApp({ dbPath = ':memory:', origin = 'http://localhost:3000
     } catch (error) { db.exec('ROLLBACK'); throw error; }
     res.json({ user: publicUser(user) });
   }));
+  const verification = registerVerification(app, db, { now, origin, allowedOrigins, mail: recoveryMail, requireSession, rateLimit });
   registerRecovery(app, db, { now, origin, allowedOrigins, mail: recoveryMail, rateLimit,
     hashPassword: async (password) => {
       const salt = randomBytes(16).toString('hex');

@@ -28,14 +28,14 @@ let refreshHelpers;
 before(async () => {
   temporaryDirectory = mkdtempSync(join(root, '.stage1-render-'));
   const screens = {};
-  const names = ['CommunityScreen', 'RecoveryRequestSheet', 'ResetPasswordScreen', 'ChangePasswordSheet', 'EditObservationSheet', 'NotificationsScreen', 'FieldChatScreen', 'BirdQuizScreen', 'AuthScreen', 'LogObservationScreen', 'ProfileScreen', 'JournalScreen', 'LifeListScreen', 'GlobalSearchScreen', 'SettingsScreen', 'SpeciesDetailScreen', 'SpeciesPhoto', 'PhotoMetadata', 'PhotoPlanning', 'ReferenceComparisons', 'SpeciesInfoPanel', 'SpeciesRecording', 'HotspotMap', 'HotspotWeatherPanel', 'HotspotDetailScreen', 'HotspotAccess', 'HotspotsScreen', 'ExploreScreen', 'LocationPicker', 'Header'];
+  const names = ['CommunityScreen', 'EmailVerification', 'VerifyEmailScreen', 'RecoveryRequestSheet', 'ResetPasswordScreen', 'ChangePasswordSheet', 'EditObservationSheet', 'NotificationsScreen', 'FieldChatScreen', 'BirdQuizScreen', 'AuthScreen', 'LogObservationScreen', 'ProfileScreen', 'JournalScreen', 'LifeListScreen', 'GlobalSearchScreen', 'SettingsScreen', 'SpeciesDetailScreen', 'SpeciesPhoto', 'PhotoMetadata', 'PhotoPlanning', 'ReferenceComparisons', 'SpeciesInfoPanel', 'SpeciesRecording', 'HotspotMap', 'HotspotWeatherPanel', 'HotspotDetailScreen', 'HotspotAccess', 'HotspotsScreen', 'ExploreScreen', 'LocationPicker', 'Header'];
   // Compile these existing TSX screens for Node rendering; no browser or new test framework.
-  for (const relative of ['lib/pullToRefresh.ts', 'lib/recovery.ts', 'lib/native-push.ts', 'lib/push.ts', 'lib/navigation.ts', 'lib/useDialogFocus.ts', 'lib/maps.ts', 'lib/auth.ts', 'lib/discovery.ts', 'lib/activity.ts', 'lib/location.ts', 'lib/observations.ts', 'lib/alerts.ts', 'lib/retention.ts', 'lib/messages.ts', ...names.map((name) => `components/${name}.tsx`)]) {
+  for (const relative of ['lib/verification.ts', 'lib/pullToRefresh.ts', 'lib/recovery.ts', 'lib/native-push.ts', 'lib/push.ts', 'lib/navigation.ts', 'lib/useDialogFocus.ts', 'lib/maps.ts', 'lib/auth.ts', 'lib/discovery.ts', 'lib/activity.ts', 'lib/location.ts', 'lib/observations.ts', 'lib/alerts.ts', 'lib/retention.ts', 'lib/messages.ts', ...names.map((name) => `components/${name}.tsx`)]) {
     const output = join(temporaryDirectory, relative.replace(/\.tsx?$/, '.mjs'));
     mkdirSync(dirname(output), { recursive: true });
     const source = readFileSync(join(root, 'src', relative), 'utf8');
     const { code } = transformSync(source, { loader: 'tsx', format: 'esm', jsx: 'automatic', target: 'node24' });
-    writeFileSync(output, code.replace('../lib/pullToRefresh"', '../lib/pullToRefresh.mjs"').replace('./recovery"', './recovery.mjs"').replace('./RecoveryRequestSheet"', './RecoveryRequestSheet.mjs"').replace('../lib/recovery"', '../lib/recovery.mjs"').replace('./SpeciesRecording"', './SpeciesRecording.mjs"').replace('./native-push"','./native-push.mjs"').replace('./alerts"','./alerts.mjs"').replace('../lib/navigation"','../lib/navigation.mjs"').replace('./ChangePasswordSheet"', './ChangePasswordSheet.mjs"').replace('./EditObservationSheet"','./EditObservationSheet.mjs"').replace('../lib/messages"', '../lib/messages.mjs"').replace('../lib/useDialogFocus"', '../lib/useDialogFocus.mjs"').replace('../lib/maps"', '../lib/maps.mjs"').replace('./HotspotMap"', './HotspotMap.mjs"').replace('./HotspotAccess"', './HotspotAccess.mjs"').replace('./HotspotWeatherPanel"', './HotspotWeatherPanel.mjs"').replace('./SpeciesPhoto"', './SpeciesPhoto.mjs"').replace('./PhotoMetadata"', './PhotoMetadata.mjs"').replace('./PhotoPlanning"', './PhotoPlanning.mjs"').replace('./SpeciesInfoPanel"', './SpeciesInfoPanel.mjs"').replace('./ReferenceComparisons"', './ReferenceComparisons.mjs"').replace('../lib/discovery"', '../lib/discovery.mjs"').replace('../lib/auth"', '../lib/auth.mjs"').replace('../lib/retention"', '../lib/retention.mjs"').replace('./auth"', './auth.mjs"').replace('./maps"', './maps.mjs"').replace('../lib/location"', '../lib/location.mjs"').replace('../lib/observations"', '../lib/observations.mjs"'));
+    writeFileSync(output, code.replace('./verification"', './verification.mjs"').replace('../lib/verification"', '../lib/verification.mjs"').replace('./EmailVerification"', './EmailVerification.mjs"').replace('../lib/pullToRefresh"', '../lib/pullToRefresh.mjs"').replace('./recovery"', './recovery.mjs"').replace('./RecoveryRequestSheet"', './RecoveryRequestSheet.mjs"').replace('../lib/recovery"', '../lib/recovery.mjs"').replace('./SpeciesRecording"', './SpeciesRecording.mjs"').replace('./native-push"','./native-push.mjs"').replace('./alerts"','./alerts.mjs"').replace('../lib/navigation"','../lib/navigation.mjs"').replace('./ChangePasswordSheet"', './ChangePasswordSheet.mjs"').replace('./EditObservationSheet"','./EditObservationSheet.mjs"').replace('../lib/messages"', '../lib/messages.mjs"').replace('../lib/useDialogFocus"', '../lib/useDialogFocus.mjs"').replace('../lib/maps"', '../lib/maps.mjs"').replace('./HotspotMap"', './HotspotMap.mjs"').replace('./HotspotAccess"', './HotspotAccess.mjs"').replace('./HotspotWeatherPanel"', './HotspotWeatherPanel.mjs"').replace('./SpeciesPhoto"', './SpeciesPhoto.mjs"').replace('./PhotoMetadata"', './PhotoMetadata.mjs"').replace('./PhotoPlanning"', './PhotoPlanning.mjs"').replace('./SpeciesInfoPanel"', './SpeciesInfoPanel.mjs"').replace('./ReferenceComparisons"', './ReferenceComparisons.mjs"').replace('../lib/discovery"', '../lib/discovery.mjs"').replace('../lib/auth"', '../lib/auth.mjs"').replace('../lib/retention"', '../lib/retention.mjs"').replace('./auth"', './auth.mjs"').replace('./maps"', './maps.mjs"').replace('../lib/location"', '../lib/location.mjs"').replace('../lib/observations"', '../lib/observations.mjs"'));
   }
   for (const name of names) {
     const module = await import(pathToFileURL(join(temporaryDirectory, 'components', `${name}.mjs`)).href);
@@ -257,11 +257,42 @@ test('ordinary route refresh cannot discard a pending valid or malformed recover
     globalThis.window.location.hash = '#reset-password=bad';
     navigationHelpers.writeRoute({ screen: 'explore' });
     assert.equal(calls.length, 0);
+    for (const hash of ['#verify-email=' + 'b'.repeat(64), '#verify-email=bad']) {
+      globalThis.window.location.hash = hash;
+      navigationHelpers.writeRoute({ screen: 'explore' });
+      assert.equal(calls.length, 0);
+    }
     globalThis.window.location.hash = '';
     navigationHelpers.writeRoute({ screen: 'community' });
     assert.equal(calls.length, 1);
     assert.equal(calls[0][2], '/?screen=community');
   } finally { globalThis.window = previous; }
+});
+
+test('verification links require explicit confirmation, validate responses and preserve session errors', async () => {
+  const module = await import(pathToFileURL(join(temporaryDirectory, 'lib/verification.mjs')).href);
+  const valid = 'a'.repeat(64);
+  assert.equal(module.verificationTokenFromHash(`#verify-email=${valid}`), valid);
+  for (const hash of ['#verify-email=bad', `#verify-email=${valid}&verify-email=${valid}`, `#verify-email=${valid}&reset-password=${valid}`]) assert.equal(module.verificationTokenFromHash(hash), null);
+  assert.equal(module.verificationTokenFromHash('#unrelated'), undefined);
+  const html = render('VerifyEmailScreen', { token: valid });
+  assert.match(html, /type="submit"/); assert.match(html, /Verify email/); assert.doesNotMatch(html, new RegExp(valid));
+  assert.match(render('VerifyEmailScreen', { token: null }), /link is invalid/);
+  assert.match(render('EmailVerification', {}), /Check verification status/);
+  const previous = globalThis.fetch; const signal = new AbortController().signal; let sent;
+  try {
+    globalThis.fetch = async (url, options) => { sent = { url, ...options }; return Response.json({ verified: true }); };
+    await module.verification.confirm(valid, signal);
+    assert.equal(sent.url, '/api/auth/verification/confirm'); assert.equal(sent.method, 'POST'); assert.equal(sent.credentials, 'same-origin');
+    assert.deepEqual(JSON.parse(sent.body), { token: valid });
+    globalThis.fetch = async () => Response.json({ emailVerified: false }); assert.equal(await module.verification.status(signal), false);
+    globalThis.fetch = async () => Response.json({ message: 'Requested, not guaranteed delivered' }); assert.match(await module.verification.resend(signal), /not guaranteed/);
+    globalThis.fetch = async () => Response.json({}); await assert.rejects(module.verification.confirm(valid, signal), /Unexpected verification/);
+    await assert.rejects(module.verification.status(signal), /Unexpected verification/); await assert.rejects(module.verification.resend(signal), /Unexpected verification/);
+    globalThis.fetch = async () => Response.json({ error: 'Email not configured' }, { status: 503 }); await assert.rejects(module.verification.resend(signal), /not configured/);
+    globalThis.fetch = async () => Response.json({}, { status: 401 }); await assert.rejects(module.verification.status(signal), authClient.SessionExpiredError);
+    globalThis.fetch = async () => { throw new Error('synthetic offline'); }; await assert.rejects(module.verification.confirm(valid, signal), /Cannot reach/);
+  } finally { globalThis.fetch = previous; }
 });
 
 test('recovery screens preserve password validation and distinguish invalid fragment links', async () => {

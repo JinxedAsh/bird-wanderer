@@ -2,6 +2,10 @@
 
 Updated 26 October 2026. This is a shared implementation/verification checklist for the team. It is not a claim that the application is fully complete. The living specification and supplied designs remain authoritative. It was reread on 26 October; its textual screen accounting does not mention password recovery or audio, but those visible controls are tracked below rather than silently called functional.
 
+## Optional email verification — 29 October 2026
+
+Entry58/[PR #43](https://github.com/JinxedAsh/bird-wanderer/pull/43) adds optional verified status, hashed/latest/15-minute/single-use tokens, registration dispatch when configured, authenticated Settings resend/status and explicit confirmation. Legacy accounts remain unverified; login stays available. Proof affects only the emailed account and preserves unrelated sessions. Password recovery remains independent with session revocation. All159 tests, TypeScript and build pass (index-CukkI7ae.js,491.68kB). Isolated synthetic browser checks passed explicit confirmation/account isolation/latest/replay, Settings/unconfigured/session errors and320/390px layouts; a repeated-link stale-success defect was fixed and retested on the final asset together with recovery routing and Back/Forward. Actual SMTP/inbox/physical email-link acceptance and controlled browser confirmation transport failure/recovery remain pending. EMAIL_VERIFICATION_WALKTHROUGH.md provides setup and Viva Notes. The production high-severity audit gate passes while one moderate pre-existing transitive qs advisory remains; no clean full-audit claim is made.
+
 ## Delivered and currently implemented
 
 | Screen/requirement | Current state | Verification / remaining acceptance |
