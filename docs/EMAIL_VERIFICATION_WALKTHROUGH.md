@@ -56,6 +56,8 @@ Manual/provider checklist after configuration:
 
 See the chronological Development Record entry for exact test/build/browser/delivery results of this increment.
 
+29 October checkpoint:159 full tests, TypeScript and production build passed. Independent Test chat ran eight verification tests and isolated browser checks, including actual explicit confirmation, account isolation, latest/replay, Settings/unconfigured/session errors and320/390px layout. An identical-link stale-success display was found and fixed with a per-entry screen key; final `index-CukkI7ae.js` passed repeated-entry, recovery routing and Back/Forward regressions. No real emails or new-password entries were used. A controlled browser confirmation network503-to-success test remains pending. Production audit's high-severity gate passes but one moderate pre-existing transitive `qs` advisory remains disclosed in Entry58. Delivery: [PR #43](https://github.com/JinxedAsh/bird-wanderer/pull/43).
+
 ## Viva Notes
 
 **What changed and why:** we added proof that someone can receive mail at an account's address, while preserving the working authentication system. Reusing SQLite, routing, SMTP and component styles keeps the change understandable.
