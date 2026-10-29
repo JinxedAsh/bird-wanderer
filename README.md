@@ -141,3 +141,5 @@ Dependency fixes and Viva Notes: [Dependency audit](docs/DEPENDENCY_SECURITY_WAL
 Sourced recording flow, provider limits and Viva Notes: [Species recordings](docs/RECORDINGS_WALKTHROUGH.md).
 
 Email setup, one-time link flow, limitations and Viva Notes: [Password recovery](docs/PASSWORD_RECOVERY_WALKTHROUGH.md).
+
+Community can be refreshed with the Refresh button beside Upload, or by pulling down at the top of the feed until "Release to refresh" appears. Existing filters and search remain selected; errors retain the current content and offer retry.

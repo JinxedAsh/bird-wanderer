@@ -23,18 +23,19 @@ let searchHelpers;
 let navigationHelpers;
 let nativePushHelpers;
 let pushClient;
+let refreshHelpers;
 
 before(async () => {
   temporaryDirectory = mkdtempSync(join(root, '.stage1-render-'));
   const screens = {};
-  const names = ['RecoveryRequestSheet', 'ResetPasswordScreen', 'ChangePasswordSheet', 'EditObservationSheet', 'NotificationsScreen', 'FieldChatScreen', 'BirdQuizScreen', 'AuthScreen', 'LogObservationScreen', 'ProfileScreen', 'JournalScreen', 'LifeListScreen', 'GlobalSearchScreen', 'SettingsScreen', 'SpeciesDetailScreen', 'SpeciesPhoto', 'PhotoMetadata', 'PhotoPlanning', 'ReferenceComparisons', 'SpeciesInfoPanel', 'SpeciesRecording', 'HotspotMap', 'HotspotWeatherPanel', 'HotspotDetailScreen', 'HotspotAccess', 'HotspotsScreen', 'ExploreScreen', 'LocationPicker', 'Header'];
+  const names = ['CommunityScreen', 'RecoveryRequestSheet', 'ResetPasswordScreen', 'ChangePasswordSheet', 'EditObservationSheet', 'NotificationsScreen', 'FieldChatScreen', 'BirdQuizScreen', 'AuthScreen', 'LogObservationScreen', 'ProfileScreen', 'JournalScreen', 'LifeListScreen', 'GlobalSearchScreen', 'SettingsScreen', 'SpeciesDetailScreen', 'SpeciesPhoto', 'PhotoMetadata', 'PhotoPlanning', 'ReferenceComparisons', 'SpeciesInfoPanel', 'SpeciesRecording', 'HotspotMap', 'HotspotWeatherPanel', 'HotspotDetailScreen', 'HotspotAccess', 'HotspotsScreen', 'ExploreScreen', 'LocationPicker', 'Header'];
   // Compile these existing TSX screens for Node rendering; no browser or new test framework.
-  for (const relative of ['lib/recovery.ts', 'lib/native-push.ts', 'lib/push.ts', 'lib/navigation.ts', 'lib/useDialogFocus.ts', 'lib/maps.ts', 'lib/auth.ts', 'lib/discovery.ts', 'lib/activity.ts', 'lib/location.ts', 'lib/observations.ts', 'lib/alerts.ts', 'lib/retention.ts', 'lib/messages.ts', ...names.map((name) => `components/${name}.tsx`)]) {
+  for (const relative of ['lib/pullToRefresh.ts', 'lib/recovery.ts', 'lib/native-push.ts', 'lib/push.ts', 'lib/navigation.ts', 'lib/useDialogFocus.ts', 'lib/maps.ts', 'lib/auth.ts', 'lib/discovery.ts', 'lib/activity.ts', 'lib/location.ts', 'lib/observations.ts', 'lib/alerts.ts', 'lib/retention.ts', 'lib/messages.ts', ...names.map((name) => `components/${name}.tsx`)]) {
     const output = join(temporaryDirectory, relative.replace(/\.tsx?$/, '.mjs'));
     mkdirSync(dirname(output), { recursive: true });
     const source = readFileSync(join(root, 'src', relative), 'utf8');
     const { code } = transformSync(source, { loader: 'tsx', format: 'esm', jsx: 'automatic', target: 'node24' });
-    writeFileSync(output, code.replace('./recovery"', './recovery.mjs"').replace('./RecoveryRequestSheet"', './RecoveryRequestSheet.mjs"').replace('../lib/recovery"', '../lib/recovery.mjs"').replace('./SpeciesRecording"', './SpeciesRecording.mjs"').replace('./native-push"','./native-push.mjs"').replace('./alerts"','./alerts.mjs"').replace('../lib/navigation"','../lib/navigation.mjs"').replace('./ChangePasswordSheet"', './ChangePasswordSheet.mjs"').replace('./EditObservationSheet"','./EditObservationSheet.mjs"').replace('../lib/messages"', '../lib/messages.mjs"').replace('../lib/useDialogFocus"', '../lib/useDialogFocus.mjs"').replace('../lib/maps"', '../lib/maps.mjs"').replace('./HotspotMap"', './HotspotMap.mjs"').replace('./HotspotAccess"', './HotspotAccess.mjs"').replace('./HotspotWeatherPanel"', './HotspotWeatherPanel.mjs"').replace('./SpeciesPhoto"', './SpeciesPhoto.mjs"').replace('./PhotoMetadata"', './PhotoMetadata.mjs"').replace('./PhotoPlanning"', './PhotoPlanning.mjs"').replace('./SpeciesInfoPanel"', './SpeciesInfoPanel.mjs"').replace('./ReferenceComparisons"', './ReferenceComparisons.mjs"').replace('../lib/discovery"', '../lib/discovery.mjs"').replace('../lib/auth"', '../lib/auth.mjs"').replace('../lib/retention"', '../lib/retention.mjs"').replace('./auth"', './auth.mjs"').replace('./maps"', './maps.mjs"').replace('../lib/location"', '../lib/location.mjs"').replace('../lib/observations"', '../lib/observations.mjs"'));
+    writeFileSync(output, code.replace('../lib/pullToRefresh"', '../lib/pullToRefresh.mjs"').replace('./recovery"', './recovery.mjs"').replace('./RecoveryRequestSheet"', './RecoveryRequestSheet.mjs"').replace('../lib/recovery"', '../lib/recovery.mjs"').replace('./SpeciesRecording"', './SpeciesRecording.mjs"').replace('./native-push"','./native-push.mjs"').replace('./alerts"','./alerts.mjs"').replace('../lib/navigation"','../lib/navigation.mjs"').replace('./ChangePasswordSheet"', './ChangePasswordSheet.mjs"').replace('./EditObservationSheet"','./EditObservationSheet.mjs"').replace('../lib/messages"', '../lib/messages.mjs"').replace('../lib/useDialogFocus"', '../lib/useDialogFocus.mjs"').replace('../lib/maps"', '../lib/maps.mjs"').replace('./HotspotMap"', './HotspotMap.mjs"').replace('./HotspotAccess"', './HotspotAccess.mjs"').replace('./HotspotWeatherPanel"', './HotspotWeatherPanel.mjs"').replace('./SpeciesPhoto"', './SpeciesPhoto.mjs"').replace('./PhotoMetadata"', './PhotoMetadata.mjs"').replace('./PhotoPlanning"', './PhotoPlanning.mjs"').replace('./SpeciesInfoPanel"', './SpeciesInfoPanel.mjs"').replace('./ReferenceComparisons"', './ReferenceComparisons.mjs"').replace('../lib/discovery"', '../lib/discovery.mjs"').replace('../lib/auth"', '../lib/auth.mjs"').replace('../lib/retention"', '../lib/retention.mjs"').replace('./auth"', './auth.mjs"').replace('./maps"', './maps.mjs"').replace('../lib/location"', '../lib/location.mjs"').replace('../lib/observations"', '../lib/observations.mjs"'));
   }
   for (const name of names) {
     const module = await import(pathToFileURL(join(temporaryDirectory, 'components', `${name}.mjs`)).href);
@@ -50,6 +51,7 @@ before(async () => {
   mapHelpers = await import(pathToFileURL(join(temporaryDirectory, 'lib/maps.mjs')).href);
   authClient = await import(pathToFileURL(join(temporaryDirectory, 'lib/auth.mjs')).href);
   nativePushHelpers = await import(pathToFileURL(join(temporaryDirectory, 'lib/native-push.mjs')).href);
+  refreshHelpers = await import(pathToFileURL(join(temporaryDirectory, 'lib/pullToRefresh.mjs')).href);
   pushClient = await import(pathToFileURL(join(temporaryDirectory, 'lib/push.mjs')).href);
   navigationHelpers = await import(pathToFileURL(join(temporaryDirectory, 'lib/navigation.mjs')).href);
   locationHelpers = await import(pathToFileURL(join(temporaryDirectory, 'lib/location.mjs')).href);
@@ -67,6 +69,44 @@ after(() => {
 
 const noop = () => {};
 const searchProps = { speciesList: [], hotspots: [], posts: [], onSelectSpecies: noop, onSelectHotspot: noop, onNavigate: noop };
+
+test('community refresh gesture requires a deliberate pull at the top and leaves scrolling/forms alone', () => {
+  const feed = new EventTarget();
+  const documentScroll = { scrollTop: 0 };
+  Object.assign(feed, { ownerDocument: { scrollingElement: documentScroll }, scrollTop: 0, parentElement: null, closest: () => null });
+  let allowed = true, refreshes = 0, distance = 0;
+  const detach = refreshHelpers.attachPullToRefresh(feed, () => allowed, () => refreshes++, value => { distance = value; });
+  const touch = (type, x, y, count = type === 'touchend' ? 0 : 1, target = feed) => {
+    const event = new Event(type, { cancelable: true });
+    Object.defineProperties(event, { touches: { value: Array.from({ length: count }, () => ({ clientX: x, clientY: y })) }, target: { value: target } });
+    feed.dispatchEvent(event); return event;
+  };
+  const pull = (x = 0, y = 150) => { touch('touchstart', 0, 0); const event = touch('touchmove', x, y); touch('touchend', x, y); return event; };
+  assert.equal(pull().defaultPrevented, true); assert.equal(refreshes, 1); assert.equal(distance, 0);
+  touch('touchend', 0, 150); assert.equal(refreshes, 1);
+  assert.equal(pull(100, 50).defaultPrevented, false); assert.equal(refreshes, 1);
+  pull(0, 30); pull(0, -150); assert.equal(refreshes, 1);
+  allowed = false; assert.equal(pull().defaultPrevented, false); allowed = true;
+  documentScroll.scrollTop = 50; assert.equal(pull().defaultPrevented, false); documentScroll.scrollTop = 0;
+  feed.scrollTop = 20; assert.equal(pull().defaultPrevented, false); feed.scrollTop = 0;
+  const form = { parentElement: feed, scrollTop: 0, closest: () => ({}) };
+  touch('touchstart', 0, 0, 1, form); touch('touchmove', 0, 150, 1, form); touch('touchend', 0, 150, 0, form);
+  touch('touchstart', 0, 0); touch('touchmove', 0, 150, 2); touch('touchend', 0, 150);
+  touch('touchstart', 0, 0); touch('touchmove', 0, 150); touch('touchcancel', 0, 150); touch('touchend', 0, 150);
+  touch('touchstart', 0, 0); touch('touchmove', 0, 150); allowed = false; touch('touchend', 0, 150); allowed = true;
+  assert.equal(refreshes, 1); assert.equal(distance, 0);
+  detach(); pull(); assert.equal(refreshes, 1);
+});
+
+test('community keeps its upload/search controls and exposes an accessible busy refresh button', () => {
+  const props = { posts: [], onNavigate: noop, onSelectSpeciesById: noop, onToggleLike: noop, onToggleSave: noop, onAddComment: noop, showToast: noop, onRefresh: noop };
+  const ready = render('CommunityScreen', props);
+  assert.match(ready, /aria-label="Refresh community"/);
+  assert.match(ready, /aria-label="Search community posts"/);
+  assert.match(ready, /aria-label="Upload field photo"/);
+  const busy = render('CommunityScreen', { ...props, refreshing: true });
+  assert.match(busy, /disabled="" aria-label="Refreshing community"/);
+});
 
 test('access renders sourced snapshots and missing fields, withholding overdue values and escaping text', () => {
   const access = { checkedAt: '2026-10-04', reviewOverdue: false, openingHours: { text: 'Last entry conflicts: 21:00 vs 21:30 <script>x</script>', sources: [{ label: 'Operator', url: 'https://www.sundernursery.org/timing.php' }] }, entryFee: null, cameraPass: null, approach: null };
