@@ -1,4 +1,4 @@
-export interface AuthUser { id: string; name: string; email: string }
+export interface AuthUser { id: string; name: string; email: string; emailVerified: boolean }
 
 export class SessionExpiredError extends Error {
   constructor() { super('Your session has ended. Please sign in again.'); }

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useDialogFocus } from '../lib/useDialogFocus';
 import { UserProfile, ScreenType } from '../types';
 import { ChangePasswordSheet } from './ChangePasswordSheet';
+import { EmailVerification } from './EmailVerification';
 import packageInfo from '../../package.json' with { type: 'json' };
 
 interface SettingsScreenProps {
@@ -147,6 +148,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                 {email}
               </span>
             </div>
+            <EmailVerification onSessionExpired={onSessionExpired} />
           </div>
         </div>
 

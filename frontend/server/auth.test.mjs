@@ -33,7 +33,7 @@ test('register, restore session, reject bad password, rotate session and invalid
     const registered = await f.request('register', account);
     assert.equal(registered.status, 201);
     const user = (await registered.json()).user;
-    assert.deepEqual(Object.keys(user).sort(), ['email', 'id', 'name']);
+    assert.deepEqual(Object.keys(user).sort(), ['email', 'emailVerified', 'id', 'name']);
     const session = cookie(registered);
     assert.match(registered.headers.get('set-cookie'), /HttpOnly/);
     assert.match(registered.headers.get('set-cookie'), /SameSite=Lax/);

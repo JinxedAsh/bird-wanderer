@@ -3,12 +3,17 @@ import {createRoot} from 'react-dom/client';
 import App from './App.tsx';
 import {ResetPasswordScreen} from './components/ResetPasswordScreen';
 import {recoveryTokenFromHash} from './lib/recovery';
+import {verificationTokenFromHash} from './lib/verification';
+import {VerifyEmailScreen} from './components/VerifyEmailScreen';
 import {AppErrorBoundary} from './components/AppErrorBoundary';
 import 'leaflet/dist/leaflet.css';
 import './index.css';
 
-function captureRecoveryToken() {
-  const token = recoveryTokenFromHash(window.location.hash);
+let accountLinkSequence = 0;
+function captureAccountLink() {
+  const recoveryToken = recoveryTokenFromHash(window.location.hash);
+  const verificationToken = verificationTokenFromHash(window.location.hash);
+  const token = recoveryToken !== undefined ? recoveryToken : verificationToken;
   if (token !== undefined) {
     window.history.replaceState(window.history.state, '', window.location.pathname + window.location.search);
     let policy = document.querySelector<HTMLMetaElement>('meta[data-bird-recovery-referrer]');
@@ -20,20 +25,20 @@ function captureRecoveryToken() {
     }
     policy.content = 'no-referrer';
   }
-  return token;
+  return token === undefined ? undefined : { token, purpose: recoveryToken !== undefined ? 'recovery' : 'verification', sequence: ++accountLinkSequence } as const;
 }
-const initialRecoveryToken = captureRecoveryToken();
+const initialAccountLink = captureAccountLink();
 
 function EntryScreen() {
-  const [token, setToken] = useState(initialRecoveryToken);
+  const [link, setLink] = useState(initialAccountLink);
   useEffect(() => {
     const changed = (event: Event) => {
-      const next = captureRecoveryToken();
+      const next = captureAccountLink();
       if (next !== undefined) {
         // A same-document link can emit popstate before hashchange. Consume
-        // recovery first so App's normal route canonicalization cannot lose it.
+        // account links first so App's normal route canonicalization cannot lose them.
         event.stopImmediatePropagation();
-        setToken(next);
+        setLink(next);
       }
     };
     window.addEventListener('popstate', changed, true);
@@ -43,7 +48,9 @@ function EntryScreen() {
       window.removeEventListener('hashchange', changed, true);
     };
   }, []);
-  return token === undefined ? <App /> : <ResetPasswordScreen key={token || 'invalid'} token={token} />;
+  return link === undefined ? <App /> : link.purpose === 'recovery' ?
+    <ResetPasswordScreen key={`recovery:${link.sequence}`} token={link.token} /> :
+    <VerifyEmailScreen key={`verification:${link.sequence}`} token={link.token} />;
 }
 
 createRoot(document.getElementById('root')!).render(
