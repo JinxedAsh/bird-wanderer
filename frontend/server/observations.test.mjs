@@ -14,6 +14,7 @@ const discovery = {
   }),
 };
 const now = Date.parse('2026-10-23T12:00:00Z');
+const syntheticConditions = query => ({ ...query, source: 'Open-Meteo', sourceUrl: 'https://open-meteo.com/en/docs/historical-weather-api', model: 'Synthetic archive fixture estimate', matchedTime: query.observedAt.slice(0,13)+':00', timezone: 'Asia/Kolkata', timeBasis: 'Assumed local clock; exact instant unverified', fetchedAt: '2026-10-23T12:00:00Z', temperatureC: 0, windKmh: 0, precipitationMm: 0, humidityPercent: 50, cloudCoverPercent: null });
 const makeImage = () =>
   sharp({ create: { width: 8, height: 8, channels: 3, background: '#245a27' } })
     .jpeg()
@@ -84,6 +85,72 @@ async function fixture(t, extra = {}) {
   };
 }
 
+test('custom points and conditions persist with owner-only exact coordinates, private labels and account-bound weather', async t => {
+  const f = await fixture(t, { observationWeather: { load: async query => syntheticConditions(query) } });
+  const a = await f.account('MapOwner'), b = await f.account('MapReader');
+  const point = { latitude: 28.56789, longitude: 77.12345, label: 'Private garden label', source: 'manual' };
+  const observedAt = '2026-03-22T09:45';
+  const preview = await f.request('observations/conditions', { method: 'POST', cookie: a.cookie, body: { ...point, observedAt } });
+  assert.equal(preview.status, 200); const snapshot = await preview.json();
+  assert.equal(snapshot.conditions.latitude, 28.6); assert.equal(snapshot.conditions.longitude, 77.1);
+  const upload = async owner => (await (await f.request('observations/media', { method: 'POST', cookie: owner.cookie, body: await makeImage(), type: 'image/jpeg' })).json()).media;
+  const media = await upload(a);
+  const input = { mediaId: media.id, speciesId: 'indrol2', hotspotId: '', customLocation: point, observedAt, conditionsId: snapshot.conditionsId, visibility: 'public', hideExactLocation: false, notes: '' };
+  const created = await f.request('observations', { method: 'POST', cookie: a.cookie, body: input }); assert.equal(created.status, 201);
+  const own = (await created.json()).observation;
+  assert.equal(own.hotspotId, null); assert.deepEqual(own.observationLocation, point); assert.equal(own.location, point.label); assert.equal(own.conditions.temperatureC, 0);
+  assert.deepEqual(own.privateLocation, { latitude: 28.5, longitude: 77.2 });
+  const read = async owner => (await (await f.request(`observations/${own.id}`, { cookie: owner.cookie })).json()).observation;
+  let other = await read(b); assert.equal(other.observationLocation.latitude, 28.6); assert.equal(other.observationLocation.longitude, 77.1);
+  assert.equal(other.privateLocation, undefined); assert.equal(other.observationLocation.source, 'generalized');
+  assert.doesNotMatch(JSON.stringify(other), /28\.56789|77\.12345|Private garden label/);
+  assert.equal((await f.request(`observations/${own.id}`, { method: 'PATCH', cookie: b.cookie, body: { notes: 'intrude' } })).status, 404);
+  const search = await f.request('observations/social/search?q=Private%20garden%20label', { cookie: b.cookie }); assert.equal((await search.json()).observations.length, 0);
+  const mediaB = await upload(b);
+  assert.equal((await f.request('observations', { method: 'POST', cookie: b.cookie, body: { ...input, mediaId: mediaB.id } })).status, 400);
+  assert.equal((await f.request('observations', { method: 'POST', cookie: a.cookie, body: input })).status, 200);
+  await f.restart(); assert.deepEqual(await read(a), own);
+  const profile = await (await f.request('observations/profile', { cookie: a.cookie })).json();
+  assert.equal((await f.request('observations/profile', { method: 'PATCH', cookie: a.cookie, body: { ...profile.profile, locationPrivacy: 'hide' } })).status, 200);
+  other = await read(b); assert.equal(other.location, 'Location withheld'); assert.equal(other.observationLocation, null); assert.equal(other.conditions, null);
+  assert.equal((await read(a)).conditions.temperatureC, 0);
+  const changed = await f.request(`observations/${own.id}`, { method: 'PATCH', cookie: a.cookie, body: { observedAt: '2026-03-22T10:45' } }); assert.equal(changed.status, 200); assert.equal((await changed.json()).observation.conditions, null);
+  const stale = await f.request(`observations/${own.id}`, { method: 'PATCH', cookie: a.cookie, body: { conditionsId: snapshot.conditionsId } }); assert.equal(stale.status, 400);
+  const switched = await f.request(`observations/${own.id}`, { method: 'PATCH', cookie: a.cookie, body: { hotspotId: 'L123', customLocation: null } }); assert.equal(switched.status, 200); assert.equal((await switched.json()).observation.hotspotId, 'L123');
+});
+
+test('hidden custom points withhold conditions under public visibility and updates clear stale weather; legacy rows remain readable', async t => {
+  const f = await fixture(t, { observationWeather: { load: async query => syntheticConditions(query) } }); const a = await f.account('HiddenMap'), b = await f.account('HiddenReader');
+  const point = { latitude: 0, longitude: 0, label: '', source: 'manual' }, observedAt = '2026-03-22T09:00';
+  const preview = await (await f.request('observations/conditions', { method: 'POST', cookie: a.cookie, body: { ...point, observedAt } })).json();
+  const media = (await (await f.request('observations/media', { method: 'POST', cookie: a.cookie, body: await makeImage(), type: 'image/jpeg' })).json()).media;
+  const input = { mediaId: media.id, speciesId: 'indrol2', hotspotId: '', customLocation: point, observedAt, conditionsId: preview.conditionsId, visibility: 'public', hideExactLocation: true, notes: '' };
+  assert.equal((await f.request('observations', { method: 'POST', cookie: a.cookie, body: { ...input, customLocation: { ...point, source: 'exif' } } })).status, 400);
+  const created = await f.request('observations', { method: 'POST', cookie: a.cookie, body: input }); assert.equal(created.status, 201); const id = (await created.json()).observation.id;
+  const other = (await (await f.request(`observations/${id}`, { cookie: b.cookie })).json()).observation;
+  assert.equal(other.conditions, null); assert.equal(other.observationLocation, null);
+  assert.equal((await f.request(`observations/${id}`, { method: 'PATCH', cookie: a.cookie, body: { hideExactLocation: false } })).status, 200);
+  const generalized = (await (await f.request(`observations/${id}`, { cookie: b.cookie })).json()).observation;
+  assert.equal(generalized.observationLocation.latitude, 0); assert.equal(generalized.conditions.temperatureC, 0); assert.equal(generalized.privateLocation, undefined);
+  const changed = await f.request(`observations/${id}`, { method: 'PATCH', cookie: a.cookie, body: { customLocation: { ...point, longitude: 1, source: 'map' }, hotspotId: '' } }); assert.equal(changed.status, 200); assert.equal((await changed.json()).observation.conditions, null);
+  for (const body of [{ customLocation: { ...point, latitude: 100 } }, { customLocation: point, hotspotId: 'L123' }]) assert.equal((await f.request(`observations/${id}`, { method: 'PATCH', cookie: a.cookie, body })).status, 400);
+  await f.request(`observations/${id}`, { method: 'PATCH', cookie: a.cookie, body: { customLocation: null, hotspotId: 'L123' } });
+  f.db.exec('DROP TABLE observation_details; DROP TABLE observation_conditions;'); await f.restart();
+  const legacy = (await (await f.request(`observations/${id}`, { cookie: a.cookie })).json()).observation;
+  assert.equal(legacy.hotspotId, 'L123'); assert.equal(legacy.conditions, null); assert.equal(legacy.observationLocation, null);
+});
+
+test('weather preview counts failed attempts, limits per account, then permits retry in the next window', async t => {
+  let time = now, unavailable = true;
+  const f = await fixture(t, { now: () => time, observationWeather: { load: async query => { if (unavailable) throw Object.assign(new Error('Synthetic provider outage'), { status: 502 }); return syntheticConditions(query); } } });
+  const a = await f.account('WeatherLimits'); const body = { latitude: 0, longitude: 0, observedAt: '2026-03-22T09:00' };
+  for (let i = 0; i < 20; i++) assert.equal((await f.request('observations/conditions', { method: 'POST', cookie: a.cookie, body })).status, 502);
+  assert.equal((await f.request('observations/conditions', { method: 'POST', cookie: a.cookie, body })).status, 429);
+  time += 60001; unavailable = false;
+  assert.equal((await f.request('observations/conditions', { method: 'POST', cookie: a.cookie, body })).status, 200);
+  assert.equal((await f.request('observations/conditions', { method: 'POST', body })).status, 401);
+});
+
 test('upload, private observation, journal/profile and media survive restart; other accounts cannot read or mutate', async (t) => {
   const f = await fixture(t),
     a = await f.account('Owner'),
@@ -103,6 +170,8 @@ test('upload, private observation, journal/profile and media survive restart; ot
   const media = (await uploaded.json()).media;
   assert.equal(media.exif.cameraMake, 'Fixture maker');
   assert.equal(media.hasPrivateLocation, true);
+  assert.deepEqual(media.privateLocation, { latitude: 28.5, longitude: 77.2 });
+  assert.equal(media.exif.capturedAt, '2026-10-23 09:00:00');
   const mediaPath = `observations/media/${media.id}`;
   const image = await f.request(mediaPath, { cookie: a.cookie });
   assert.equal(image.status, 200);

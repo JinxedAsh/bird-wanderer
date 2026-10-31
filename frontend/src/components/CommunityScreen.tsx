@@ -536,7 +536,7 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
                 <div className="grid grid-cols-3 gap-2 text-center pt-1">
                   <div className="bg-white p-2 rounded-lg shadow-xs">
                     <span className="material-symbols-outlined text-[#904d00] text-[18px]">sunny</span>
-                    <p className="text-[10px] text-[#42493e] mt-0.5">Lighting</p>
+                    <p className="text-[10px] text-[#42493e] mt-0.5">Cloud estimate</p>
                     <p className="text-[12px] font-bold text-[#181c20]">
                       {selectedPostForDetails.weather?.lighting || 'Unverified'}
                     </p>
@@ -560,6 +560,7 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
                 </div>
               </div>
 
+              {selectedPostForDetails.weather?.description && <p className="text-[12px]">{selectedPostForDetails.weather.description} <a href={selectedPostForDetails.weather.sourceUrl} target="_blank" rel="noreferrer" className="underline">Weather source</a></p>}
               {/* Sensor & Optical Data */}
               <div className="bg-[#f1f4f9] rounded-xl p-3.5 flex flex-col gap-2">
                 <span className="text-[11px] uppercase tracking-wider text-[#42493e] font-bold">

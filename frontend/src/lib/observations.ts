@@ -1,6 +1,13 @@
 import { SessionExpiredError } from './auth';
 import type { UserProfile, JournalEntry, CommunityPost } from '../types';
 import type { PhotoExif } from './discovery';
+import type { ObservationPoint } from './observation-form';
+
+export interface ObservationConditions {
+  source: string; sourceUrl: string; model: string; observedAt: string; matchedTime: string; timezone: string;
+  utcOffset: string | null; timeBasis: string; latitude: number; longitude: number; fetchedAt: string;
+  temperatureC: number | null; humidityPercent: number | null; precipitationMm: number | null; cloudCoverPercent: number | null; windKmh: number | null;
+}
 
 export interface Observation {
   likes?: number;
@@ -27,6 +34,9 @@ export interface Observation {
   exif: PhotoExif;
   createdAt: string;
   isOwner: boolean;
+  observationLocation?: ObservationPoint | null;
+  conditions?: ObservationConditions | null;
+  utcOffset?: string | null;
 }
 export interface UploadedPhoto {
   id: string;
@@ -34,6 +44,7 @@ export interface UploadedPhoto {
   exif: PhotoExif;
   metadataError: boolean;
   hasPrivateLocation: boolean;
+  privateLocation?: { latitude: number; longitude: number } | null;
   note: string;
 }
 export interface ObservationInput {
@@ -44,6 +55,9 @@ export interface ObservationInput {
   notes: string;
   visibility: Observation['visibility'];
   hideExactLocation: boolean;
+  customLocation?: ObservationPoint | null;
+  conditionsId?: string | null;
+  utcOffset?: string | null;
 }
 
 async function request(path: string, signal: AbortSignal, method = 'GET', body?: object | File) {
@@ -67,6 +81,14 @@ async function request(path: string, signal: AbortSignal, method = 'GET', body?:
   return data;
 }
 export const observations = {
+  conditions: async (point: { latitude: number; longitude: number }, observedAt: string, utcOffset: string, signal: AbortSignal): Promise<{ conditionsId: string; conditions: ObservationConditions }> => {
+    const data = await request('/conditions', signal, 'POST', { latitude: Math.round(point.latitude * 10) / 10, longitude: Math.round(point.longitude * 10) / 10, observedAt, utcOffset: utcOffset || null });
+    const value = data.conditions;
+    if (typeof data.conditionsId !== 'string' || !/^[a-f0-9-]{36}$/.test(data.conditionsId) || value?.source !== 'Open-Meteo' || value.observedAt !== observedAt || value.latitude !== Math.round(point.latitude * 10) / 10 || value.longitude !== Math.round(point.longitude * 10) / 10 || value.utcOffset !== (utcOffset || null)
+      || value.sourceUrl !== 'https://open-meteo.com/en/docs/historical-weather-api' || ['model', 'matchedTime', 'timezone', 'timeBasis', 'fetchedAt'].some(key => typeof value[key] !== 'string')
+      || ['temperatureC', 'humidityPercent', 'precipitationMm', 'cloudCoverPercent', 'windKmh'].some(key => value[key] !== null && (typeof value[key] !== 'number' || !Number.isFinite(value[key])))) throw new Error('Unexpected historical weather response.');
+    return data;
+  },
   search:(q:string,signal:AbortSignal,peopleOffset=0,postsOffset=0):Promise<{people:PublicBirder[];observations:Observation[];nextPeopleOffset:number|null;nextPostsOffset:number|null}>=>request(`/social/search?q=${encodeURIComponent(q)}&peopleOffset=${peopleOffset}&postsOffset=${postsOffset}`,signal),
   peoplePage:(signal:AbortSignal,q='',offset=0):Promise<{people:PublicBirder[];nextOffset:number|null}>=>request(`/social/people?q=${encodeURIComponent(q)}&offset=${offset}`,signal),
   get: async (id:string,signal:AbortSignal):Promise<Observation> => (await request(`/${encodeURIComponent(id)}`,signal)).observation,
@@ -105,13 +127,14 @@ export const observations = {
 const camera = (exif: PhotoExif) =>
   [exif.cameraMake, exif.cameraModel, exif.lens].filter(Boolean).join(' · ') || 'Camera metadata unavailable';
 export const observationEntry = (row: Observation): JournalEntry => ({
+  weatherSourceUrl: row.conditions?.sourceUrl,
   id: row.id,
   speciesName: row.speciesName,
   scientificName: row.scientificName,
   date: row.observedAt.replace('T', ' '),
   location: row.location,
   gear: camera(row.exif),
-  weather: 'Historical conditions unverified',
+  weather: row.conditions ? `${row.conditions.temperatureC ?? 'Unavailable'}°C · ${row.conditions.windKmh ?? 'Unavailable'} km/h · ${row.conditions.model} · ${row.conditions.matchedTime} ${row.conditions.timezone}. ${row.conditions.timeBasis}. Open-Meteo (CC BY 4.0)` : 'Historical conditions unavailable or withheld',
   notes: row.notes,
   habitatTag: 'User observation',
   imageUrl: row.imageUrl,
@@ -119,6 +142,7 @@ export const observationEntry = (row: Observation): JournalEntry => ({
   inLifeList: row.inLifeList,
 });
 export const observationPost = (row: Observation): CommunityPost => ({
+  locationPoint: row.observationLocation,
   authorId: row.ownerId,
   isFollowing: row.isFollowing,
   id: row.id,
@@ -145,6 +169,7 @@ export const observationPost = (row: Observation): CommunityPost => ({
   isLiked: row.isLiked ?? false,
   isSaved: row.isSaved ?? false,
   comments: row.comments || [],
+  weather: row.conditions ? { lighting: row.conditions.cloudCoverPercent === null ? 'Cloud unavailable' : `${row.conditions.cloudCoverPercent}% cloud`, temp: row.conditions.temperatureC === null ? 'Unavailable' : `${row.conditions.temperatureC}°C`, wind: row.conditions.windKmh === null ? 'Unavailable' : `${row.conditions.windKmh} km/h`, description: `${row.conditions.model} · ${row.conditions.matchedTime} ${row.conditions.timezone}. ${row.conditions.timeBasis}. Open-Meteo (CC BY 4.0)`, sourceUrl: row.conditions.sourceUrl } : undefined,
 });
 
 export interface PublicBirder {

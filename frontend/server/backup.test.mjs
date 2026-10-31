@@ -14,7 +14,8 @@ test('a verified database/media backup restores actual accounts, sessions, priva
   const directory=mkdtempSync(join(tmpdir(),'bird-backup-test-'));
   const dbPath=join(directory,'source.sqlite'),mediaPath=join(directory,'media');
   const discovery={catalogue:async()=>({species:[{id:'comkin1',name:'Common Kingfisher',scientificName:'Alcedo atthis'}],hotspots:[{id:'L123',name:'Synthetic Wetland'}]})};
-  let active=createApp({dbPath,mediaPath,discovery}),server;
+  const observationWeather={load:async query=>({...query,source:'Open-Meteo',sourceUrl:'https://open-meteo.com/en/docs/historical-weather-api',model:'Synthetic backup weather estimate',temperatureC:20,windKmh:0,matchedTime:query.observedAt,timezone:'GMT',timeBasis:'Assumed local clock',fetchedAt:new Date().toISOString()})};
+  let active=createApp({dbPath,mediaPath,discovery,observationWeather}),server;
   const open=async()=>{server=active.app.listen(0,'127.0.0.1');await new Promise(resolve=>server.once('listening',resolve));};
   const request=(path,body,cookie,type='application/json')=>fetch(`http://127.0.0.1:${server.address().port}/api/${path}`,{method:body===undefined?'GET':'POST',headers:{origin:'http://localhost:3000',...(cookie?{cookie}:{}),...(body===undefined?{}:{'Content-Type':type})},body:body===undefined?undefined:type==='application/json'?JSON.stringify(body):body});
   t.after(async()=>{if(server?.listening)await new Promise(resolve=>server.close(resolve));if(active.db.isOpen)active.db.close();assert.equal(dirname(directory),tmpdir());rmSync(directory,{recursive:true,force:true});});
@@ -24,8 +25,11 @@ test('a verified database/media backup restores actual accounts, sessions, priva
   const image=await sharp({create:{width:10,height:10,channels:3,background:'#123456'}}).jpeg().toBuffer();
   const upload=await request('observations/media',image,cookie,'image/jpeg');assert.equal(upload.status,201);
   const media=(await upload.json()).media;
-  const published=await request('observations',{mediaId:media.id,speciesId:'comkin1',hotspotId:'L123',observedAt:'2026-10-23T09:00',notes:'Private backup fixture',visibility:'private',hideExactLocation:true},cookie);
+  const customLocation={latitude:28.56789,longitude:77.12345,label:'Private backup point',source:'manual'};
+  const conditions=await(await request('observations/conditions',{...customLocation,observedAt:'2026-10-23T09:00'},cookie)).json();
+  const published=await request('observations',{mediaId:media.id,speciesId:'comkin1',hotspotId:'',customLocation,conditionsId:conditions.conditionsId,observedAt:'2026-10-23T09:00',notes:'Private backup fixture',visibility:'private',hideExactLocation:true},cookie);
   assert.equal(published.status,201);const before=(await published.json()).observation;
+  assert.deepEqual(before.observationLocation,customLocation);assert.equal(before.conditions.temperatureC,20);
   const originalBytes=Buffer.from(await(await request(`observations/media/${media.id}`,undefined,cookie)).arrayBuffer());
   await new Promise(resolve=>server.close(resolve));
   // No app writes occur. Keep the idle connection open to prove SQLite's backup

@@ -9,6 +9,8 @@ import { normalizeExif } from './exif.mjs';
 import { communityRouter, communityStats, visibleObservationSQL } from './community.mjs';
 import { createAlerts } from './alerts.mjs';
 import { messagesRouter } from './messages.mjs';
+import { observationDetails } from './observation-details.mjs';
+import { roundedPoint } from './observation-weather.mjs';
 
 const maxBytes = 10 * 1024 * 1024;
 const clean = (value, max) => (typeof value === 'string' && value.trim().length <= max ? value.trim() : null);
@@ -50,7 +52,7 @@ async function sanitizeImage(bytes) {
 export function observationsRouter(
   db,
   discovery,
-  { mediaPath = resolve('data/media'), now = Date.now, processImage = sanitizeImage, push } = {},
+  { mediaPath = resolve('data/media'), now = Date.now, processImage = sanitizeImage, push, weather } = {},
 ) {
   db.exec(`
     CREATE TABLE IF NOT EXISTS profiles (
@@ -80,6 +82,7 @@ export function observationsRouter(
     );
     CREATE INDEX IF NOT EXISTS observations_owner_date ON observations(user_id, created_at);
   `);
+  const details = observationDetails(db, weather, now);
   const router = Router();
   const route = (fn) => async (req, res, next) => {
     try {
@@ -95,7 +98,7 @@ export function observationsRouter(
     const counts = db
       .prepare(
         `SELECT COUNT(*) AS photos, COUNT(DISTINCT CASE WHEN in_life_list=1 THEN species_id END) AS birds,
-      COUNT(DISTINCT substr(observed_at,1,10)||':'||hotspot_id) AS visits FROM observations WHERE user_id=?`,
+      COUNT(DISTINCT substr(observed_at,1,10)||':'||CASE WHEN hotspot_id='' THEN COALESCE((SELECT round(json_extract(location_json,'$.latitude'),3)||','||round(json_extract(location_json,'$.longitude'),3) FROM observation_details WHERE observation_id=observations.id),id) ELSE hotspot_id END) AS visits FROM observations WHERE user_id=?`,
       )
       .get(userId);
     return {
@@ -143,6 +146,9 @@ export function observationsRouter(
       db.prepare('SELECT location_privacy FROM profiles WHERE user_id=?').get(row.user_id)
         ?.location_privacy || 'approximate';
     const hidden = !own && ['hide', 'private'].includes(ownerPrivacy);
+    const extra = details.get(row.id);
+    const custom = !row.hotspot_id;
+    const pointHidden = hidden || (!own && custom && !!row.hide_location);
     return {
       id: row.id,
       ownerId: row.user_id,
@@ -151,8 +157,11 @@ export function observationsRouter(
       speciesId: row.species_id,
       speciesName: row.species_name,
       scientificName: row.scientific_name,
-      hotspotId: hidden ? null : row.hotspot_id,
-      location: hidden ? 'Location withheld' : row.hotspot_name,
+      hotspotId: hidden ? null : row.hotspot_id || null,
+      location: pointHidden ? 'Location withheld' : custom && !own ? 'Approximate observation area' : row.hotspot_name,
+      observationLocation: pointHidden ? null : extra.location ? own ? extra.location : { ...roundedPoint(extra.location), label: 'Approximate observation area', source: 'generalized' } : null,
+      conditions: pointHidden ? null : extra.conditions,
+      ...(own ? { utcOffset: extra.utcOffset } : {}),
       observedAt: row.observed_at,
       notes: row.notes,
       visibility: row.visibility,
@@ -171,7 +180,7 @@ export function observationsRouter(
           }
         : {}),
       locationPolicy:
-        'Shared records use hotspot-level location only; exact EXIF coordinates are never published. This conservative protection applies to all species, without claiming a verified sensitivity classification.',
+        'Exact EXIF and chosen coordinates are owner-only. Shared records use hotspot-level or rounded 0.1-degree location; custom labels remain owner-only. Hidden locations also withhold conditions. Applies to all species.',
     };
   };
   const socialNotifications=createSocialNotifications(db,{observation,canRead},now);
@@ -181,6 +190,7 @@ export function observationsRouter(
   router.dispatchPush = alerts.dispatchPush;
   router.checkOpportunities = alerts.checkOpportunities;
   router.use('/alerts', alerts.router);
+  router.post('/conditions', route(async (req, res) => res.json(await details.preview(req.userId, req.body || {}))));
   router.get(
     '/profile',
     route((req, res) => res.json({ profile: profile(req.userId) })),
@@ -365,6 +375,7 @@ export function observationsRouter(
             exif,
             metadataError,
             hasPrivateLocation: latitude !== null && longitude !== null,
+            privateLocation: latitude !== null && longitude !== null ? { latitude, longitude } : null,
             note: 'Shared image is re-encoded JPEG, max 4096px, with embedded metadata removed. Original file is not retained.',
           },
         });
@@ -434,7 +445,7 @@ export function observationsRouter(
       if (
         !uuid(body.mediaId) ||
         typeof body.speciesId !== 'string' ||
-        typeof body.hotspotId !== 'string' ||
+        (typeof body.hotspotId !== 'string' && !body.customLocation) ||
         !['public', 'followers', 'private'].includes(body.visibility) ||
         typeof body.hideExactLocation !== 'boolean' ||
         clean(body.notes, 3000) === null ||
@@ -447,8 +458,12 @@ export function observationsRouter(
         );
       if(!validObservationTime(body.observedAt,now()))
         throw fail(400,'Enter a valid observation date/time (camera/local clock; timezone unverified).');
+      const customLocation = body.customLocation ? details.location(body.customLocation) : null;
+      const utcOffset = details.offset(body.utcOffset);
+      if (customLocation && body.hotspotId) throw fail(400, 'Choose either an eBird hotspot or a custom point.');
       const media = db.prepare('SELECT * FROM media WHERE id=? AND user_id=?').get(body.mediaId, req.userId);
       if (!media) throw fail(409, 'Choose an unused photograph belonging to your account.');
+      details.checkExif(customLocation, media);
       const existing = db.prepare('SELECT * FROM observations WHERE media_id=?').get(body.mediaId);
       if (existing) {
         if (
@@ -459,6 +474,7 @@ export function observationsRouter(
           existing.notes !== body.notes.trim() ||
           existing.visibility !== body.visibility ||
           !!existing.hide_location !== body.hideExactLocation
+          || JSON.stringify(details.get(existing.id).location) !== JSON.stringify(customLocation)
         )
           throw fail(409, 'This photograph is already attached to an observation.');
         return res.json({
@@ -468,9 +484,10 @@ export function observationsRouter(
       }
       const catalogue = await discovery.catalogue();
       const species = catalogue.species.find((row) => row.id === body.speciesId),
-        hotspot = catalogue.hotspots.find((row) => row.id === body.hotspotId);
+        hotspot = customLocation ? { id: '', name: customLocation.label || 'Chosen observation point' } : catalogue.hotspots.find((row) => row.id === body.hotspotId);
       if (!species || !hotspot)
         throw fail(400, 'Choose a species and hotspot from the current discovery catalogue.');
+      const conditions = details.conditions(body.conditionsId, req.userId, customLocation || hotspot, body.observedAt, body.utcOffset);
       const id = randomUUID();
       // No await inside this transaction: the sighting and its matched alerts commit together.
       db.exec('BEGIN');
@@ -491,6 +508,7 @@ export function observationsRouter(
           1,
           now(),
         );
+        details.save(id, customLocation, conditions, utcOffset);
         alerts.queue(observation(id));
         db.exec('COMMIT');
       } catch (error) {
@@ -517,33 +535,50 @@ export function observationsRouter(
     route(async(req,res)=>{
       const original=observation(req.params.id);
       if(!original||original.user_id!==req.userId)throw fail(404,'Observation not found.');
-      const body=req.body,allowed=['inLifeList','visibility','notes','observedAt','speciesId','hotspotId'];
+      const body=req.body,allowed=['inLifeList','visibility','notes','observedAt','speciesId','hotspotId','customLocation','conditionsId','utcOffset','hideExactLocation'];
       if(!body||typeof body!=='object'||Array.isArray(body)||!Object.keys(body).length||Object.keys(body).some(key=>!allowed.includes(key)))
         throw fail(400,'Choose valid observation fields to change.');
       if((body.inLifeList!==undefined&&typeof body.inLifeList!=='boolean')||
+         (body.hideExactLocation!==undefined&&typeof body.hideExactLocation!=='boolean')||
          (body.visibility!==undefined&&!['public','followers','private'].includes(body.visibility))||
          (body.notes!==undefined&&clean(body.notes,3000)===null)||
          (body.observedAt!==undefined&&!validObservationTime(body.observedAt,now()))||
-         ['speciesId','hotspotId'].some(key=>body[key]!==undefined&&(typeof body[key]!=='string'||!body[key]||body[key].length>80)))
+         ['speciesId','hotspotId'].some(key=>body[key]!==undefined&&(typeof body[key]!=='string'||(!body[key]&&!(key==='hotspotId'&&body.customLocation))||body[key].length>80)))
         throw fail(400,'Check species, hotspot, local date/time, visibility and notes (up to 3000 characters).');
       // Text/privacy/life-list edits must still work when the discovery provider is unavailable.
-      const needsCatalogue=(body.speciesId!==undefined&&body.speciesId!==original.species_id)||(body.hotspotId!==undefined&&body.hotspotId!==original.hotspot_id);
+      const oldDetails=details.get(original.id);
+      const newPoint=body.customLocation===undefined?undefined:body.customLocation===null?null:details.location(body.customLocation);
+      details.checkExif(newPoint, original);
+      if(newPoint&&body.hotspotId)throw fail(400,'Choose either a hotspot or a custom point.');
+      const needsCatalogue=(body.speciesId!==undefined&&body.speciesId!==original.species_id)||(body.hotspotId!==undefined&&body.hotspotId!==original.hotspot_id&&!newPoint)||(!!body.conditionsId&&!newPoint&&!oldDetails.location);
       const catalogue=needsCatalogue?await discovery.catalogue():null;
       const species=body.speciesId===undefined?null:body.speciesId===original.species_id?{id:original.species_id,name:original.species_name,scientificName:original.scientific_name}:catalogue.species.find(row=>row.id===body.speciesId);
-      const hotspot=body.hotspotId===undefined?null:body.hotspotId===original.hotspot_id?{id:original.hotspot_id,name:original.hotspot_name}:catalogue.hotspots.find(row=>row.id===body.hotspotId);
+      const hotspot=newPoint?{id:'',name:newPoint.label||'Chosen observation point'}:body.hotspotId===undefined?null:body.hotspotId===original.hotspot_id?{id:original.hotspot_id,name:original.hotspot_name}:catalogue.hotspots.find(row=>row.id===body.hotspotId);
       if((body.speciesId!==undefined&&!species)||(body.hotspotId!==undefined&&!hotspot))throw fail(400,'Choose a species and hotspot from the current discovery catalogue.');
       // Awaiting the provider may allow another request to run. Merge only submitted
       // fields into the latest owned row, preserving unrelated concurrent changes.
       const row=observation(original.id);
       if(!row||row.user_id!==req.userId)throw fail(404,'Observation not found.');
-      const corrected=(species&&species.id!==row.species_id)||(hotspot&&hotspot.id!==row.hotspot_id);
+      const currentDetails=details.get(row.id);
+      const point=newPoint===undefined?(hotspot?.id?null:currentDetails.location):newPoint;
+      if(!point&&!(hotspot?.id||row.hotspot_id))throw fail(400,'Keep a custom location or choose an eBird hotspot.');
+      const locationChanged=!!hotspot||newPoint!==undefined;
+      const conditionsChanged=locationChanged||body.observedAt!==undefined||body.utcOffset!==undefined;
+      let conditions=conditionsChanged?null:currentDetails.conditions;
+      if(body.conditionsId) {
+        let weatherPoint=point;
+        if(!weatherPoint)weatherPoint=catalogue?.hotspots.find(site=>site.id===(hotspot?.id||row.hotspot_id));
+        conditions=details.conditions(body.conditionsId,req.userId,weatherPoint,body.observedAt??row.observed_at,body.utcOffset);
+      } else if(body.conditionsId===null)conditions=null;
+      const corrected=(species&&species.id!==row.species_id)||locationChanged;
       db.exec('BEGIN');
       try{
-        db.prepare(`UPDATE observations SET in_life_list=?,visibility=?,notes=?,observed_at=?,species_id=?,species_name=?,scientific_name=?,hotspot_id=?,hotspot_name=? WHERE id=?`).run(
+        db.prepare(`UPDATE observations SET in_life_list=?,visibility=?,notes=?,observed_at=?,species_id=?,species_name=?,scientific_name=?,hotspot_id=?,hotspot_name=?,hide_location=? WHERE id=?`).run(
           body.inLifeList===undefined?row.in_life_list:Number(body.inLifeList),body.visibility??row.visibility,
           body.notes===undefined?row.notes:body.notes.trim(),body.observedAt??row.observed_at,
           species?.id??row.species_id,species?.name??row.species_name,species?.scientificName??row.scientific_name,
-          hotspot?.id??row.hotspot_id,hotspot?.name??row.hotspot_name,row.id);
+          hotspot?.id??row.hotspot_id,hotspot?.name??row.hotspot_name,body.hideExactLocation===undefined?row.hide_location:Number(body.hideExactLocation),row.id);
+        details.save(row.id,point,conditions,body.utcOffset===undefined ? (body.observedAt===undefined ? currentDetails.utcOffset : null) : details.offset(body.utcOffset));
         // A corrected species/site is not a newly published sighting. Old matched
         // alerts/outbox references must not silently change into a different report.
         if(corrected)db.prepare('DELETE FROM sighting_alerts WHERE observation_id=?').run(row.id);

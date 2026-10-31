@@ -14,6 +14,7 @@ Start with the [current completion plan](docs/PROJECT_COMPLETION_PLAN.md), [Deve
 
 - Fifteen frontend screens for discovery, species, hotspots, community, observations, journal, life list, quiz, messages, profile, search, notifications, settings and authentication.
 - Express authentication API with SQLite persistence, salted password hashes and server-managed sessions.
+- Observation uploads search real eBird common/scientific names, autofill available EXIF date/GPS without replacing manual edits, and support custom map/manual locations outside the hotspot list. Optional historical Open-Meteo estimates are tied to the chosen place/time and saved with the record. Exact coordinates/private labels remain owner-only; shared custom areas are rounded and hidden locations withhold conditions. See [upload location, weather and Viva walkthrough](docs/UPLOAD_LOCATION_WEATHER_WALKTHROUGH.md) for setup, provenance and acceptance limits.
 - Input validation, authentication rate limiting, origin checks and session invalidation on logout.
 - Automated authentication integration tests, TypeScript checks and a production build.
 - Real account-owned JPEG/PNG uploads and source EXIF, metadata-free shared images, persisted observations/journal/life-list membership and profile/privacy preferences are implemented in the current vertical slice. Private/followers/profile restrictions are enforced on records and media. See [upload walkthrough and acceptance limits](docs/OBSERVATIONS_WALKTHROUGH.md). Community follows/reactions/comments/reports are delivered; see [community walkthrough](docs/COMMUNITY_WALKTHROUGH.md). Sighting subscriptions/readstate and optional Firebase source are implemented in the current increment; real provider/device delivery remains unverified. Forecast-opportunity scheduling is implemented in the next source increment; see [forecast rules and evidence](docs/FORECAST_OPPORTUNITIES_WALKTHROUGH.md). See [alerts setup and limits](docs/ALERTS_WALKTHROUGH.md). Ten-question source-photo practice and weekly journal-derived challenges are implemented in the current source increment; see [retention walkthrough](docs/RETENTION_WALKTHROUGH.md). Persistent participant-only messaging is delivered; see [messaging behavior and limits](docs/MESSAGING_WALKTHROUGH.md). Global registered-people/post lookup, categorized social notifications and older-record paging are delivered.
@@ -37,7 +38,7 @@ Start with the [current completion plan](docs/PROJECT_COMPLETION_PLAN.md), [Deve
 | --- | --- |
 | Frontend | React 19, TypeScript, Vite, Tailwind CSS |
 | Maps | Leaflet 1.9.4, OpenStreetMap tiles, Google Maps directions links |
-| Weather | Server-side Open-Meteo forecast requests and a short location cache |
+| Weather | Open-Meteo forecasts plus observation-hour archive/recent-past estimates, with rounded queries, bounded caching and persisted validated snapshots |
 | API | Node.js 24, Express |
 | Database | SQLite through Node's built-in SQLite module |
 | Authentication | scrypt password hashing, hashed session tokens, HttpOnly cookies |

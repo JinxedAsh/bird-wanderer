@@ -193,7 +193,7 @@ export function communityRouter(
         .prepare(
           `SELECT o.id FROM observations o JOIN users u ON u.id=o.user_id LEFT JOIN profiles p ON p.user_id=o.user_id
       WHERE ${visibleObservationSQL} AND (instr(lower(o.species_name),:q)>0 OR instr(lower(o.scientific_name),:q)>0 OR instr(lower(u.name),:q)>0 OR instr(lower(o.notes),:q)>0
-      OR instr(lower(CASE WHEN o.user_id=:viewer OR COALESCE(p.location_privacy,'approximate')='approximate' THEN o.hotspot_name ELSE '' END),:q)>0)
+      OR instr(lower(CASE WHEN o.user_id=:viewer OR (o.hotspot_id!='' AND COALESCE(p.location_privacy,'approximate')='approximate') THEN o.hotspot_name ELSE '' END),:q)>0)
       ORDER BY o.created_at DESC,o.id DESC LIMIT 51 OFFSET :offset`,
         )
         .all({ viewer: req.userId, q, offset: postsOffset });

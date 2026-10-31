@@ -257,6 +257,7 @@ export const JournalScreen: React.FC<JournalScreenProps> = ({
                 </span>
                 <span className="text-[12px] font-bold text-[#181c20] truncate block">
                   {activeEntry.weather}
+                  {activeEntry.weatherSourceUrl && <a href={activeEntry.weatherSourceUrl} target="_blank" rel="noreferrer" className="block min-h-11 underline">Open-Meteo source and methodology</a>}
                 </span>
               </div>
             </div>
