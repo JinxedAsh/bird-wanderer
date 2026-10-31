@@ -1,8 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import type { BirdSpecies, Hotspot, ScreenType, UserProfile } from '../types';
 import { observations, type UploadedPhoto, type ObservationInput } from '../lib/observations';
 import { SessionExpiredError } from '../lib/auth';
 import { PhotoMetadata } from './PhotoMetadata';
+import { speciesMatches, exifObservationTime, hasObservationLocation, type ObservationPoint } from '../lib/observation-form';
+import { ObservationLocationFields } from './ObservationLocationFields';
+import { ObservationConditionsPanel, conditionsKey, type ConditionsSelection } from './ObservationConditionsPanel';
 
 interface LogObservationScreenProps {
   initialSpecies?: BirdSpecies;
@@ -27,6 +30,12 @@ export const LogObservationScreen: React.FC<LogObservationScreenProps> = ({
   const [speciesId, setSpeciesId] = useState(initialSpecies?.source ? initialSpecies.id : '');
   const [hotspotId, setHotspotId] = useState('');
   const [observedAt, setObservedAt] = useState('');
+  const [point, setPoint] = useState<ObservationPoint | null>(null);
+  const [utcOffset, setUtcOffset] = useState('');
+  const [dateSource, setDateSource] = useState('Enter the observation time or use photo EXIF when present.');
+  const [conditions, setConditions] = useState<ConditionsSelection | null>(null);
+  const dateEdited = useRef(false), locationEdited = useRef(false);
+  const [locationReset, setLocationReset] = useState(0);
   const [notes, setNotes] = useState('');
   const [visibility, setVisibility] = useState<ObservationInput['visibility']>('private');
   const [hideExactLocation, setHideExactLocation] = useState(true);
@@ -34,11 +43,24 @@ export const LogObservationScreen: React.FC<LogObservationScreenProps> = ({
   const [preview, setPreview] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [published, setPublished] = useState(false);
   const pending = useRef<AbortController | null>(null),
     staged = useRef<string | null>(null),
     objectUrl = useRef('');
   const fileInput = useRef<HTMLInputElement>(null);
+  const applyExif = (media: UploadedPhoto, force = false) => {
+    const time = exifObservationTime(media.exif);
+    if (force || !dateEdited.current) {
+      setObservedAt(time); setUtcOffset(time ? media.exif.utcOffset || '' : ''); dateEdited.current = false;
+      setDateSource(time ? 'Autofilled from the photo EXIF camera clock; confirm or edit it.' : 'No valid capture date in this photo. Enter it manually.');
+    }
+    if (force || !locationEdited.current) {
+      setHotspotId(''); setPoint(media.privateLocation ? { ...media.privateLocation, label: '', source: 'exif' } : null); locationEdited.current = false;
+      if (force) setLocationReset(value => value + 1);
+    }
+
+  };
   const removeStaged = (id: string | null) => {
     if (id) void observations.removeUpload(id, new AbortController().signal).catch(() => {});
   };
@@ -56,6 +78,10 @@ export const LogObservationScreen: React.FC<LogObservationScreenProps> = ({
     removeStaged(staged.current);
     staged.current = null;
     setUploaded(null);
+    setConditions(null);
+
+    if (!dateEdited.current) { setObservedAt(''); setUtcOffset(''); }
+    if (!locationEdited.current) { setPoint(null); setHotspotId(''); setLocationReset(value => value + 1); }
     setError('');
     setBusy(false);
     if (objectUrl.current) URL.revokeObjectURL(objectUrl.current);
@@ -75,6 +101,7 @@ export const LogObservationScreen: React.FC<LogObservationScreenProps> = ({
       if (controller.signal.aborted) return;
       staged.current = media.id;
       setUploaded(media);
+      applyExif(media);
     } catch (failure) {
       if (!controller.signal.aborted) {
         if (failure instanceof SessionExpiredError) onSessionExpired?.();
@@ -84,18 +111,22 @@ export const LogObservationScreen: React.FC<LogObservationScreenProps> = ({
       if (pending.current === controller) setBusy(false);
     }
   };
+  // Conditions are reusable only for the same rounded point, date and offset.
+  // Label-only edits must not discard a still-visible matching snapshot.
   const publish = async () => {
-    if (!uploaded || !speciesId || !hotspotId || !observedAt) {
-      setError('Choose a photograph, catalogue species, hotspot and observation date/time.');
+    if (saving || published) return;
+    if (!uploaded || !speciesId || !hasObservationLocation(hotspotId, point) || !observedAt) {
+      setError('Choose a photograph, catalogue species, location and observation date/time.');
       return;
     }
     const controller = new AbortController();
     pending.current = controller;
+    setSaving(true);
     setBusy(true);
     setError('');
     try {
       await observations.publish(
-        { mediaId: uploaded.id, speciesId, hotspotId, observedAt, notes, visibility, hideExactLocation },
+        { mediaId: uploaded.id, speciesId, hotspotId, customLocation: point, observedAt, utcOffset: utcOffset || null, conditionsId: conditions?.key === conditionsKey(weatherPoint, observedAt, utcOffset) ? conditions.conditionsId : null, notes, visibility, hideExactLocation },
         controller.signal,
       );
       if (controller.signal.aborted) return;
@@ -109,17 +140,15 @@ export const LogObservationScreen: React.FC<LogObservationScreenProps> = ({
         else setError(failure instanceof Error ? failure.message : 'Could not save the observation.');
       }
     } finally {
+      setSaving(false);
       if (pending.current === controller) setBusy(false);
     }
   };
-  const matches = speciesList
-    .filter((bird) =>
-      [bird.name, bird.scientificName].some((value) =>
-        value.toLowerCase().includes(speciesQuery.toLowerCase().trim()),
-      ),
-    )
-    .slice(0, 50);
+  const search = useMemo(() => speciesMatches(speciesList, speciesQuery, speciesId), [speciesList, speciesQuery, speciesId]);
+  const matches = search.choices;
   const selected = speciesList.find((bird) => bird.id === speciesId);
+  const site = hotspots.find(hotspot => hotspot.id === hotspotId);
+  const weatherPoint = point || (typeof site?.latitude === 'number' && typeof site.longitude === 'number' ? { latitude: site.latitude, longitude: site.longitude } : null);
   return (
     <div className="flex flex-col w-full px-4 pb-28 pt-2">
       <div className="relative w-full rounded-2xl overflow-hidden shadow-sm bg-[#ebeef3] aspect-[4/3] mb-4">
@@ -174,10 +203,10 @@ export const LogObservationScreen: React.FC<LogObservationScreenProps> = ({
           <input
             id="observation-species-search"
             value={speciesQuery}
-            disabled={published}
+            disabled={published || saving}
             onChange={(event) => {
               setSpeciesQuery(event.target.value);
-              setSpeciesId('');
+              setSpeciesId(speciesMatches(speciesList, event.target.value).exactId);
             }}
             placeholder="Common or scientific name"
             className="w-full min-h-11 rounded-lg bg-white p-3 text-[13px]"
@@ -188,8 +217,8 @@ export const LogObservationScreen: React.FC<LogObservationScreenProps> = ({
           <select
             id="observation-species"
             value={speciesId}
-            disabled={published}
-            onChange={(event) => setSpeciesId(event.target.value)}
+            disabled={published || saving}
+            onChange={(event) => { setSpeciesId(event.target.value); const bird = speciesList.find(value => value.id === event.target.value); if (bird) setSpeciesQuery(bird.name); }}
             className="w-full min-h-11 rounded-lg bg-white p-2 text-[13px]"
           >
             <option value="">Choose a matching species</option>
@@ -200,47 +229,33 @@ export const LogObservationScreen: React.FC<LogObservationScreenProps> = ({
             ))}
           </select>
           {!matches.length && <p className="text-[12px]">No matching species in the loaded catalogue.</p>}
+          <p className="text-[11px]">{selected ? `Selected: ${selected.name} (${selected.scientificName})` : `${search.total} catalogue matches. Type a common or scientific name, then choose a result. Only the first 50 matches are listed.`}</p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          <label className="bg-[#f1f4f9] p-3 rounded-xl text-[12px] font-bold">
-            Location
-            <select
-              aria-label="Observation hotspot"
-              value={hotspotId}
-              disabled={published}
-              onChange={(event) => setHotspotId(event.target.value)}
-              className="block mt-2 w-full min-h-11 rounded-lg bg-white p-2 text-[13px] font-normal"
-            >
-              <option value="">Choose a hotspot</option>
-              {hotspots.map((hotspot) => (
-                <option key={hotspot.id} value={hotspot.id}>
-                  {hotspot.name}
-                </option>
-              ))}
-            </select>
-          </label>
+          <ObservationLocationFields resetKey={locationReset} hotspots={hotspots} hotspotId={hotspotId} point={point} disabled={published || saving} onChange={(id, next) => { locationEdited.current = true; setHotspotId(id); setPoint(next);  }} />
           <label className="bg-[#f1f4f9] p-3 rounded-xl text-[12px] font-bold">
             Date &amp; Time
             <input
               aria-label="Observation date and time"
               type="datetime-local"
               value={observedAt}
-              disabled={published}
-              onChange={(event) => setObservedAt(event.target.value)}
+              disabled={published || saving}
+              onChange={(event) => { dateEdited.current = true; setObservedAt(event.target.value); setUtcOffset(''); setDateSource('Manually entered local clock; timezone unverified.');  }}
               className="block mt-2 w-full min-h-11 min-w-0 rounded-lg bg-white p-2 text-[13px] font-normal"
             />
           </label>
         </div>
         <p className="text-[11px] text-[#42493e]">
-          Enter local observation time. A camera clock/timezone is not independently verified. The selected
-          hotspot is not proof of where the photo was captured.
+          {dateSource} A camera clock/timezone is not independently verified. A selected hotspot is not proof of where the photo was captured.
         </p>
+        <label className="block text-[12px]">UTC offset (optional, such as +05:30)<input aria-label="Observation UTC offset" value={utcOffset} disabled={published || saving} maxLength={6} onChange={event => { dateEdited.current = true; setUtcOffset(event.target.value);  }} className="block w-full min-h-11 rounded-lg bg-[#f1f4f9] p-2" /></label>
+        {uploaded && !published && <button type="button" className="min-h-11 underline text-[12px]" disabled={saving} onClick={() => applyExif(uploaded, true)}>Use photo EXIF date and GPS again (replaces manual entries)</button>}
       </section>
       <section className="bg-[#f1f4f9] p-3.5 rounded-xl mb-4">
         <h3 className="text-[13px] font-bold mb-2">Camera &amp; Lens — source metadata</h3>
         {uploaded ? (
           <>
-            <PhotoMetadata exif={uploaded.exif} />
+            <PhotoMetadata exif={uploaded.exif} source="upload" />
             {uploaded.metadataError && (
               <p role="status" className="text-[12px]">
                 Image is valid, but camera metadata could not be read.
@@ -253,19 +268,14 @@ export const LogObservationScreen: React.FC<LogObservationScreenProps> = ({
           </p>
         )}
       </section>
-      <section className="bg-[#f1f4f9] p-3.5 rounded-xl mb-4">
-        <h3 className="text-[13px] font-bold">Conditions</h3>
-        <p className="text-[12px] mt-2">
-          Historical weather is unverified. Current forecasts are not attached to your past photograph.
-        </p>
-      </section>
+      <ObservationConditionsPanel key={uploaded?.id || 'draft'} point={weatherPoint} observedAt={observedAt} utcOffset={utcOffset} disabled={published || saving} onChange={setConditions} onSessionExpired={onSessionExpired} />
       <label className="bg-[#f1f4f9] p-3.5 rounded-xl mb-4 text-[13px] font-bold">
         Field Notes
         <textarea
           aria-label="Field notes"
           value={notes}
           maxLength={3000}
-          disabled={published}
+          disabled={published || saving}
           onChange={(event) => setNotes(event.target.value)}
           placeholder="Describe what you observed. Avoid private coordinates in public notes."
           rows={4}
@@ -280,7 +290,7 @@ export const LogObservationScreen: React.FC<LogObservationScreenProps> = ({
             role="switch"
             aria-label="Hide exact location"
             aria-checked={hideExactLocation}
-            disabled={published}
+            disabled={published || saving}
             onClick={() => setHideExactLocation((value) => !value)}
             className={`min-h-11 px-3 rounded-xl text-[12px] font-semibold ${hideExactLocation ? 'bg-[#2d5a27] text-white' : 'bg-white'}`}
           >
@@ -288,8 +298,7 @@ export const LogObservationScreen: React.FC<LogObservationScreenProps> = ({
           </button>
         </div>
         <p className="text-[11px] mt-2">
-          Exact EXIF coordinates are private to you. Shared records use only the selected hotspot; image
-          metadata is removed. This protection currently applies to every species, without claiming a reviewed
+          Exact EXIF and chosen coordinates are private to you. Hidden custom locations also withhold conditions; generalized custom areas use 0.1-degree rounding. Custom labels stay private. Image metadata is removed. This protection currently applies to every species, without claiming a reviewed
           endangered-species classification.
         </p>
       </section>
@@ -300,7 +309,7 @@ export const LogObservationScreen: React.FC<LogObservationScreenProps> = ({
             <button
               key={mode}
               type="button"
-              disabled={published}
+              disabled={published || saving}
               aria-pressed={visibility === mode}
               onClick={() => setVisibility(mode)}
               className={`flex-1 min-h-11 rounded-xl text-[12px] font-semibold capitalize ${visibility === mode ? 'bg-[#2d5a27] text-white' : 'bg-white'}`}
@@ -329,7 +338,7 @@ export const LogObservationScreen: React.FC<LogObservationScreenProps> = ({
       ) : (
         <button
           type="button"
-          disabled={busy || !uploaded}
+          disabled={busy || !uploaded || saving}
           onClick={() => void publish()}
           className="w-full min-h-12 rounded-xl bg-[#154212] text-white font-bold disabled:opacity-50"
         >

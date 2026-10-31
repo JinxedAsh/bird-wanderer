@@ -55,6 +55,7 @@ export interface PostExif {
 }
 
 export interface CommunityPost {
+  locationPoint?: { latitude: number; longitude: number } | null;
   authorId?: string;
   isFollowing?: boolean;
   isNearby?: boolean;
@@ -88,6 +89,8 @@ export interface CommunityPost {
     lighting: string;
     temp: string;
     wind: string;
+    description?: string;
+    sourceUrl?: string;
   };
 }
 
@@ -146,6 +149,7 @@ export interface Hotspot {
 }
 
 export interface JournalEntry {
+  weatherSourceUrl?: string;
   id: string;
   speciesName: string;
   scientificName: string;

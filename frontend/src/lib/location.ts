@@ -4,7 +4,7 @@ import { hotspotCoordinates } from './maps';
 export interface LocationPoint { latitude: number; longitude: number; source: 'GPS' | 'Manual'; accuracyM?: number }
 export const nearbyRadiusKm = 50;
 
-export function distanceKm(from: LocationPoint, hotspot: Hotspot): number | null {
+export function distanceKm(from: LocationPoint, hotspot: Pick<Hotspot, 'latitude' | 'longitude'>): number | null {
   const to = hotspotCoordinates(hotspot);
   if (!to || !hotspotCoordinates(from)) return null;
   const radians = (degrees: number) => degrees * Math.PI / 180;

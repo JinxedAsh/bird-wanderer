@@ -10,6 +10,7 @@ import { observationsRouter } from './observations.mjs';
 import { retentionRouter } from './retention.mjs';
 import { registerRecovery } from './recovery.mjs';
 import { registerVerification } from './verification.mjs';
+import { createObservationWeather } from './observation-weather.mjs';
 
 const scrypt = promisify(scryptCallback);
 const cookieName = 'bw_session';
@@ -17,7 +18,7 @@ const sessionDuration = 7 * 24 * 60 * 60 * 1000;
 const digest = (value) => createHash('sha256').update(value).digest('hex');
 const passwordOptions = { N: 32768, r: 8, p: 3, maxmem: 64 * 1024 * 1024 };
 
-export function createApp({ dbPath = ':memory:', origin = 'http://localhost:3000', additionalOrigins = [], secureCookies = false, trustProxyLoopback = false, now = Date.now, rateLimit = 30, discovery = createDiscoveryService(), mediaPath, imageProcessor, push, recoveryMail } = {}) {
+export function createApp({ dbPath = ':memory:', origin = 'http://localhost:3000', additionalOrigins = [], secureCookies = false, trustProxyLoopback = false, now = Date.now, rateLimit = 30, discovery = createDiscoveryService(), mediaPath, imageProcessor, push, recoveryMail, observationWeather } = {}) {
   const allowedOrigins = new Set([origin, ...additionalOrigins]);
   if (dbPath !== ':memory:') mkdirSync(dirname(dbPath), { recursive: true });
   const db = new DatabaseSync(dbPath);
@@ -178,7 +179,7 @@ export function createApp({ dbPath = ':memory:', origin = 'http://localhost:3000
     },
   });
   app.use('/api/activity', requireSession, activityRouter(db, discovery, now));
-  const observations = observationsRouter(db, discovery, { mediaPath, now, processImage: imageProcessor, push });
+  const observations = observationsRouter(db, discovery, { mediaPath, now, processImage: imageProcessor, push, weather: observationWeather || createObservationWeather({ now }) });
   app.use('/api/observations', requireSession, observations);
   app.use('/api/retention', requireSession, retentionRouter(db,discovery,now));
   app.use('/api/discovery', requireSession, discoveryRouter(discovery));

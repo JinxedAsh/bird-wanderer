@@ -37,7 +37,7 @@ import { HotspotsScreen } from './components/HotspotsScreen';
 const JournalScreen=React.lazy(()=>import('./components/JournalScreen').then(module=>({default:module.JournalScreen})));
 import { ProfileScreen } from './components/ProfileScreen';
 import { SpeciesDetailScreen } from './components/SpeciesDetailScreen';
-import { LogObservationScreen } from './components/LogObservationScreen';
+const LogObservationScreen = React.lazy(() => import('./components/LogObservationScreen').then(module => ({ default: module.LogObservationScreen })));
 import { HotspotDetailScreen } from './components/HotspotDetailScreen';
 import { LifeListScreen } from './components/LifeListScreen';
 const BirdQuizScreen=React.lazy(()=>import('./components/BirdQuizScreen').then(module=>({default:module.BirdQuizScreen})));
@@ -789,7 +789,7 @@ export default function App() {
               onDeleteComment={id=>changeRecord(signal=>observations.deleteComment(id,signal))}
               nearbyEnabled={Boolean(location)}
               onChooseLocation={()=>{navigateTo('explore');setLocationPickerOpen(true);}}
-              posts={posts.map(post=>{const point=discovery?.hotspots.find(h=>h.name===post.location);return {...post,isNearby:Boolean(location&&point&&(distanceKm(location,point)??Infinity)<=nearbyRadiusKm)};})}
+              posts={posts.map(post=>{const point=post.locationPoint||discovery?.hotspots.find(h=>h.name===post.location);return {...post,isNearby:Boolean(location&&point&&(distanceKm(location,point)??Infinity)<=nearbyRadiusKm)};})}
               onNavigate={navigateTo}
               onSelectSpeciesById={handleSelectSpeciesById}
               onToggleLike={handleToggleLike}
@@ -853,7 +853,7 @@ export default function App() {
           )}
 
           {currentScreen === 'log-observation' && (
-            <LogObservationScreen
+            <React.Suspense fallback={<p role="status" className="p-4 text-sm">Loading observation form…</p>}><LogObservationScreen
               key={sessionUser?.id}
               speciesList={discovery?.species || []}
               hotspots={discovery?.hotspots || []}
@@ -863,7 +863,7 @@ export default function App() {
               onPostObservation={handlePostObservation}
               onNavigate={navigateTo}
               showToast={showToast}
-            />
+            /></React.Suspense>
           )}
 
           {currentScreen === 'hotspot-detail' && (
