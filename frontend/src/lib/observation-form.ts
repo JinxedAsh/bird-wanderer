@@ -22,6 +22,7 @@ export const validObservationPoint = (point: unknown): point is { latitude: numb
   const value = point as ObservationPoint | null;
   return !!value && Number.isFinite(value.latitude) && Math.abs(value.latitude) <= 90 && Number.isFinite(value.longitude) && Math.abs(value.longitude) <= 180;
 };
+export const hasObservationLocation = (hotspotId: string, point: unknown) => !!hotspotId || validObservationPoint(point);
 export function nearestHotspot(point: ObservationPoint | null, hotspots: Hotspot[]) {
   if (!point) return null;
   const radians = (n: number) => n * Math.PI / 180;

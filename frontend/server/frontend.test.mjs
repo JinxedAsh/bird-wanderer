@@ -957,6 +957,10 @@ test('upload species selection normalizes common/scientific punctuation and reta
   assert.equal(module.exifObservationTime({ capturedAt: '2026-03-22 09:45:00' }), '2026-03-22T09:45');
   assert.equal(module.exifObservationTime({ capturedAt: null }), '');
   const point = { latitude: 0, longitude: 0, label: '', source: 'exif' };
+  assert.equal(module.hasObservationLocation('', point), true);
+  assert.equal(module.hasObservationLocation('L123', null), true);
+  assert.equal(module.hasObservationLocation('', null), false);
+  assert.equal(module.hasObservationLocation('', { ...point, longitude: NaN }), false);
   assert.equal(module.nearestHotspot(point, [{ id: 'L0', name: 'Zero', latitude: 0, longitude: 0 }]).distanceKm, 0);
   const html = render('ObservationLocationFields', { hotspots: [], hotspotId: '', point, onChange: noop });
   assert.match(html, /Observation latitude/); assert.match(html, /owner-only/); assert.doesNotMatch(html, /Noida|Nominatim/);

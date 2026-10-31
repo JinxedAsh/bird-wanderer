@@ -3,7 +3,7 @@ import { observations, type Observation } from '../lib/observations';
 import { SessionExpiredError } from '../lib/auth';
 import { useDialogFocus } from '../lib/useDialogFocus';
 import type { BirdSpecies, Hotspot } from '../types';
-import { speciesMatches, type ObservationPoint } from '../lib/observation-form';
+import { speciesMatches, hasObservationLocation, type ObservationPoint } from '../lib/observation-form';
 import { ObservationLocationFields } from './ObservationLocationFields';
 import { ObservationConditionsPanel, conditionsKey, type ConditionsSelection } from './ObservationConditionsPanel';
 
@@ -269,7 +269,7 @@ export function EditObservationSheet({
             <div className="flex gap-2">
               <button
                 disabled={
-                  busy || !dirty || !draft.speciesId || !draft.hotspotId
+                  busy || !dirty || !draft.speciesId || !hasObservationLocation(draft.hotspotId, point)
                 }
                 className="min-h-11 flex-1 rounded-xl bg-[#154212] px-3 text-white disabled:opacity-50"
                 type="submit"

@@ -110,12 +110,18 @@ test('custom points and conditions persist with owner-only exact coordinates, pr
   assert.equal((await f.request('observations', { method: 'POST', cookie: b.cookie, body: { ...input, mediaId: mediaB.id } })).status, 400);
   assert.equal((await f.request('observations', { method: 'POST', cookie: a.cookie, body: input })).status, 200);
   await f.restart(); assert.deepEqual(await read(a), own);
+  assert.equal((await f.request(`observations/${own.id}`, { method: 'PATCH', cookie: a.cookie, body: { visibility: 'followers' } })).status, 200);
+  assert.equal((await f.request(`observations/${own.id}`, { cookie: b.cookie })).status, 404);
+  assert.equal((await f.request(`observations/social/follows/${a.user.id}`, { method: 'PUT', cookie: b.cookie, body: { following: true } })).status, 200);
+  assert.equal((await read(b)).observationLocation.latitude, 28.6);
+  assert.doesNotMatch(JSON.stringify(await read(b)), /28\.56789|77\.12345|Private garden label/);
   const profile = await (await f.request('observations/profile', { cookie: a.cookie })).json();
   assert.equal((await f.request('observations/profile', { method: 'PATCH', cookie: a.cookie, body: { ...profile.profile, locationPrivacy: 'hide' } })).status, 200);
   other = await read(b); assert.equal(other.location, 'Location withheld'); assert.equal(other.observationLocation, null); assert.equal(other.conditions, null);
   assert.equal((await read(a)).conditions.temperatureC, 0);
   const changed = await f.request(`observations/${own.id}`, { method: 'PATCH', cookie: a.cookie, body: { observedAt: '2026-03-22T10:45' } }); assert.equal(changed.status, 200); assert.equal((await changed.json()).observation.conditions, null);
   const stale = await f.request(`observations/${own.id}`, { method: 'PATCH', cookie: a.cookie, body: { conditionsId: snapshot.conditionsId } }); assert.equal(stale.status, 400);
+  const trueExif = await f.request(`observations/${own.id}`, { method: 'PATCH', cookie: a.cookie, body: { customLocation: { latitude: 28.5, longitude: 77.2, label: '', source: 'exif' }, hotspotId: '' } }); assert.equal(trueExif.status, 200);
   const switched = await f.request(`observations/${own.id}`, { method: 'PATCH', cookie: a.cookie, body: { hotspotId: 'L123', customLocation: null } }); assert.equal(switched.status, 200); assert.equal((await switched.json()).observation.hotspotId, 'L123');
 });
 

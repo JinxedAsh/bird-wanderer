@@ -3,7 +3,7 @@ import type { BirdSpecies, Hotspot, ScreenType, UserProfile } from '../types';
 import { observations, type UploadedPhoto, type ObservationInput } from '../lib/observations';
 import { SessionExpiredError } from '../lib/auth';
 import { PhotoMetadata } from './PhotoMetadata';
-import { speciesMatches, exifObservationTime, type ObservationPoint } from '../lib/observation-form';
+import { speciesMatches, exifObservationTime, hasObservationLocation, type ObservationPoint } from '../lib/observation-form';
 import { ObservationLocationFields } from './ObservationLocationFields';
 import { ObservationConditionsPanel, conditionsKey, type ConditionsSelection } from './ObservationConditionsPanel';
 
@@ -115,7 +115,7 @@ export const LogObservationScreen: React.FC<LogObservationScreenProps> = ({
   // Label-only edits must not discard a still-visible matching snapshot.
   const publish = async () => {
     if (saving || published) return;
-    if (!uploaded || !speciesId || (!hotspotId && !point) || !observedAt) {
+    if (!uploaded || !speciesId || !hasObservationLocation(hotspotId, point) || !observedAt) {
       setError('Choose a photograph, catalogue species, location and observation date/time.');
       return;
     }
