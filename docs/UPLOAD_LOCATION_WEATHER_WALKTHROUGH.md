@@ -53,6 +53,8 @@ Automated tests cover common/scientific normalization, selected options beyond t
 
 Browser testing uses isolated storage, pre-created synthetic accounts and generated JPEGs; its exact builds, fixes and results are in Development Record Entry59. It is separate from physical Android evidence. Still manually check the Oppo file chooser/keyboard, map taps and permission behavior, actual user-photo EXIF variants, and provider outages/quotas on the intended network. An arbitrary custom pin is not an audited entrance, travel route or permission to photograph there.
 
+Final31 October checkpoint:169 full tests/type/build pass; main asset index-BrIlWYvM.js484.98kB. Scoped browser publication/reload, weather refresh/retention, map keyboard/manual entry, no-hotspot0,0, second-account privacy and320/390px checks passed. A12-second fixture proved that late EXIF preserves full manual entries and a partial coordinate draft. Provenance, no-GPS clearing, same-query weather retention and custom-point Save defects found during QA were fixed and retested. Real archive/recent requests are separate from controlled failure/delay tests; no provider-outage or physical-phone claim is made. [Delivery PR #44](https://github.com/JinxedAsh/bird-wanderer/pull/44).
+
 ## Viva Notes
 
 **Why these changes:** the existing form already had real species and photo metadata, but required too much manual repetition and a limited hotspot choice. We reused those sources, added location flexibility and preserved evidence boundaries.

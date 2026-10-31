@@ -35,6 +35,7 @@ export function createObservationWeather({ fetchImpl = fetch, now = Date.now } =
     const hourly = data?.hourly;
     if (!validPoint(data) || Math.abs(data.latitude - query.latitude) > 1 || Math.min(Math.abs(data.longitude - query.longitude), 360 - Math.abs(data.longitude - query.longitude)) > 1) bad();
     if (!Number.isInteger(data?.utc_offset_seconds) || Math.abs(data.utc_offset_seconds) > 14 * 3600 || typeof data.timezone !== 'string') bad();
+    if (utcTime && (data.utc_offset_seconds !== 0 || !['GMT', 'UTC', 'Etc/UTC'].includes(data.timezone))) bad();
     try { new Intl.DateTimeFormat('en', { timeZone: data.timezone }); } catch { bad(); }
     if (!Array.isArray(hourly?.time) || hourly.time.length < 1 || hourly.time.length > 26 || hourly.time.some((time, i) => typeof time !== 'string' || !/^\d{4}-\d{2}-\d{2}T\d{2}:00$/.test(time) || time.slice(0, 10) !== date || (i > 0 && time <= hourly.time[i - 1]))) bad();
     for (let i = 0; i < variables.length; i++) if (data.hourly_units?.[variables[i]] !== units[i] || !Array.isArray(hourly[variables[i]]) || hourly[variables[i]].length !== hourly.time.length) bad();

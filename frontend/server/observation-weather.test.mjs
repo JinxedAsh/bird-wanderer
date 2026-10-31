@@ -34,6 +34,8 @@ test('known offset selects UTC hour across date boundary; recent endpoint never 
   const recent = await service.load({ ...input, observedAt: '2026-10-30T09:45' });
   assert.equal(requests[1].hostname, 'api.open-meteo.com'); assert.equal(requests[1].searchParams.get('start_date'), '2026-10-30'); assert.match(recent.model, /Recent past/);
   assert.equal(requests[1].searchParams.has('current'), false);
+  const wrongZone = createObservationWeather({ now: () => now, fetchImpl: async url => Response.json({ ...data(url), utc_offset_seconds: 19800 }) });
+  await assert.rejects(wrongZone.load({ ...input, utcOffset: '+05:30' }), /unsupported/);
 });
 test('units/identity/missing data/provider delay fail honestly and failures can retry', async () => {
   for (const mutate of [value => { value.hourly_units.temperature_2m = '°F'; }, value => { value.hourly.time = []; }, value => { value.latitude = 0; }, value => { value.hourly.temperature_2m[9] = 999; }, value => { value.timezone = 'invalid'; }, value => { for (const key of Object.keys(value.hourly)) if (key !== 'time') value.hourly[key][9] = null; }]) {
