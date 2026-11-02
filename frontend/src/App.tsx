@@ -702,6 +702,8 @@ export default function App() {
     </main>
   );
 
+  const discoveryInformation = discovery && !discoveryError ? <p>eBird - {discovery.coverageLabel || discovery.region}. Retrieved {new Date(discovery.fetchedAt).toLocaleString()}. Recent reports: past 14 days. {discovery.cached ? 'Using server cache.' : ''}</p> : undefined;
+
   return (
     <div className="min-h-full bg-[#f7f9ff] text-[#181c20] flex flex-col items-center">
       {/* Mobile Frame Container */}
@@ -715,7 +717,7 @@ export default function App() {
             unreadCount={unreadNotifsCount}
             userProfile={userProfile}
             showToast={showToast}
-            information={['explore','search','hotspots'].includes(currentScreen) && discovery && !discoveryError ? <p>eBird - {discovery.coverageLabel || discovery.region}. Retrieved {new Date(discovery.fetchedAt).toLocaleString()}. Recent reports: past 14 days. {discovery.cached ? 'Using server cache.' : ''}</p> : undefined}
+            information={['explore','hotspots'].includes(currentScreen) ? discoveryInformation : undefined}
           />
         )}
 
@@ -905,7 +907,7 @@ export default function App() {
           )}
 
           {currentScreen === 'search' && (
-            <GlobalSearchScreen key={sessionUser?.id} onOpenPerson={handleOpenPerson} onOpenPost={handleOpenObservation}
+            <GlobalSearchScreen sourceInformation={discoveryInformation} key={sessionUser?.id} onOpenPerson={handleOpenPerson} onOpenPost={handleOpenObservation}
               recentSearches={discoveryActivity.searches}
               savedSpeciesIds={discoveryActivity.saves.filter((item) => item.kind === 'species').map((item) => item.id)}
               historyDisabled={saveDisabled}

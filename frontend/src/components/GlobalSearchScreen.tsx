@@ -10,6 +10,7 @@ import { SessionExpiredError } from '../lib/auth';
 import { SpeciesPhoto } from './SpeciesPhoto';
 
 interface GlobalSearchScreenProps {
+  sourceInformation?: React.ReactNode;
   onOpenPerson?: (id: string) => void;
   onOpenPost?: (id: string) => void;
   recentSearches?: string[];
@@ -47,6 +48,7 @@ export function birdMatchesQuery(bird: BirdSpecies, query: string) {
 }
 
 export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
+  sourceInformation,
   onOpenPerson,
   onOpenPost,
   recentSearches = [],
@@ -255,7 +257,8 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
               </span>
             </button>
           )}
-          <InformationDisclosure label="Search options and history">
+          <InformationDisclosure label="Search options, sources and history">
+          {sourceInformation}
       {(activeCategory === 'all' || activeCategory === 'birds') &&
         externalDiscovery && (
           <label className="mt-2 flex items-center gap-2 text-[12px] text-[#42493e]">

@@ -991,3 +991,12 @@ test('supporting information stays in a labelled native disclosure without losin
   assert.match(html, /<summary aria-label="Weather source and options"/);
   assert.match(html, /href="https:\/\/open-meteo.com\/"/);
 });
+
+
+test('notification settings preserve readable forecast thresholds inside the information control', () => {
+  const html = render('NotificationsScreen', { notifications: [], onMarkAllRead: noop, onSelectNotification: noop, onNavigate: noop });
+  assert.match(html, /aria-label="Alert settings and subscriptions"/);
+  assert.ok(html.includes('rain ≤20%, wind ≤15 km/h'));
+  assert.match(html, /Sighting alerts enabled/);
+  assert.match(html, /Manage subscriptions/);
+});
