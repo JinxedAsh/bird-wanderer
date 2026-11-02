@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import type { BirdSpecies } from '../types';
 import { loadSpeciesPhoto, type SpeciesPhoto as Photo } from '../lib/discovery';
 import { SessionExpiredError } from '../lib/auth';
+import { positionInformationPanel } from './InformationDisclosure';
 import { PhotoMetadata } from './PhotoMetadata';
 
 interface SpeciesPhotoProps {
@@ -21,22 +22,19 @@ export interface PhotoLoadState {
 }
 
 export type PhotoAttribution = Pick<Photo,'author'|'license'|'licenseUrl'|'sourceUrl'|'title'|'credit'|'attribution'|'usageTerms'|'restrictions'|'matchUrl'>;
-export const PhotoCredit: React.FC<{ photo: PhotoAttribution; full?: boolean }> = ({ photo, full = false }) => (
-  <figcaption onClick={(event) => event.stopPropagation()} onKeyDown={(event) => event.stopPropagation()} className="col-span-3 row-start-2 mt-1 text-[10px] leading-relaxed text-[#42493e] break-words">
-    <span>{!full && photo.author.length > 180 ? 'Photo reference • ' : `Photo: ${photo.author} • `}</span>
-    <a href={photo.licenseUrl} target="_blank" rel="noreferrer" className="underline">{photo.license}</a>
-    <span> • </span><a href={photo.sourceUrl} target="_blank" rel="noreferrer" className="underline">Wikimedia Commons</a>
-    {!full && <span> • cropped to fit</span>}
-    {full && <><p>{photo.title} • Cropped to fit the display.</p>{photo.credit && <p>Credit: {photo.credit}</p>}{photo.attribution && <p>Attribution: {photo.attribution}</p>}{photo.usageTerms && <p>Usage terms: {photo.usageTerms}</p>}{photo.restrictions && <p>Source restrictions: {photo.restrictions}</p>}<a href={photo.matchUrl} target="_blank" rel="noreferrer" className="underline">Scientific-name match on Wikidata</a><p>Reference photograph; not evidence of a recent sighting or verified camera settings.</p></>}
-    {!full && photo.author.length > 180 ? <details>
-      <summary className="flex min-h-11 cursor-pointer items-center font-semibold underline">Full photo credit &amp; rights</summary>
-      <p>Photo: {photo.author}</p>
-      {photo.credit && <p>Credit: {photo.credit}</p>}
-      {photo.attribution && <p>Attribution: {photo.attribution}</p>}
-      {photo.usageTerms && <p>Usage terms: {photo.usageTerms}</p>}
-      {photo.restrictions && <p>Source restrictions: {photo.restrictions}</p>}
-    </details> : !full && <>{photo.attribution && <span> • {photo.attribution}</span>}{photo.restrictions && <span> • {photo.restrictions}</span>}</>}
-
+export const PhotoCredit: React.FC<{ photo: PhotoAttribution; full?: boolean; overlay?: boolean; children?: React.ReactNode }> = ({ photo, full = false, overlay = false, children }) => (
+  <figcaption onClick={(event) => event.stopPropagation()} onKeyDown={(event) => event.stopPropagation()} className={`${overlay ? 'photo-credit' : ''} ${full ? 'photo-credit-hero' : ''}`} title={`Photo: ${photo.author} · ${photo.license}`}>
+    <details onToggle={positionInformationPanel} onKeyDown={event => { if (event.key === 'Escape') event.currentTarget.open = false; }} className="reference-info"><summary aria-label="Full photo credit and rights" title="Photo credit and rights"><span aria-hidden="true" className="material-symbols-outlined text-[16px]">info</span><span className="sr-only">Full photo credit &amp; rights</span></summary>
+      <div className="reference-info-panel">
+        <p>Photo: {photo.author} • <a href={photo.licenseUrl} target="_blank" rel="noreferrer" className="underline">{photo.license}</a></p>
+        <a href={photo.sourceUrl} target="_blank" rel="noreferrer" className="underline">Wikimedia Commons</a>
+        <p>{photo.title} • Cropped to fit the display.</p>
+        {photo.credit && <p>Credit: {photo.credit}</p>}{photo.attribution && <p>Attribution: {photo.attribution}</p>}{photo.usageTerms && <p>Usage terms: {photo.usageTerms}</p>}{photo.restrictions && <p>Source restrictions: {photo.restrictions}</p>}
+        <a href={photo.matchUrl} target="_blank" rel="noreferrer" className="underline">Scientific-name match on Wikidata</a>
+        <p>Reference photograph; not evidence of a recent sighting or verified camera settings.</p>
+        {children}
+      </div>
+    </details>
   </figcaption>
 );
 
@@ -85,14 +83,13 @@ export const SpeciesPhoto: React.FC<SpeciesPhotoProps> = ({ species, frameClassN
   }, [species.id, species.source, visible, attempt]);
   const src = broken ? '/discovery-placeholder.svg' : photo?.thumbnailUrl || species.image;
   return (
-    <figure className={hero ? '' : 'contents'}>
+    <figure className={hero ? 'relative' : 'contents'}>
       <div ref={frame} className={frameClassName}>
         <img src={src} alt={species.source && (!photo || broken) ? `${!loaded && !broken ? 'Loading photo' : 'Photo unavailable'}: ${species.name}` : species.name} loading={hero ? 'eager' : 'lazy'} decoding="async" onError={() => setBroken(true)} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" />
         {children}
         {hero && species.source && <div className="absolute bottom-3 left-3 right-3 w-fit max-w-[calc(100%-1.5rem)] flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/75 backdrop-blur-md text-white text-[11px] font-medium shadow-sm"><span className="w-2 h-2 shrink-0 rounded-full bg-[#fe932c]"></span><span>{photo?.exif?.status === 'available' ? 'Source EXIF available' : photo ? 'Source EXIF unavailable' : loaded ? 'Photo metadata unavailable' : 'Loading photo metadata...'}</span></div>}
       </div>
-      {photo && <PhotoCredit photo={photo} full={hero} />}
-      {hero && photo?.exif && <PhotoMetadata exif={photo.exif} />}
+      {photo && <PhotoCredit photo={photo} full={hero} overlay>{hero && photo.exif && <PhotoMetadata exif={photo.exif} />}</PhotoCredit>}
       {hero && species.source && !photo && <p role={error ? 'alert' : 'status'} className="mt-1 text-[12px] text-[#42493e]">{error || (loaded ? 'No matching photograph with supported licence and attribution is available.' : 'Loading species photograph...')}</p>}
       {broken && species.source && <p role="status" className="col-span-3 row-start-3 text-[11px] text-[#42493e]">Photo could not load. Reference and credit remain available.</p>}
       {hero && (error || broken) && <button type="button" onClick={() => { setBroken(false); setAttempt((prev) => prev + 1); }} className="mt-1 text-[12px] font-semibold text-[#154212] underline">Retry photo</button>}

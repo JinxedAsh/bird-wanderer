@@ -1,6 +1,7 @@
 import React from 'react';
 import { ScreenType, UserProfile } from '../types';
 import { readRoute, routeQuery, shareAppLink } from '../lib/navigation';
+import { InformationDisclosure } from './InformationDisclosure';
 
 interface HeaderProps {
   currentScreen: ScreenType;
@@ -10,6 +11,7 @@ interface HeaderProps {
   titleOverride?: string;
   userProfile: UserProfile;
   showToast: (message: string) => void;
+  information?: React.ReactNode;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -20,6 +22,7 @@ export const Header: React.FC<HeaderProps> = ({
   titleOverride,
   userProfile,
   showToast,
+  information,
 }) => {
   const isStackScreen = [
     'species-detail',
@@ -105,6 +108,7 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Right: Actions */}
         <div className="flex items-center gap-1.5 flex-shrink-0">
+          {information && <InformationDisclosure label="Discovery data and sources">{information}</InformationDisclosure>}
           {isStackScreen ? (
             <button
               onClick={() => {

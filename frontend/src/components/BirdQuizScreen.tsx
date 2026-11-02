@@ -195,7 +195,7 @@ export const BirdQuizScreen: React.FC<BirdQuizScreenProps> = ({
       </section>
 
       {/* Observation Photo Card */}
-      <section className="py-2.5">
+      <figure className="relative py-2.5">
         <div className="relative w-full rounded-2xl overflow-hidden bg-[#ebeef3] shadow-sm aspect-[4/3]">
           <img
             key={`${question.imageUrl}:${photoAttempt}`}
@@ -209,15 +209,9 @@ export const BirdQuizScreen: React.FC<BirdQuizScreenProps> = ({
             <span className="text-[11px] font-semibold">Field Identification</span>
           </div>
         </div>
-      </section>
-
-      <figure>
-        <details className="my-2 text-[12px]">
-          <summary className="min-h-11 cursor-pointer">Photograph source and licence</summary>
-          <PhotoCredit photo={question.photoCredit} full />
-          <p>Source filenames may name the species; this is practice, not a closed-book exam.</p>
-        </details>
+        <PhotoCredit photo={question.photoCredit} overlay full><p>Source filenames may name the species; this is practice, not a closed-book exam.</p></PhotoCredit>
       </figure>
+
       {photoFailed && (
         <div role="alert" className="my-2 text-[13px]">
           <p>

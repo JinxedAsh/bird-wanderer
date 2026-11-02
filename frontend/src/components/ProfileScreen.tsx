@@ -56,6 +56,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
           <span className="text-[11px] font-bold uppercase tracking-wider">Field Naturalist</span>
         </div>
         <div className="flex items-center gap-2">
+          <button type="button" onClick={()=>onNavigate('messages')} aria-label="Field Chats" className="w-11 h-11 flex items-center justify-center rounded-xl bg-[#f1f4f9] text-[#181c20]"><span className="material-symbols-outlined text-[20px]">chat</span></button>
           <button
             onClick={() => onNavigate('notifications')}
             aria-label="Notifications"
@@ -76,7 +77,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
       {/* Header Section */}
       <div className="px-4 pt-1 pb-4 flex flex-col items-center text-center">
         <div className="relative mb-2.5">
-          <div className="w-20 h-20 rounded-full overflow-hidden shadow-sm bg-[#e0e3e8] ring-4 ring-white">
+          <div className="w-20 h-20 rounded-2xl overflow-hidden shadow-sm bg-[#e0e3e8] ring-4 ring-white">
             <img
               src={userProfile.avatarUrl}
               alt={userProfile.name}
@@ -139,9 +140,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
             <span className="material-symbols-outlined text-[16px]">notifications_none</span>
             <span>Alerts</span>
           </button>
-          <button type="button" onClick={()=>onNavigate('messages')} className="col-span-3 min-h-11 px-3 bg-[#ebeef3] hover:bg-[#e0e3e8] text-[#181c20] rounded-xl text-[12px] font-semibold flex items-center justify-center gap-2">
-            <span className="material-symbols-outlined text-[18px]">chat</span>Field Chats
-          </button>
+
         </div>
       </div>
 

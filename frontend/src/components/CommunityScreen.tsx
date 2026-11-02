@@ -213,9 +213,7 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
             )}
           </div>
 
-          {onRefresh && <button type="button" onClick={onRefresh} disabled={refreshing} aria-label={refreshing ? 'Refreshing community' : 'Refresh community'} title="Refresh community" className="h-11 w-11 shrink-0 rounded-xl bg-white text-[#154212] shadow-sm disabled:opacity-50">
-            <span aria-hidden="true" className={`material-symbols-outlined text-[22px] ${refreshing ? 'animate-spin motion-reduce:animate-none' : ''}`}>refresh</span>
-          </button>}
+
           <button
             onClick={() => onNavigate('log-observation')}
             aria-label="Upload field photo"
@@ -228,6 +226,9 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
 
         {/* Filter Pills */}
         <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
+          {onRefresh && <button type="button" onClick={onRefresh} disabled={refreshing} aria-label={refreshing ? 'Refreshing community' : 'Refresh community'} title="Refresh community" className="h-11 w-11 shrink-0 rounded-xl bg-white text-[#154212] shadow-sm disabled:opacity-50">
+            <span aria-hidden="true" className={`material-symbols-outlined text-[22px] ${refreshing ? 'animate-spin motion-reduce:animate-none' : ''}`}>refresh</span>
+          </button>}
           {filterOptions.map((opt) => {
             const isActive = activeFilter === opt.id;
             return (
@@ -388,7 +389,7 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
 
               {/* Content & EXIF Strip */}
               <div className="p-3.5 flex flex-col gap-2.5">
-                <p className="text-[14px] text-[#181c20] leading-relaxed">{post.caption}</p>
+                <p className="text-[14px] text-[#181c20] leading-relaxed [overflow-wrap:anywhere]">{post.caption}</p>
 
                 {/* Minimal EXIF Bar */}
                 <div className="bg-[#f1f4f9] rounded-xl px-3 py-2 flex items-center justify-between text-[#42493e] text-[12px]">

@@ -1,3 +1,4 @@
+import { InformationDisclosure } from './InformationDisclosure';
 import React, { useState } from 'react';
 import { AppNotification, ScreenType } from '../types';
 import type { AlertSubscription } from '../lib/alerts';
@@ -43,7 +44,20 @@ export const NotificationsScreen: React.FC<NotificationsScreenProps> = ({
 
   return (
     <div className="flex flex-col w-full pb-28 pt-1">
-      <section className="mx-4 my-2 rounded-xl bg-white p-3 text-[12px] text-[#42493e]">
+      {/* Content Header & Action Bar */}
+      <section className="px-4 pt-2 pb-2 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="text-[18px] font-bold text-[#181c20]">Notifications</span>
+          <span
+            className={`font-semibold text-[11px] px-2 py-0.5 rounded-full ${
+              unreadCount > 0
+                ? 'bg-[#2d5a27] text-white'
+                : 'bg-[#ebeef3] text-[#42493e]'
+            }`}
+          >
+            {unreadCount > 0 ? `${unreadCount} new` : '0 new'}
+          </span>
+          <InformationDisclosure className="reference-info-inline" label="Alert settings and subscriptions">
         <label className="flex min-h-11 items-center justify-between gap-2 font-semibold">Sighting alerts enabled<input type="checkbox" aria-label="Sighting alerts enabled" checked={enabled} onChange={onToggleEnabled} className="h-6 w-6" /></label>
         <p>Subscribe on species or hotspot pages. Alerts cover future visible user reports, not guaranteed sightings. Checked every 15 seconds while this app is visible.</p>
         <p className="mt-2">{pushStatus}</p>
@@ -58,21 +72,8 @@ export const NotificationsScreen: React.FC<NotificationsScreenProps> = ({
           {subscriptions.length===0&&<p>No subscriptions yet.</p>}
           {subscriptions.map(row=><div key={`${row.kind}:${row.id}`} className="flex items-center justify-between gap-2"><span className="min-w-0 break-words">{row.label} · {row.kind}</span><button type="button" onClick={()=>onRemoveSubscription?.(row.kind,row.id)} className="min-h-11 shrink-0 px-2 underline" aria-label={`Remove ${row.label} subscription`}>Remove</button></div>)}
         </details>
-        {error&&<div role="alert" className="mt-2"><p>{error}</p><button type="button" onClick={onRetry} className="min-h-11 underline">Retry alerts</button></div>}
-      </section>
-      {/* Content Header & Action Bar */}
-      <section className="px-4 pt-2 pb-2 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-[18px] font-bold text-[#181c20]">Notifications</span>
-          <span
-            className={`font-semibold text-[11px] px-2 py-0.5 rounded-full ${
-              unreadCount > 0
-                ? 'bg-[#2d5a27] text-white'
-                : 'bg-[#ebeef3] text-[#42493e]'
-            }`}
-          >
-            {unreadCount > 0 ? `${unreadCount} new` : '0 new'}
-          </span>
+
+      </InformationDisclosure>
         </div>
 
         <button
@@ -82,6 +83,9 @@ export const NotificationsScreen: React.FC<NotificationsScreenProps> = ({
           Mark all read
         </button>
       </section>
+
+
+      {error&&<div role="alert" className="mt-2"><p>{error}</p><button type="button" onClick={onRetry} className="min-h-11 underline">Retry alerts</button></div>}
 
       {/* Filter Tabs */}
       <nav aria-label="Notification filters" className="px-4 pb-3">

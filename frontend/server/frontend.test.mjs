@@ -28,14 +28,14 @@ let refreshHelpers;
 before(async () => {
   temporaryDirectory = mkdtempSync(join(root, '.stage1-render-'));
   const screens = {};
-  const names = ['ObservationPinMap','ObservationLocationFields','ObservationConditionsPanel','CommunityScreen', 'EmailVerification', 'VerifyEmailScreen', 'RecoveryRequestSheet', 'ResetPasswordScreen', 'ChangePasswordSheet', 'EditObservationSheet', 'NotificationsScreen', 'FieldChatScreen', 'BirdQuizScreen', 'AuthScreen', 'LogObservationScreen', 'ProfileScreen', 'JournalScreen', 'LifeListScreen', 'GlobalSearchScreen', 'SettingsScreen', 'SpeciesDetailScreen', 'SpeciesPhoto', 'PhotoMetadata', 'PhotoPlanning', 'ReferenceComparisons', 'SpeciesInfoPanel', 'SpeciesRecording', 'HotspotMap', 'HotspotWeatherPanel', 'HotspotDetailScreen', 'HotspotAccess', 'HotspotsScreen', 'ExploreScreen', 'LocationPicker', 'Header'];
+  const names = ['InformationDisclosure','ObservationPinMap','ObservationLocationFields','ObservationConditionsPanel','CommunityScreen', 'EmailVerification', 'VerifyEmailScreen', 'RecoveryRequestSheet', 'ResetPasswordScreen', 'ChangePasswordSheet', 'EditObservationSheet', 'NotificationsScreen', 'FieldChatScreen', 'BirdQuizScreen', 'AuthScreen', 'LogObservationScreen', 'ProfileScreen', 'JournalScreen', 'LifeListScreen', 'GlobalSearchScreen', 'SettingsScreen', 'SpeciesDetailScreen', 'SpeciesPhoto', 'PhotoMetadata', 'PhotoPlanning', 'ReferenceComparisons', 'SpeciesInfoPanel', 'SpeciesRecording', 'HotspotMap', 'HotspotWeatherPanel', 'HotspotDetailScreen', 'HotspotAccess', 'HotspotsScreen', 'ExploreScreen', 'LocationPicker', 'Header'];
   // Compile these existing TSX screens for Node rendering; no browser or new test framework.
   for (const relative of ['lib/observation-form.ts', 'lib/verification.ts', 'lib/pullToRefresh.ts', 'lib/recovery.ts', 'lib/native-push.ts', 'lib/push.ts', 'lib/navigation.ts', 'lib/useDialogFocus.ts', 'lib/maps.ts', 'lib/auth.ts', 'lib/discovery.ts', 'lib/activity.ts', 'lib/location.ts', 'lib/observations.ts', 'lib/alerts.ts', 'lib/retention.ts', 'lib/messages.ts', ...names.map((name) => `components/${name}.tsx`)]) {
     const output = join(temporaryDirectory, relative.replace(/\.tsx?$/, '.mjs'));
     mkdirSync(dirname(output), { recursive: true });
     const source = readFileSync(join(root, 'src', relative), 'utf8');
     const { code } = transformSync(source, { loader: 'tsx', format: 'esm', jsx: 'automatic', target: 'node24' });
-    writeFileSync(output, code.replace('../lib/observation-form"','../lib/observation-form.mjs"').replace('./observation-form"','./observation-form.mjs"').replace('./ObservationPinMap"','./ObservationPinMap.mjs"').replace('./ObservationLocationFields"','./ObservationLocationFields.mjs"').replace('./ObservationConditionsPanel"','./ObservationConditionsPanel.mjs"').replace('./verification"', './verification.mjs"').replace('../lib/verification"', '../lib/verification.mjs"').replace('./EmailVerification"', './EmailVerification.mjs"').replace('../lib/pullToRefresh"', '../lib/pullToRefresh.mjs"').replace('./recovery"', './recovery.mjs"').replace('./RecoveryRequestSheet"', './RecoveryRequestSheet.mjs"').replace('../lib/recovery"', '../lib/recovery.mjs"').replace('./SpeciesRecording"', './SpeciesRecording.mjs"').replace('./native-push"','./native-push.mjs"').replace('./alerts"','./alerts.mjs"').replace('../lib/navigation"','../lib/navigation.mjs"').replace('./ChangePasswordSheet"', './ChangePasswordSheet.mjs"').replace('./EditObservationSheet"','./EditObservationSheet.mjs"').replace('../lib/messages"', '../lib/messages.mjs"').replace('../lib/useDialogFocus"', '../lib/useDialogFocus.mjs"').replace('../lib/maps"', '../lib/maps.mjs"').replace('./HotspotMap"', './HotspotMap.mjs"').replace('./HotspotAccess"', './HotspotAccess.mjs"').replace('./HotspotWeatherPanel"', './HotspotWeatherPanel.mjs"').replace('./SpeciesPhoto"', './SpeciesPhoto.mjs"').replace('./PhotoMetadata"', './PhotoMetadata.mjs"').replace('./PhotoPlanning"', './PhotoPlanning.mjs"').replace('./SpeciesInfoPanel"', './SpeciesInfoPanel.mjs"').replace('./ReferenceComparisons"', './ReferenceComparisons.mjs"').replace('../lib/discovery"', '../lib/discovery.mjs"').replace('../lib/auth"', '../lib/auth.mjs"').replace('../lib/retention"', '../lib/retention.mjs"').replace('./auth"', './auth.mjs"').replace('./maps"', './maps.mjs"').replace('../lib/location"', '../lib/location.mjs"').replace('../lib/observations"', '../lib/observations.mjs"'));
+    writeFileSync(output, code.replace('./InformationDisclosure\"', './InformationDisclosure.mjs\"').replace('../lib/observation-form"','../lib/observation-form.mjs"').replace('./observation-form"','./observation-form.mjs"').replace('./ObservationPinMap"','./ObservationPinMap.mjs"').replace('./ObservationLocationFields"','./ObservationLocationFields.mjs"').replace('./ObservationConditionsPanel"','./ObservationConditionsPanel.mjs"').replace('./verification"', './verification.mjs"').replace('../lib/verification"', '../lib/verification.mjs"').replace('./EmailVerification"', './EmailVerification.mjs"').replace('../lib/pullToRefresh"', '../lib/pullToRefresh.mjs"').replace('./recovery"', './recovery.mjs"').replace('./RecoveryRequestSheet"', './RecoveryRequestSheet.mjs"').replace('../lib/recovery"', '../lib/recovery.mjs"').replace('./SpeciesRecording"', './SpeciesRecording.mjs"').replace('./native-push"','./native-push.mjs"').replace('./alerts"','./alerts.mjs"').replace('../lib/navigation"','../lib/navigation.mjs"').replace('./ChangePasswordSheet"', './ChangePasswordSheet.mjs"').replace('./EditObservationSheet"','./EditObservationSheet.mjs"').replace('../lib/messages"', '../lib/messages.mjs"').replace('../lib/useDialogFocus"', '../lib/useDialogFocus.mjs"').replace('../lib/maps"', '../lib/maps.mjs"').replace('./HotspotMap"', './HotspotMap.mjs"').replace('./HotspotAccess"', './HotspotAccess.mjs"').replace('./HotspotWeatherPanel"', './HotspotWeatherPanel.mjs"').replace('./SpeciesPhoto"', './SpeciesPhoto.mjs"').replace('./PhotoMetadata"', './PhotoMetadata.mjs"').replace('./PhotoPlanning"', './PhotoPlanning.mjs"').replace('./SpeciesInfoPanel"', './SpeciesInfoPanel.mjs"').replace('./ReferenceComparisons"', './ReferenceComparisons.mjs"').replace('../lib/discovery"', '../lib/discovery.mjs"').replace('../lib/auth"', '../lib/auth.mjs"').replace('../lib/retention"', '../lib/retention.mjs"').replace('./auth"', './auth.mjs"').replace('./maps"', './maps.mjs"').replace('../lib/location"', '../lib/location.mjs"').replace('../lib/observations"', '../lib/observations.mjs"'));
   }
   for (const name of names) {
     const module = await import(pathToFileURL(join(temporaryDirectory, 'components', `${name}.mjs`)).href);
@@ -654,12 +654,12 @@ test('long compact photo credits disclose the complete source text without clipp
   const author = 'Photographer contact and rights notice. '.repeat(20);
   const photo = { author, license: 'CC BY-SA 4.0', licenseUrl: 'https://creativecommons.org/licenses/by-sa/4.0/', sourceUrl: 'https://commons.wikimedia.org/wiki/File:Bird.jpg', credit: 'Creator credit', attribution: 'Required attribution', usageTerms: 'Complete terms', restrictions: 'Source restrictions' };
   const compact = render('PhotoCredit', { photo });
-  assert.match(compact, /<details><summary/);
+  assert.match(compact, /<details[^>]*><summary[^>]*aria-label="Full photo credit and rights"/);
   assert.doesNotMatch(compact, /<details open/);
   for (const text of [author, photo.licenseUrl, photo.sourceUrl, photo.credit, photo.attribution, photo.usageTerms, photo.restrictions, 'Full photo credit &amp; rights']) assert.ok(compact.includes(text), text);
   const short = render('PhotoCredit', { photo: { ...photo, author: 'Short author' } });
   assert.match(short, /Photo: Short author/);
-  assert.doesNotMatch(short, /<details/);
+  assert.match(short, /<details[^>]*><summary[^>]*aria-label="Full photo credit and rights"/);
 });
 
 
@@ -981,4 +981,22 @@ test('conditions client sends rounded coordinates without photo or identity and 
     assert.match(module.observationEntry({ ...snapshot, exif:{},conditions:snapshot,observedAt:snapshot.observedAt }).weather,/0°C/);
     assert.match(module.observationPost({ ...snapshot, exif:{},conditions:snapshot,observedAt:snapshot.observedAt }).weather.description,/Archive estimate/);
   } finally { globalThis.fetch = previous; }
+});
+
+
+test('supporting information stays in a labelled native disclosure without losing its content', () => {
+  const html = render('InformationDisclosure', { label: 'Weather source and options', children: createElement('a', { href: 'https://open-meteo.com/' }, 'Source and licence') });
+  assert.match(html, /<details class="reference-info /);
+  assert.doesNotMatch(html, /<details[^>]* open/);
+  assert.match(html, /<summary aria-label="Weather source and options"/);
+  assert.match(html, /href="https:\/\/open-meteo.com\/"/);
+});
+
+
+test('notification settings preserve readable forecast thresholds inside the information control', () => {
+  const html = render('NotificationsScreen', { notifications: [], onMarkAllRead: noop, onSelectNotification: noop, onNavigate: noop });
+  assert.match(html, /aria-label="Alert settings and subscriptions"/);
+  assert.ok(html.includes('rain ≤20%, wind ≤15 km/h'));
+  assert.match(html, /Sighting alerts enabled/);
+  assert.match(html, /Manage subscriptions/);
 });

@@ -1,3 +1,4 @@
+import { InformationDisclosure } from './InformationDisclosure';
 import React, { useMemo, useState } from 'react';
 import { Hotspot, ScreenType, BirdSpecies } from '../types';
 import type { HotspotDetails, HotspotWeather } from '../lib/discovery';
@@ -41,7 +42,7 @@ export const HotspotDetailScreen: React.FC<HotspotDetailScreenProps> = ({
   showToast,
 }) => {
   const isSaved = Boolean(hotspot.isSaved);
-  const [openAccordion, setOpenAccordion] = useState<string | null>('visit');
+  const [openAccordion, setOpenAccordion] = useState<string | null>(null);
   const mapHotspots = useMemo(() => [hotspot], [hotspot]);
   const directionsUrl = hotspotDirectionsUrl(hotspot);
   const recentSightings = hotspot.source ? details?.recentSightings || [] : hotspot.recentSightings;
@@ -63,7 +64,7 @@ export const HotspotDetailScreen: React.FC<HotspotDetailScreenProps> = ({
 
   return (
     <div className="flex flex-col w-full pb-28 pt-0">
-      {hotspot.source&&onToggleSubscription&&<button type="button" aria-pressed={subscribed} onClick={onToggleSubscription} className="mx-4 my-2 min-h-11 rounded-xl bg-white text-[#154212] text-[13px] font-semibold">{subscribed?'Unsubscribe from hotspot alerts':'Subscribe to hotspot alerts'}</button>}
+
       {/* Top Location Hero Banner */}
       <div className="relative w-full h-56 overflow-hidden bg-[#ebeef3]">
         <img
@@ -191,21 +192,27 @@ export const HotspotDetailScreen: React.FC<HotspotDetailScreenProps> = ({
         </button>
       </div>
 
+
       {/* Section 1: Recent Sightings */}
       <div className="px-4 pt-5">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-[#154212]"></span>
             <h3 className="text-[17px] font-bold text-[#181c20]">Recent Sightings</h3>
+            <InformationDisclosure className="reference-info-inline" label="Hotspot alerts and report information">
+      {hotspot.source&&onToggleSubscription&&<button type="button" aria-pressed={subscribed} onClick={onToggleSubscription} className="mx-4 my-2 min-h-11 rounded-xl bg-white text-[#154212] text-[13px] font-semibold">{subscribed?'Unsubscribe from hotspot alerts':'Subscribe to hotspot alerts'}</button>}
+          {hotspot.source && <p className="text-[12px] text-[#42493e]">Latest report per species at this hotspot, not total sightings or a complete history.</p>}
+          {details && <p className="text-[11px] text-[#42493e]">Retrieved {new Date(details.fetchedAt).toLocaleString()}{details.cached ? ' (cached)' : ''}. Observation times are local to the location.</p>}
+      </InformationDisclosure>
           </div>
           <span className="text-[11px] text-[#42493e] font-semibold">{hotspot.source ? 'This hotspot, past 14 days' : 'Past 4 hours'}</span>
         </div>
 
-        <div className="flex flex-col gap-2">
-          {hotspot.source && <p className="text-[12px] text-[#42493e]">Latest report per species at this hotspot, not total sightings or a complete history.</p>}
+        <div className="flex flex-col gap-2 max-h-72 overflow-y-auto" tabIndex={0} role="region" aria-label="Recent hotspot reports">
+
           {hotspot.source && !details && !detailsError && <p role="status" className="text-[12px] text-[#42493e]">Loading hotspot reports and species...</p>}
           {hotspot.source && detailsError && <div role="alert" className="text-[12px] text-[#42493e]"><p>{detailsError}</p><button type="button" onClick={onRetryDetails} className="mt-2 font-semibold text-[#154212] underline">Try again</button></div>}
-          {details && <p className="text-[11px] text-[#42493e]">Retrieved {new Date(details.fetchedAt).toLocaleString()}{details.cached ? ' (cached)' : ''}. Observation times are local to the location.</p>}
+
           {details && recentSightings.length === 0 && <p className="text-[12px] text-[#42493e]">No recent reports returned. This does not mean no birds occur here.</p>}
           {recentSightings.map((sight, idx) => (
             <div

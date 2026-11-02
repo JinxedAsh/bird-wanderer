@@ -2,7 +2,8 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import type { BirdSpecies, Hotspot, ScreenType, UserProfile } from '../types';
 import { observations, type UploadedPhoto, type ObservationInput } from '../lib/observations';
 import { SessionExpiredError } from '../lib/auth';
-import { PhotoMetadata } from './PhotoMetadata';
+import { PhotoMetadata, formatShutter } from './PhotoMetadata';
+import { InformationDisclosure } from './InformationDisclosure';
 import { speciesMatches, exifObservationTime, hasObservationLocation, type ObservationPoint } from '../lib/observation-form';
 import { ObservationLocationFields } from './ObservationLocationFields';
 import { ObservationConditionsPanel, conditionsKey, type ConditionsSelection } from './ObservationConditionsPanel';
@@ -150,7 +151,7 @@ export const LogObservationScreen: React.FC<LogObservationScreenProps> = ({
   const site = hotspots.find(hotspot => hotspot.id === hotspotId);
   const weatherPoint = point || (typeof site?.latitude === 'number' && typeof site.longitude === 'number' ? { latitude: site.latitude, longitude: site.longitude } : null);
   return (
-    <div className="flex flex-col w-full px-4 pb-28 pt-2">
+    <div className="relative flex flex-col w-full px-4 pb-28 pt-2">
       <div className="relative w-full rounded-2xl overflow-hidden shadow-sm bg-[#ebeef3] aspect-[4/3] mb-4">
         <img
           src={preview || '/discovery-placeholder.svg'}
@@ -190,13 +191,15 @@ export const LogObservationScreen: React.FC<LogObservationScreenProps> = ({
           {selected?.name || 'Select species below'}
         </span>
       </div>
-      <p className="text-[11px] text-[#42493e] mb-4">
+      <InformationDisclosure className="absolute right-5 top-3" label="Photo upload information">      <p className="text-[11px] text-[#42493e] mb-4">
         JPEG/PNG, up to 10 MB and 40 megapixels. Stored copy is metadata-free JPEG, up to 4096px. Original
         file is not retained. Species identification is your selection, not automatic verification.
       </p>
+      </InformationDisclosure>
       <section className="space-y-3 mb-4">
         <h2 className="text-[18px] font-bold text-[#181c20]">Field Identification</h2>
-        <div className="bg-[#f1f4f9] p-3 rounded-xl space-y-2">
+        <details open={!speciesId || undefined} className="bg-[#f1f4f9] p-3 rounded-xl space-y-2">
+          <summary className="list-none cursor-pointer min-h-11 flex items-center justify-between gap-2"><span><span className="block text-[11px] mb-2">Bird Species</span><span className="block text-[15px]">{selected?.name || 'Choose a species'}</span>{selected && <span className="block text-[12px] italic">{selected.scientificName}</span>}</span><span aria-hidden="true" className="material-symbols-outlined text-[20px] text-[#154212]">edit</span><span className="sr-only">Edit species selection</span></summary>
           <label className="block text-[12px] font-bold" htmlFor="observation-species-search">
             Find bird species
           </label>
@@ -230,11 +233,17 @@ export const LogObservationScreen: React.FC<LogObservationScreenProps> = ({
           </select>
           {!matches.length && <p className="text-[12px]">No matching species in the loaded catalogue.</p>}
           <p className="text-[11px]">{selected ? `Selected: ${selected.name} (${selected.scientificName})` : `${search.total} catalogue matches. Type a common or scientific name, then choose a result. Only the first 50 matches are listed.`}</p>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        </details>
+        <div className="flex flex-col gap-3">
+          <details open={(!hotspotId && !point) || undefined} className="rounded-xl bg-[#f1f4f9] p-3"><summary className="min-h-11 cursor-pointer list-none flex items-center justify-between gap-2"><span><span className="block text-[11px] mb-2">Location</span><span className="block text-[14px]">{point ? point.label || 'Chosen observation point' : site?.name || 'Choose location'}</span></span><span aria-hidden="true" className="material-symbols-outlined text-[20px]">location_on</span><span className="sr-only">Edit observation location</span></summary>
           <ObservationLocationFields resetKey={locationReset} hotspots={hotspots} hotspotId={hotspotId} point={point} disabled={published || saving} onChange={(id, next) => { locationEdited.current = true; setHotspotId(id); setPoint(next);  }} />
-          <label className="bg-[#f1f4f9] p-3 rounded-xl text-[12px] font-bold">
-            Date &amp; Time
+          </details>
+          <div className="bg-[#f1f4f9] p-3 rounded-xl text-[12px] font-bold">
+            <div className="flex items-center justify-between"><span>Date &amp; Time</span><InformationDisclosure className="reference-info-inline" label="Date and EXIF controls">        <p className="text-[11px] text-[#42493e]">
+          {dateSource} A camera clock/timezone is not independently verified. A selected hotspot is not proof of where the photo was captured.
+        </p>
+        <label className="block text-[12px]">UTC offset (optional, such as +05:30)<input aria-label="Observation UTC offset" value={utcOffset} disabled={published || saving} maxLength={6} onChange={event => { dateEdited.current = true; setUtcOffset(event.target.value);  }} className="block w-full min-h-11 rounded-lg bg-[#f1f4f9] p-2" /></label>
+        {uploaded && !published && <button type="button" className="min-h-11 underline text-[12px]" disabled={saving} onClick={() => applyExif(uploaded, true)}>Use photo EXIF date and GPS again (replaces manual entries)</button>}</InformationDisclosure></div>
             <input
               aria-label="Observation date and time"
               type="datetime-local"
@@ -243,16 +252,25 @@ export const LogObservationScreen: React.FC<LogObservationScreenProps> = ({
               onChange={(event) => { dateEdited.current = true; setObservedAt(event.target.value); setUtcOffset(''); setDateSource('Manually entered local clock; timezone unverified.');  }}
               className="block mt-2 w-full min-h-11 min-w-0 rounded-lg bg-white p-2 text-[13px] font-normal"
             />
-          </label>
+          </div>
         </div>
-        <p className="text-[11px] text-[#42493e]">
-          {dateSource} A camera clock/timezone is not independently verified. A selected hotspot is not proof of where the photo was captured.
-        </p>
-        <label className="block text-[12px]">UTC offset (optional, such as +05:30)<input aria-label="Observation UTC offset" value={utcOffset} disabled={published || saving} maxLength={6} onChange={event => { dateEdited.current = true; setUtcOffset(event.target.value);  }} className="block w-full min-h-11 rounded-lg bg-[#f1f4f9] p-2" /></label>
-        {uploaded && !published && <button type="button" className="min-h-11 underline text-[12px]" disabled={saving} onClick={() => applyExif(uploaded, true)}>Use photo EXIF date and GPS again (replaces manual entries)</button>}
+
       </section>
+      <label className="bg-[#f1f4f9] p-3.5 rounded-xl mb-4 text-[13px] font-bold">
+        Field Notes
+        <textarea
+          aria-label="Field notes"
+          value={notes}
+          maxLength={3000}
+          disabled={published || saving}
+          onChange={(event) => setNotes(event.target.value)}
+          placeholder="Describe what you observed. Avoid private coordinates in public notes."
+          rows={4}
+          className="block w-full mt-2 rounded-lg bg-white p-3 text-[13px] font-normal"
+        />
+      </label>
       <section className="bg-[#f1f4f9] p-3.5 rounded-xl mb-4">
-        <h3 className="text-[13px] font-bold mb-2">Camera &amp; Lens — source metadata</h3>
+        <div className="flex items-center justify-between mb-2"><h3 className="text-[16px] font-semibold">Photo Details</h3><InformationDisclosure className="reference-info-inline" label="Photo metadata and provenance">
         {uploaded ? (
           <>
             <PhotoMetadata exif={uploaded.exif} source="upload" />
@@ -267,21 +285,19 @@ export const LogObservationScreen: React.FC<LogObservationScreenProps> = ({
             Choose a photograph to read its actual EXIF. Missing settings will not be filled in.
           </p>
         )}
+        </InformationDisclosure></div>
+        <div className="grid grid-cols-4 gap-2 text-center text-[12px]">
+          {[
+            ['Camera', uploaded?.exif.cameraModel || uploaded?.exif.cameraMake || 'Unavailable'],
+            ['Lens', uploaded?.exif.lens || 'Unavailable'],
+            ['Focal', uploaded?.exif.focalLengthMm == null ? 'Unavailable' : `${uploaded.exif.focalLengthMm}mm`],
+            ['Aperture', uploaded?.exif.aperture == null ? 'Unavailable' : `f/${uploaded.exif.aperture}`],
+            ['Shutter', uploaded ? formatShutter(uploaded.exif.exposureSeconds) : 'Unavailable'],
+            ['ISO', uploaded?.exif.iso == null ? 'Unavailable' : String(uploaded.exif.iso)],
+          ].map(([label, value], index) => <div key={label} className={`rounded-md bg-white p-2 min-w-0 ${index < 2 ? 'col-span-2 text-left' : ''}`}><span className="block text-[9px] uppercase">{label}</span><span title={value} aria-label={`${label}: ${value}`} className="block break-words">{index >= 2 && value === 'Unavailable' ? '—' : value}</span></div>)}
+        </div>
       </section>
       <ObservationConditionsPanel key={uploaded?.id || 'draft'} point={weatherPoint} observedAt={observedAt} utcOffset={utcOffset} disabled={published || saving} onChange={setConditions} onSessionExpired={onSessionExpired} />
-      <label className="bg-[#f1f4f9] p-3.5 rounded-xl mb-4 text-[13px] font-bold">
-        Field Notes
-        <textarea
-          aria-label="Field notes"
-          value={notes}
-          maxLength={3000}
-          disabled={published || saving}
-          onChange={(event) => setNotes(event.target.value)}
-          placeholder="Describe what you observed. Avoid private coordinates in public notes."
-          rows={4}
-          className="block w-full mt-2 rounded-lg bg-white p-3 text-[13px] font-normal"
-        />
-      </label>
       <section className="bg-[#f1f4f9] p-3.5 rounded-xl mb-4">
         <div className="flex items-center justify-between gap-2">
           <h3 className="text-[15px] font-bold">Location Privacy</h3>
@@ -297,10 +313,10 @@ export const LogObservationScreen: React.FC<LogObservationScreenProps> = ({
             {hideExactLocation ? 'Hidden' : 'Generalized'}
           </button>
         </div>
-        <p className="text-[11px] mt-2">
+        <div className="flex items-center justify-between"><p className="text-[12px]">Hide exact location</p><InformationDisclosure className="reference-info-inline" label="Location privacy details">        <p className="text-[11px] mt-2">
           Exact EXIF and chosen coordinates are private to you. Hidden custom locations also withhold conditions; generalized custom areas use 0.1-degree rounding. Custom labels stay private. Image metadata is removed. This protection currently applies to every species, without claiming a reviewed
           endangered-species classification.
-        </p>
+        </p></InformationDisclosure></div>
       </section>
       <section className="bg-[#f1f4f9] p-3.5 rounded-xl mb-4">
         <h3 className="text-[15px] font-bold mb-2">Post visibility</h3>
@@ -318,10 +334,10 @@ export const LogObservationScreen: React.FC<LogObservationScreenProps> = ({
             </button>
           ))}
         </div>
-        <p className="text-[11px] mt-2">
+        <InformationDisclosure className="reference-info-inline ml-auto" label="Visibility details">        <p className="text-[11px] mt-2">
           Private stays in your journal. Followers requires a stored follow relationship. Public follows your
           profile visibility too.
-        </p>
+        </p></InformationDisclosure>
       </section>
       {error && (
         <p role="alert" className="mb-3 text-[13px] text-red-700">
@@ -342,7 +358,7 @@ export const LogObservationScreen: React.FC<LogObservationScreenProps> = ({
           onClick={() => void publish()}
           className="w-full min-h-12 rounded-xl bg-[#154212] text-white font-bold disabled:opacity-50"
         >
-          {busy ? 'Saving…' : 'POST OBSERVATION'}
+          {busy ? 'Saving…' : 'POST PHOTOGRAPH'}
         </button>
       )}
     </div>

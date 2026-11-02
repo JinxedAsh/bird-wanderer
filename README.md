@@ -32,6 +32,8 @@ Start with the [current completion plan](docs/PROJECT_COMPLETION_PLAN.md), [Deve
 - The photography guide compares up to three exact-species licensed reference photographs, per-field EXIF sample counts and readable ranges; it preserves single-photo exposure comparisons. Dated forecast light windows and explicit rain/wind preparation heuristics are separate from historical photo conditions. Imported seasonal statistics and measured difficulty/environment matching remain unverified. See [Evidence walkthrough](docs/PHASE_1_EVIDENCE_WALKTHROUGH.md).
 - Official-source access snapshots cover four venues/eight records: Lodhi, Sunder, Yamuna I/II and Okhla. Sources, conflicts, historical fees and unknown permissions remain explicit; overdue values are withheld after 90 days. Delhi runtime includes adjacent Gautam Buddha Nagar with accurate coverage labels. See [acceptance details](docs/PHASE_1_ACCEPTANCE.md).
 
+The [design comparison checklist](docs/DESIGN_FIDELITY.md) records the current presentation refinements, remaining visual differences and browser-verification boundaries.
+
 ## Technology
 
 | Layer | Implementation |

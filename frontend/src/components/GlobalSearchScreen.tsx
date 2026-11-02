@@ -1,3 +1,4 @@
+import { InformationDisclosure } from './InformationDisclosure';
 import React, { useEffect, useRef, useState } from 'react';
 import { BirdSpecies, Hotspot, ScreenType, CommunityPost } from '../types';
 import {
@@ -9,6 +10,7 @@ import { SessionExpiredError } from '../lib/auth';
 import { SpeciesPhoto } from './SpeciesPhoto';
 
 interface GlobalSearchScreenProps {
+  sourceInformation?: React.ReactNode;
   onOpenPerson?: (id: string) => void;
   onOpenPost?: (id: string) => void;
   recentSearches?: string[];
@@ -46,6 +48,7 @@ export function birdMatchesQuery(bird: BirdSpecies, query: string) {
 }
 
 export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
+  sourceInformation,
   onOpenPerson,
   onOpenPost,
   recentSearches = [],
@@ -254,6 +257,32 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
               </span>
             </button>
           )}
+          <InformationDisclosure label="Search options, sources and history">
+          {sourceInformation}
+      {(activeCategory === 'all' || activeCategory === 'birds') &&
+        externalDiscovery && (
+          <label className="mt-2 flex items-center gap-2 text-[12px] text-[#42493e]">
+            <input
+              type="checkbox"
+              checked={savedOnly}
+              onChange={(event) => setSavedOnly(event.target.checked)}
+            />
+            Saved birds only
+          </label>
+        )}
+      {onRecordSearch && (
+        <p className="mt-2 text-[11px] text-[#72796e]">
+          Press Enter or open a bird/hotspot result to keep this search.
+        </p>
+      )}
+
+      {externalDiscovery && (showPeople || showPosts) && (
+        <p className="text-[12px] text-[#42493e]">
+          People and posts are searched on the server using your current access.
+          Photos and identification remain user-reported.
+        </p>
+      )}
+      </InformationDisclosure>
         </div>
       </div>
 
@@ -280,22 +309,6 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
         )}
       </div>
 
-      {(activeCategory === 'all' || activeCategory === 'birds') &&
-        externalDiscovery && (
-          <label className="mt-2 flex items-center gap-2 text-[12px] text-[#42493e]">
-            <input
-              type="checkbox"
-              checked={savedOnly}
-              onChange={(event) => setSavedOnly(event.target.checked)}
-            />
-            Saved birds only
-          </label>
-        )}
-      {onRecordSearch && (
-        <p className="mt-2 text-[11px] text-[#72796e]">
-          Press Enter or open a bird/hotspot result to keep this search.
-        </p>
-      )}
 
       {/* Recent Searches */}
       {recentSearches.length > 0 && (
@@ -313,11 +326,11 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
             </button>
           </div>
 
-          <div className="flex flex-wrap gap-1.5 pt-0.5">
+          <div className="flex gap-1.5 pt-0.5 overflow-x-auto no-scrollbar">
             {recentSearches.map((term) => (
               <div
                 key={term}
-                className="inline-flex max-w-full items-center gap-1.5 bg-[#f1f4f9] text-[#181c20] px-3 py-1 rounded-full text-[12px] font-medium"
+                className="inline-flex shrink-0 max-w-full items-center gap-1.5 bg-[#f1f4f9] text-[#181c20] px-3 py-1 rounded-full text-[12px] font-medium"
               >
                 <button
                   type="button"
@@ -370,12 +383,6 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
         </p>
       )}
       {/* Search Results Stream */}
-      {externalDiscovery && (showPeople || showPosts) && (
-        <p className="text-[12px] text-[#42493e]">
-          People and posts are searched on the server using your current access.
-          Photos and identification remain user-reported.
-        </p>
-      )}
       <div className="flex flex-col gap-2.5 pt-2">
         {/* Bird Result */}
         {showBirds &&

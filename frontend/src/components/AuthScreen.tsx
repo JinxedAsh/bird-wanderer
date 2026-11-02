@@ -41,7 +41,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, showToas
 
 
   return (
-    <div className="flex flex-col w-full px-4 py-8 max-w-md mx-auto items-center justify-center min-h-[90vh]">
+    <div className="flex flex-col w-full px-4 py-6 max-w-md mx-auto items-center min-h-[90vh]">
       {recovering && <RecoveryRequestSheet initialEmail={email} onClose={() => setRecovering(false)} />}
       {/* Brand & Identity Header */}
       <header className="flex flex-col items-center text-center mt-2 mb-6">
@@ -71,7 +71,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, showToas
       </header>
 
       {/* Form Card */}
-      <div className="w-full bg-white rounded-2xl p-4 shadow-sm border border-[#f1f4f9] flex flex-col gap-4">
+      <div className="w-full bg-white rounded-xl p-4 shadow-xs border border-[#f1f4f9] flex flex-col gap-4">
         {/* Tab Switcher */}
         <nav aria-label="Authentication modes" className="flex w-full bg-[#ebeef3] p-1 rounded-xl">
           <button
