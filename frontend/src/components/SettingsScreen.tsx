@@ -365,7 +365,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                 <div className="w-8 h-8 rounded-lg bg-[#154212]/10 text-[#154212] flex items-center justify-center">
                   <span className="material-symbols-outlined text-[20px]">nest_protect</span>
                 </div>
-                <h3 className="text-[17px] font-semibold text-[#181c20]">Protect sensitive species</h3>
+                <h3 className="text-[18px] font-medium text-[#181c20]">Protect sensitive species</h3>
               </div>
               <button
                 aria-label="Close location privacy"
@@ -414,7 +414,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                 </div>
                 <div className="flex flex-col min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-[14px] font-bold text-[#181c20]">
+                    <span className="text-[16px] font-medium text-[#181c20]">
                       Show approximate location
                     </span>
                     <span className="bg-[#154212] text-white text-[10px] font-bold px-1.5 py-0.2 rounded-full">
@@ -457,7 +457,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                   </div>
                 </div>
                 <div className="flex flex-col min-w-0 flex-1">
-                  <span className="text-[14px] font-bold text-[#181c20]">Hide exact location</span>
+                  <span className="text-[16px] font-medium text-[#181c20]">Hide exact location</span>
                   <span className="text-[12px] text-[#42493e] mt-0.5 leading-snug">
                     Withhold the observation location from other viewers; photographs keep their visibility rules.
                   </span>
@@ -494,7 +494,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                   </div>
                 </div>
                 <div className="flex flex-col min-w-0 flex-1">
-                  <span className="text-[14px] font-bold text-[#181c20]">Keep private</span>
+                  <span className="text-[16px] font-medium text-[#181c20]">Keep private</span>
                   <span className="text-[12px] text-[#42493e] mt-0.5 leading-snug">
                     Observations and their photographs are visible only to your account.
                   </span>
@@ -504,7 +504,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
 
             <button
               onClick={handleSavePrivacy}
-              className="w-full h-12 rounded-xl bg-[#2d5a27] hover:bg-[#154212] active:scale-[0.99] text-white font-bold text-[14px] flex items-center justify-center gap-2 shadow-md transition-all"
+              className="w-full h-12 rounded-xl bg-[#2d5a27] hover:bg-[#154212] active:scale-[0.99] text-white font-medium text-[18px] flex items-center justify-center gap-2 shadow-sm transition-all"
             >
               <span className="material-symbols-outlined text-[18px]">lock_clock</span>
               <span>Save Privacy Settings</span>

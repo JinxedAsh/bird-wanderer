@@ -177,8 +177,8 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
             <span className="text-[12px] font-medium uppercase tracking-wide">Sightings</span>
           </div>
           <div className="mt-2">
-            <div className="flex items-baseline gap-1">
-              <span className="text-[16px] font-bold text-[#181c20]">
+            <div className="flex flex-wrap items-baseline gap-1">
+              <span className="text-[20px] font-medium text-[#181c20]">
                 {species.source ? species.recentObservations?.length ? 'Reported' : 'Unavailable' : species.sightingsThisWeek ?? 0}
               </span>
               <span className="text-[12px] text-[#42493e]">{species.source ? 'past 14 days' : 'this week'}</span>
