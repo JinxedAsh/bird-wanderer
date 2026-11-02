@@ -54,7 +54,7 @@ Likely viva questions:
 ## Verification checkpoint
 
 - Final full suite: 171/171 passed; TypeScript and production build passed.
-- Latest production asset: `index-1Tw3-MO4.js` (486.93 kB main bundle). PR [#45](https://github.com/JinxedAsh/bird-wanderer/pull/45) tracks delivery; merge requires passing checks for its exact latest commit.
+- Latest production asset: `index-BKdAOXPE.js` (486.93 kB main bundle). PR [#45](https://github.com/JinxedAsh/bird-wanderer/pull/45) tracks delivery; merge requires passing checks for its exact latest commit.
 - No backend/API/schema/environment/dependency changes. Unrelated local documentation and domain/test scripts are preserved outside this increment's commits.
 
 
@@ -79,3 +79,5 @@ The design's density and sections are restored, but exact one-to-one approval re
 ## Demo route
 
 Start the usual application with `pnpm dev` from frontend; open its existing local/LAN/HTTPS address and sign in with your own demo account. Explore shows main discovery content first. Use an information icon to show provenance, open a species and Plan a Shot, follow reported hotspots to weather/access/maps, then demonstrate one private upload and its Journal record. Missing source evidence stays unavailable. Do not use the isolated QA port or synthetic accounts as the normal demo deployment.
+
+Final markup-only correction: the quiz photo and its figcaption now share a semantic figure wrapper. Source-owner latest-build browser check confirmed the credit disclosure opens, its parent is FIGURE and page width fits390. Independent all-screen screenshots remain dated mixed-build evidence.
