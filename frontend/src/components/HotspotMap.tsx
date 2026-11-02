@@ -104,10 +104,10 @@ export const HotspotMap: React.FC<HotspotMapProps> = ({ hotspots, label, selecte
     for (const [id, marker] of markers.current) marker.getElement()?.classList.toggle('is-selected', id === selectedId);
   }, [ready, selectedId, points]);
 
-  if (points.length === 0) return <div role="status" className="flex h-60 items-center justify-center rounded-2xl bg-[#ebeef3] p-4 text-center text-[13px] text-[#42493e]">No valid hotspot coordinates to show for this filter.</div>;
+  if (points.length === 0) return <div role="status" className="flex h-60 items-center justify-center rounded-lg bg-[#ebeef3] p-4 text-center text-[13px] text-[#42493e]">No valid hotspot coordinates to show for this filter.</div>;
   return (
     <div>
-      <div ref={container} role="region" aria-label={label} className="hotspot-map h-60 w-full overflow-hidden rounded-2xl border border-[#e0e3e8] bg-[#ebeef3] shadow-sm" />
+      <div ref={container} role="region" aria-label={label} className="hotspot-map h-60 w-full overflow-hidden rounded-lg border border-[#e0e3e8] bg-[#ebeef3] shadow-sm" />
       {!ready && !error && <p role="status" className="mt-1 text-[12px] text-[#42493e]">Loading interactive map...</p>}
       {error && <div role="alert" className="mt-2 text-[12px] text-[#42493e]"><p>{error}</p><button type="button" onClick={() => setAttempt((prev) => prev + 1)} className="mt-1 font-semibold text-[#154212] underline">Retry map</button></div>}
     </div>

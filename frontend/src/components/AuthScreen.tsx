@@ -44,7 +44,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, showToas
     <div className="flex flex-col w-full px-4 py-6 max-w-md mx-auto items-center min-h-[90vh]">
       {recovering && <RecoveryRequestSheet initialEmail={email} onClose={() => setRecovering(false)} />}
       {/* Brand & Identity Header */}
-      <header className="flex flex-col items-center text-center mb-[30px]">
+      <header className="flex flex-col items-center text-center mb-7">
         <div className="relative flex items-center justify-center w-20 h-20 rounded-2xl bg-[#ebeef3] mb-3 shadow-xs">
           <img
             src="/bird-wanderer-logo.svg"
@@ -56,7 +56,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, showToas
           </span>
         </div>
 
-        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#f1f4f9] mb-[5px]">
+        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#f1f4f9] mb-[7px]">
           <span className="material-symbols-outlined text-[14px] text-[#3b6934]">nature</span>
           <span className="text-[10px] font-bold text-[#42493e] uppercase tracking-wider">
             Field Log & Journal

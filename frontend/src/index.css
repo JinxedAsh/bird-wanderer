@@ -82,3 +82,14 @@
 .reference-info-inline > summary::before { content: ''; position: absolute; inset: -12px; }
 
 .reference-info.absolute { position: absolute; }
+
+/* Phone references use the full viewport width. Hide the desktop scrollbar
+   gutter at phone widths; scrolling and keyboard navigation remain enabled. */
+@media (max-width: 448px) {
+  html { scrollbar-width: none; }
+  html::-webkit-scrollbar { display: none; }
+}
+
+/* Compact visible pills keep a 44px hit area inside the filter row's padding. */
+.hotspot-filter { position: relative; }
+.hotspot-filter::before { content: ''; position: absolute; inset: -8px 0; }

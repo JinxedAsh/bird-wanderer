@@ -1,6 +1,6 @@
 # Design comparison and acceptance
 
-Updated 3 November 2026. This is a presentation-only increment on `ui-design-fidelity`, based on main `b861d59`. It preserves the existing React/Express/SQLite architecture and all delivered features. The reference mapping is in [design-reference/README.md](design-reference/README.md).
+Updated 3 November 2026. PR #45 is merged at main `63fe074`. The current presentation-only geometry continuation is on `ui-reference-geometry`, PR #46. Both preserve the existing React/Express/SQLite architecture and delivered features. The reference mapping is in [design-reference/README.md](design-reference/README.md).
 
 ## Method and evidence
 
@@ -85,7 +85,7 @@ Final markup-only correction: the quiz photo and its figcaption now share a sema
 
 ## Active geometry pass after PR #45 (3 November)
 
-Base main `63fe074`; branch `ui-reference-geometry`. Owned source changes currently: AuthScreen, SettingsScreen, BirdQuizScreen, CommunityScreen, FieldChatScreen, GlobalSearchScreen, HotspotsScreen, HotspotDetailScreen, JournalScreen, LifeListScreen, NotificationsScreen, ProfileScreen, SpeciesDetailScreen and index.css. No backend/logic changes. The previous isolated database is reused by `%TEMP%/bird-geometry-preview.mjs` on4384; normal demo services remain untouched. Latest build `index-CEctgngJ.js` (source frozen for independent final comparison). Draft PR #46; initial head40fed89 passed all four GitHub checks.
+Base main `63fe074`; branch `ui-reference-geometry`. Owned source changes currently: AuthScreen, SettingsScreen, BirdQuizScreen, CommunityScreen, FieldChatScreen, GlobalSearchScreen, HotspotsScreen, HotspotDetailScreen, JournalScreen, LifeListScreen, NotificationsScreen, ProfileScreen, SpeciesDetailScreen and index.css. No backend/logic changes. The previous isolated database is reused by `%TEMP%/bird-geometry-preview.mjs` on4384; normal demo services remain untouched. Latest build `index-U53JNim6.js` (source frozen for independent final comparison). Draft PR #46; initial head40fed89 passed all four GitHub checks.
 
 Measured defect: all declared 14/18/20/etc icon sizes previously computed24px. Both the local rule and the external Google font sheet supplied unlayered defaults. The local icon definition is now in the base layer, with an unlayered font-size:revert-layer correction to restore component utility sizes. Actual browser verification now shows14px eco/nature and18px email/key/visibility/arrow icons.
 
@@ -96,3 +96,26 @@ Authentication text-row evidence at390: baseline heading157/tagline197/paragraph
 Next actions: compare revised Auth/Settings screenshots against normalized references; finish measurable spacing/type/radius differences screen-by-screen, recapture all affected screens after the icon cascade fix, test their retained interactions, document measured remaining deviations, then focused PR/exact-head/main checks. Preserve the unrelated local Development Record/Final Acceptance/native push/domain/test files. No files are to be reset/stashed/deleted to simplify checkout.
 
 Additional measured Settings correction: the normalized reference Save Privacy text spans17 white-pixel rows versus13 in the14px implementation, while both buttons are48px high. The label now uses18px medium, the title18px and all three option titles16px medium. Latest Species Sightings fact uses the same20px value size as the other facts and wraps whole phrases at narrow widths.
+
+
+### Latest checkpoint after interruption
+
+Latest source candidate: `index-U53JNim6.js`; branch `ui-reference-geometry`, PR #46, candidate batch after `b0ad9e0` includes AuthScreen, HotspotsScreen, HotspotMap, SettingsScreen and index.css refinements. Final browser results and exact-head CI are required before merge. Normal demo services3000/3001 remain running. The isolated4384 preview reuses its existing disposable database; the separate failure-test4385 proxy has been stopped.
+
+Independent evidence already recorded: all32 captures on the prior frozen geometry build;1,083 explicit icon-size checks matched computed sizes. Mobile-only scrollbar hiding restores full390/320px content from the measured15px desktop gutter, without disabling keyboard End/Home scrolling; desktop scrollbar remains at the tested wider viewport. Latest Hotspots/Settings changes are pending final measurements.
+
+Reference geometry targets at390: Auth heading/tagline painted rows150/186; Hotspots searchtop72/h48, visible filtertop128/h28, maptop168/h240 and first-cardtop416. The pill's44px effective hit area uses the existing information-control pattern of a transparent pseudo-element inside row padding; pins, zoom, info, filter and keyboard checks remain required. The map info panel is overlaid at top-right, leaving provider attribution at bottom-right. Unknown distance/time remain explicit via dashes and full title/accessible text. Map corners8px.
+
+Settings reference sheetheight476px at390x1256, versus the measured510px before the latest correction. Same-meaning Hide help is now concise; option gaps8px and bottompadding24px should recover that height and align the48px CTA at1184..1231. This is a target, not accepted evidence until remeasured. All save, cancel, keyboard and privacy callbacks remain unchanged.
+
+A source-owner browser failure check on the previous geometry asset completed in the isolated desktop environment: a temporary proxy returned503 before the first observation write. The photo, species, site, date, notes and private visibility remained in the draft. One retry succeeded; Journal reload and an authenticated API read confirmed exactly one private observation. This does not establish browser request-blocking, physical-phone behaviour, genuine provider outage or response loss after a committed write. The temporary proxy is stopped; no production backend code or data changed.
+
+Next action: finish independent latest-candidate Hotspots/Settings/Auth measurements and retained-flow checks; fix only verified defects, then capture/review the final paired15-screen matrix and its concrete remaining deviation list. Run171 tests/type/build for the final code, update Entry61/current state with accepted results, push the last owned changes and merge PR46 only after every check passes its exact latest head. Preserve unrelated local documentation/domain/test files. Continue any remaining measurable per-screen spacing/type/radius work rather than declaring exact parity from a general improvement.
+
+
+### Accepted measurements and remaining checks in the current candidate
+
+- Independent Hotspots measurements on the same code used by the latest candidate match the normalized390px targets: searchtop72/height48; filtertop128/visibleheight28; maptop168/height240; firstcardtop416. The map retains248 real markers; its top-right help is separate from bottom-right attribution. Effective pill hitheight computes44px. Actual edge-hit/map interactions remain part of the final check.
+- The full source candidate `index-U53JNim6.js` passes171 tests, TypeScript and build. Independent captures already verify the icon cascade, full phone content widths and retained scrolling; final Settings height/CTA and exact Auth text-row retests are pending. Exact one-to-one acceptance is not claimed from these partial measurements.
+- The controlled503 draft-retention/retry check passed on the same unchanged upload logic at desktop width. It produced exactly one private disposable record after retry and reload; no database, credentials, test images or proxy code enters this PR.
+- Final handover must include the independent per-screen remaining-spacing/typography/deviation list, latest paired capture manifest, PR head/check state and any unclosed criteria. If execution is interrupted, resume from this candidate instead of rebuilding previous work or marking the full design task complete.

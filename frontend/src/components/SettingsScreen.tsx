@@ -357,7 +357,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 transition-opacity animate-in fade-in duration-200">
           <div className="absolute inset-0" onClick={() => setIsSheetOpen(false)}></div>
 
-          <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Location privacy" tabIndex={-1} className="relative w-full max-w-md bg-white rounded-t-2xl shadow-xl max-h-[85dvh] overflow-y-auto flex flex-col p-5 z-10 animate-in slide-in-from-bottom duration-300">
+          <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Location privacy" tabIndex={-1} className="relative w-full max-w-md bg-white rounded-t-2xl shadow-xl max-h-[85dvh] overflow-y-auto flex flex-col p-5 pb-6 z-10 animate-in slide-in-from-bottom duration-300">
             <div className="w-10 h-1.5 rounded-full bg-[#e0e3e8] mx-auto mb-3"></div>
 
             <div className="flex items-start justify-between pb-2">
@@ -382,7 +382,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             </p>
 
             {/* Radio Options */}
-            <div className="flex flex-col gap-2.5 pb-5">
+            <div className="flex flex-col gap-2 pb-5">
               {/* Option 1: Approximate */}
               <div
                 role="button"
@@ -459,7 +459,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                 <div className="flex flex-col min-w-0 flex-1">
                   <span className="text-[16px] font-medium text-[#181c20]">Hide exact location</span>
                   <span className="text-[12px] text-[#42493e] mt-0.5 leading-snug">
-                    Withhold the observation location from other viewers; photographs keep their visibility rules.
+                    Hide location; photo visibility stays unchanged.
                   </span>
                 </div>
               </div>

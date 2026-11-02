@@ -59,9 +59,9 @@ export const HotspotsScreen: React.FC<HotspotsScreenProps> = ({
   };
 
   return (
-    <div className="flex flex-col w-full pb-28 pt-1">
+    <div className="flex flex-col w-full pb-28">
       {/* Search and Filters */}
-      <div className="px-4 pt-2 pb-1">
+      <div className="px-4 pt-2">
         <div className="relative flex items-center w-full">
           <span className="material-symbols-outlined absolute left-4 text-[#42493e] pointer-events-none text-[20px]">
             search
@@ -84,14 +84,14 @@ export const HotspotsScreen: React.FC<HotspotsScreenProps> = ({
         </div>
 
         {/* Filter Pills */}
-        <div className="flex items-center gap-2 mt-2.5 pb-1 overflow-x-auto no-scrollbar">
+        <div className="flex items-center gap-2 py-2 overflow-x-auto no-scrollbar">
           {(['nearby', 'popular', 'saved'] as const).map((filter) => {
             const isActive = activeFilter === filter;
             return (
               <button
                 key={filter}
                 onClick={() => setActiveFilter(filter)}
-                className={`min-h-11 px-4 py-1.5 rounded-xl text-[13px] font-medium capitalize transition-all active:scale-95 whitespace-nowrap ${
+                className={`hotspot-filter min-h-7 px-3.5 py-1 rounded-full text-[13px] font-medium capitalize transition-all active:scale-95 whitespace-nowrap ${
                   isActive
                     ? 'bg-[#154212] text-white shadow-sm'
                     : 'bg-[#f1f4f9] text-[#42493e] hover:bg-[#ebeef3]'
@@ -105,7 +105,7 @@ export const HotspotsScreen: React.FC<HotspotsScreenProps> = ({
       </div>
 
       {/* Map Stage */}
-      {!externalDiscovery && <div className="px-4 my-2">
+      {!externalDiscovery && <div className="relative px-4 my-1">
         <div className="relative w-full h-60 rounded-2xl overflow-hidden bg-[#ebeef3] shadow-sm border border-[#e0e3e8]">
           <img
             src="https://lh3.googleusercontent.com/aida-public/AB6AXuCYCLW4O-VpotfLtQjSzbP881hkudRW2F-Cz5OTlz5qWB2-YtqSDwyEbnv5DjLGgo8dEgBFh1PMWNppQ-ythe0OXVVa46KIfY-1Td2FXsLyPizYHMblBoJnbT1Et5ubzR5dp_74y_PeeKZz_Md2rHggMarwul09J03eTq4-_yoWnBPFRPGB2jUAehrVsaGUxAQ-mx6WLF6lCCz0iJSKDmzTV9p1fEk2to48vS2HgaRHwjX_XQCrmXDjEQ"
@@ -167,12 +167,12 @@ export const HotspotsScreen: React.FC<HotspotsScreenProps> = ({
       </div>
 
       }
-      {externalDiscovery && <div className="px-4 my-2">
+      {externalDiscovery && <div className="relative px-4 my-1">
         <HotspotMap hotspots={filteredHotspots} label="Map of filtered eBird hotspots" selectedId={activePinId} onSelect={setActivePinId} onOpen={(id) => {
           const hotspot = filteredHotspots.find((h) => h.id === id);
           if (hotspot) onSelectHotspot(hotspot);
         }} />
-        <div className="flex justify-end"><InformationDisclosure label="Map coverage and filters">        <p className="mt-2 text-[12px] text-[#42493e]">Select a pin to open its location. Popular filters by at least 15 species recorded all time. {nearbyEnabled ? 'Distances are straight-line estimates. Nearby uses 50 km within the configured eBird region; Popular and Saved include the whole loaded region.' : 'Choose a location for nearby filtering and distances; browsing the configured region still works.'}</p></InformationDisclosure></div>
+        <div className="absolute top-2 right-6 z-10 rounded-lg bg-white/90 shadow-xs"><InformationDisclosure label="Map coverage and filters">        <p className="mt-2 text-[12px] text-[#42493e]">Select a pin to open its location. Popular filters by at least 15 species recorded all time. {nearbyEnabled ? 'Distances are straight-line estimates. Nearby uses 50 km within the configured eBird region; Popular and Saved include the whole loaded region.' : 'Choose a location for nearby filtering and distances; browsing the configured region still works.'}</p></InformationDisclosure></div>
       </div>}
       {/* Location Cards List */}
       <div className="px-4 pt-1 flex flex-col gap-2.5">
@@ -196,13 +196,13 @@ export const HotspotsScreen: React.FC<HotspotsScreenProps> = ({
               }`}
             >
               <div className="flex flex-col min-w-0">
-                <h2 className="text-[16px] font-bold text-[#181c20] truncate">{hotspot.name}</h2>
-                <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-1 text-[12px] text-[#42493e]">
+                <h2 className="text-[16px] font-medium text-[#181c20] truncate">{hotspot.name}</h2>
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-1 text-[11px] text-[#42493e]">
                   <span className="font-bold text-[#154212]">{hotspot.speciesCount ?? 'Unknown'} species{hotspot.source ? ' all time' : ''}</span>
                   <span className="w-1 h-1 rounded-full bg-[#c2c9bb]"></span>
-                  <span>{hotspot.distanceKm == null ? 'Distance unavailable' : `${hotspot.distanceKm.toFixed(1)} km`}</span>
+                  <span title={hotspot.distanceKm == null ? 'Distance unavailable; choose a location for a straight-line estimate.' : 'Straight-line distance estimate'} aria-label={hotspot.distanceKm == null ? 'Distance unavailable' : undefined}>{hotspot.distanceKm == null ? 'Distance —' : `${hotspot.distanceKm.toFixed(1)} km`}</span>
                   <span className="w-1 h-1 rounded-full bg-[#c2c9bb]"></span>
-                  <span>Best time: {hotspot.bestTime}</span>
+                  <span title={`Best time: ${hotspot.bestTime}`} aria-label={`Best time: ${hotspot.bestTime}`}>Best time: {hotspot.source && hotspot.bestTime === 'Not available from eBird' ? '—' : hotspot.bestTime}</span>
                 </div>
               </div>
 
