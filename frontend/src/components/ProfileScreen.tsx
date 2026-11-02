@@ -77,7 +77,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
       {/* Header Section */}
       <div className="px-4 pt-1 pb-4 flex flex-col items-center text-center">
         <div className="relative mb-2.5">
-          <div className="w-20 h-20 rounded-2xl overflow-hidden shadow-sm bg-[#e0e3e8] ring-4 ring-white">
+          <div className="w-20 h-20 rounded-lg overflow-hidden bg-[#e0e3e8]">
             <img
               src={userProfile.avatarUrl}
               alt={userProfile.name}
@@ -111,7 +111,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
         </p>
 
         {/* Quick Action Row */}
-        <div className="grid grid-cols-3 gap-2 w-full mt-4 max-w-sm">
+        <div className="grid grid-cols-3 gap-1.5 w-full mt-4 max-w-sm">
           <button
             onClick={() => {
               setNameInput(userProfile.name);
@@ -119,7 +119,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
               setGearInput(userProfile.primaryRig);
               setIsEditDrawerOpen(true);
             }}
-            className="h-11 px-2 bg-[#2d5a27] hover:bg-[#154212] text-white rounded-xl text-[12px] font-semibold flex items-center justify-center gap-1 shadow-xs active:scale-[0.98] transition-transform"
+            className="h-11 px-2 bg-[#2d5a27] hover:bg-[#154212] text-white rounded-lg text-[12px] font-semibold flex items-center justify-center gap-1 shadow-xs active:scale-[0.98] transition-transform"
           >
             <span className="material-symbols-outlined text-[16px]">edit</span>
             <span>Edit profile</span>
@@ -127,7 +127,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
 
           <button
             onClick={() => onNavigate('settings')}
-            className="h-11 px-2 bg-[#ebeef3] hover:bg-[#e0e3e8] text-[#181c20] rounded-xl text-[12px] font-semibold flex items-center justify-center gap-1 transition-colors"
+            className="h-11 px-2 bg-[#ebeef3] hover:bg-[#e0e3e8] text-[#181c20] rounded-lg text-[12px] font-semibold flex items-center justify-center gap-1 transition-colors"
           >
             <span className="material-symbols-outlined text-[16px]">tune</span>
             <span>Settings</span>
@@ -135,7 +135,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
 
           <button
             onClick={() => onNavigate('notifications')}
-            className="h-11 px-2 bg-[#ebeef3] hover:bg-[#e0e3e8] text-[#181c20] rounded-xl text-[12px] font-semibold flex items-center justify-center gap-1 transition-colors"
+            className="h-11 px-2 bg-[#ebeef3] hover:bg-[#e0e3e8] text-[#181c20] rounded-lg text-[12px] font-semibold flex items-center justify-center gap-1 transition-colors"
           >
             <span className="material-symbols-outlined text-[16px]">notifications_none</span>
             <span>Alerts</span>
@@ -146,9 +146,9 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
 
       {/* Statistics Row */}
       <div className="px-4 mb-4">
-        <div className="grid grid-cols-3 bg-white rounded-2xl p-4 shadow-xs border border-[#f1f4f9]">
+        <div className="grid grid-cols-3 bg-white rounded-lg p-4 shadow-xs border border-[#f1f4f9]">
           <div className="flex flex-col items-center text-center">
-            <span className="text-[28px] font-bold text-[#154212] leading-none">
+            <span className="text-[30px] font-bold text-[#154212] leading-none">
               {userProfile.birdsCount}
             </span>
             <span className="text-[10px] font-bold uppercase tracking-wider text-[#42493e] mt-1.5">
@@ -157,7 +157,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
           </div>
 
           <div className="flex flex-col items-center text-center border-x border-[#f1f4f9]">
-            <span className="text-[28px] font-bold text-[#181c20] leading-none">
+            <span className="text-[30px] font-bold text-[#181c20] leading-none">
               {userProfile.photosCount}
             </span>
             <span className="text-[10px] font-bold uppercase tracking-wider text-[#42493e] mt-1.5">
@@ -166,7 +166,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
           </div>
 
           <div className="flex flex-col items-center text-center">
-            <span className="text-[28px] font-bold text-[#904d00] leading-none">
+            <span className="text-[30px] font-bold text-[#904d00] leading-none">
               {userProfile.tripsCount}
             </span>
             <span className="text-[10px] font-bold uppercase tracking-wider text-[#42493e] mt-1.5">
@@ -178,10 +178,10 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
 
       {/* Segmented Tabs */}
       <div className="px-4 mb-3">
-        <div className="flex p-1 bg-[#ebeef3] rounded-xl">
+        <div className="flex p-1 bg-[#ebeef3] rounded">
           <button
             onClick={() => setActiveTab('photos')}
-            className={`flex-1 py-2 text-center rounded-lg text-[12px] font-bold transition-all flex items-center justify-center gap-1 ${
+            className={`flex-1 py-2 text-center rounded text-[12px] font-medium transition-all flex items-center justify-center gap-1 ${
               activeTab === 'photos'
                 ? 'bg-white text-[#181c20] shadow-xs'
                 : 'text-[#42493e] hover:text-[#181c20]'
@@ -193,7 +193,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
 
           <button
             onClick={() => setActiveTab('lifelist')}
-            className={`flex-1 py-2 text-center rounded-lg text-[12px] font-bold transition-all flex items-center justify-center gap-1 ${
+            className={`flex-1 py-2 text-center rounded text-[12px] font-medium transition-all flex items-center justify-center gap-1 ${
               activeTab === 'lifelist'
                 ? 'bg-white text-[#181c20] shadow-xs'
                 : 'text-[#42493e] hover:text-[#181c20]'
@@ -205,7 +205,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
 
           <button
             onClick={() => setActiveTab('activity')}
-            className={`flex-1 py-2 text-center rounded-lg text-[12px] font-bold transition-all flex items-center justify-center gap-1 ${
+            className={`flex-1 py-2 text-center rounded text-[12px] font-medium transition-all flex items-center justify-center gap-1 ${
               activeTab === 'activity'
                 ? 'bg-white text-[#181c20] shadow-xs'
                 : 'text-[#42493e] hover:text-[#181c20]'
@@ -220,7 +220,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
       {/* Tab 1: Photos Grid */}
       {activeTab === 'photos' && (
         <div className="px-4">
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-3 gap-1.5">
             {photoGrid.map((photo, i) => (
               <div
                 key={i}
@@ -233,7 +233,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
                   }
                 }}
                 onClick={() => onSelectSpeciesByName(photo.name)}
-                className="group relative aspect-square rounded-xl overflow-hidden bg-[#ebeef3] shadow-xs cursor-pointer"
+                className="group relative aspect-square rounded overflow-hidden bg-[#ebeef3] shadow-xs cursor-pointer"
               >
                 <img
                   src={photo.image}
@@ -249,7 +249,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
 
           {!photoGrid.length && <p className="text-[13px]">Your uploaded photographs will appear here.</p>}
           {/* Field Rig Card */}
-          <div className="mt-4 p-4 bg-white rounded-2xl shadow-xs flex items-center justify-between border border-[#f1f4f9]">
+          <div className="mt-4 p-4 bg-white rounded-lg shadow-xs flex items-center justify-between border border-[#f1f4f9]">
             <div className="flex items-center gap-3 min-w-0">
               <div className="w-9 h-9 rounded-xl bg-[#f1f4f9] flex items-center justify-center text-[#154212] flex-shrink-0">
                 <span className="material-symbols-outlined text-[20px]">camera</span>

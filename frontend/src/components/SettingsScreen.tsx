@@ -354,23 +354,23 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
 
       {/* INTERACTIVE BOTTOM SHEET: LOCATION PRIVACY */}
       {isSheetOpen && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-xs transition-opacity animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 transition-opacity animate-in fade-in duration-200">
           <div className="absolute inset-0" onClick={() => setIsSheetOpen(false)}></div>
 
-          <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Location privacy" tabIndex={-1} className="relative w-full max-w-md bg-white rounded-t-3xl shadow-xl max-h-[85dvh] overflow-y-auto flex flex-col p-5 z-10 animate-in slide-in-from-bottom duration-300">
+          <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Location privacy" tabIndex={-1} className="relative w-full max-w-md bg-white rounded-t-2xl shadow-xl max-h-[85dvh] overflow-y-auto flex flex-col p-5 z-10 animate-in slide-in-from-bottom duration-300">
             <div className="w-10 h-1.5 rounded-full bg-[#e0e3e8] mx-auto mb-3"></div>
 
             <div className="flex items-start justify-between pb-2">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-[#154212]/10 text-[#154212] flex items-center justify-center">
+                <div className="w-8 h-8 rounded-lg bg-[#154212]/10 text-[#154212] flex items-center justify-center">
                   <span className="material-symbols-outlined text-[20px]">nest_protect</span>
                 </div>
-                <h3 className="text-[17px] font-bold text-[#181c20]">Protect sensitive species</h3>
+                <h3 className="text-[17px] font-semibold text-[#181c20]">Protect sensitive species</h3>
               </div>
               <button
                 aria-label="Close location privacy"
                 onClick={() => setIsSheetOpen(false)}
-                className="w-8 h-8 rounded-full bg-[#ebeef3] flex items-center justify-center text-[#42493e]"
+                className="w-8 h-8 rounded-xl bg-[#ebeef3] flex items-center justify-center text-[#42493e]"
               >
                 <span className="material-symbols-outlined text-[18px]">close</span>
               </button>
@@ -395,9 +395,9 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                   }
                 }}
                 onClick={() => setSelectedOption('approximate')}
-                className={`cursor-pointer p-3.5 rounded-2xl transition-all flex items-start gap-3 border ${
+                className={`cursor-pointer p-3.5 rounded-xl transition-all flex items-start gap-3 border ${
                   selectedOption === 'approximate'
-                    ? 'bg-[#f1f4f9] border-[#154212]'
+                    ? 'bg-[#f1f4f9] border-transparent'
                     : 'bg-[#f1f4f9]/40 border-transparent'
                 }`}
               >
@@ -439,9 +439,9 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                   }
                 }}
                 onClick={() => setSelectedOption('hide')}
-                className={`cursor-pointer p-3.5 rounded-2xl transition-all flex items-start gap-3 border ${
+                className={`cursor-pointer p-3.5 rounded-xl transition-all flex items-start gap-3 border ${
                   selectedOption === 'hide'
-                    ? 'bg-[#f1f4f9] border-[#154212]'
+                    ? 'bg-[#f1f4f9] border-transparent'
                     : 'bg-[#f1f4f9]/40 border-transparent'
                 }`}
               >
@@ -476,9 +476,9 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                   }
                 }}
                 onClick={() => setSelectedOption('private')}
-                className={`cursor-pointer p-3.5 rounded-2xl transition-all flex items-start gap-3 border ${
+                className={`cursor-pointer p-3.5 rounded-xl transition-all flex items-start gap-3 border ${
                   selectedOption === 'private'
-                    ? 'bg-[#f1f4f9] border-[#154212]'
+                    ? 'bg-[#f1f4f9] border-transparent'
                     : 'bg-[#f1f4f9]/40 border-transparent'
                 }`}
               >

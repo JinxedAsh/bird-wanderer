@@ -69,7 +69,7 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
       {/* Top Action Rail */}
       <div className="px-4 py-2 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#ffdcc3] text-[#6e3900] text-[11px] font-bold uppercase tracking-wider">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#ffdcc3] text-[#6e3900] text-[12px] font-medium uppercase tracking-wide">
             <span
               className="material-symbols-outlined text-[14px]"
               style={{ fontVariationSettings: "'FILL' 1" }}
@@ -137,15 +137,15 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
       </div>
 
       {/* Bento Grid Metadata */}
-      <div className="px-4 grid grid-cols-2 gap-2.5 pb-5">
+      <div className="px-4 grid grid-cols-2 gap-2 pb-5">
         {/* Habitat */}
-        <div className="bg-[#f1f4f9] rounded-xl p-3.5 flex flex-col justify-between">
+        <div className="bg-[#f1f4f9] rounded-lg p-3.5 flex flex-col justify-between">
           <div className="flex items-center gap-1.5 text-[#42493e]">
             <span className="material-symbols-outlined text-[18px] text-[#3b6934]">waves</span>
-            <span className="text-[11px] font-bold uppercase tracking-wider">Habitat</span>
+            <span className="text-[12px] font-medium uppercase tracking-wide">Habitat</span>
           </div>
           <div className="mt-2">
-            <span className="text-[16px] font-bold text-[#181c20] block leading-tight">
+            <span className="text-[20px] font-medium text-[#181c20] block leading-tight">
               {species.source ? 'Reference' : species.habitat || 'Wetlands'}
             </span>
             <span className="text-[12px] text-[#42493e]">
@@ -155,13 +155,13 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
         </div>
 
         {/* Best Time */}
-        <div className="bg-[#f1f4f9] rounded-xl p-3.5 flex flex-col justify-between">
+        <div className="bg-[#f1f4f9] rounded-lg p-3.5 flex flex-col justify-between">
           <div className="flex items-center gap-1.5 text-[#42493e]">
             <span className="material-symbols-outlined text-[18px] text-[#904d00]">wb_twilight</span>
-            <span className="text-[11px] font-bold uppercase tracking-wider">Best Time</span>
+            <span className="text-[12px] font-medium uppercase tracking-wide">Best Time</span>
           </div>
           <div className="mt-2">
-            <span className="text-[16px] font-bold text-[#181c20] block leading-tight">
+            <span className="text-[20px] font-medium text-[#181c20] block leading-tight">
               {species.source ? 'Unverified' : species.bestTime || '06:30 – 08:30'}
             </span>
             <span className="text-[12px] text-[#42493e]">
@@ -171,10 +171,10 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
         </div>
 
         {/* Sightings */}
-        <div className="bg-[#f1f4f9] rounded-xl p-3.5 flex flex-col justify-between">
+        <div className="bg-[#f1f4f9] rounded-lg p-3.5 flex flex-col justify-between">
           <div className="flex items-center gap-1.5 text-[#42493e]">
             <span className="material-symbols-outlined text-[18px] text-[#3b6934]">travel_explore</span>
-            <span className="text-[11px] font-bold uppercase tracking-wider">Sightings</span>
+            <span className="text-[12px] font-medium uppercase tracking-wide">Sightings</span>
           </div>
           <div className="mt-2">
             <div className="flex items-baseline gap-1">
@@ -190,13 +190,13 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
         </div>
 
         {/* Photography Difficulty */}
-        <div className="bg-[#f1f4f9] rounded-xl p-3.5 flex flex-col justify-between">
+        <div className="bg-[#f1f4f9] rounded-lg p-3.5 flex flex-col justify-between">
           <div className="flex items-center gap-1.5 text-[#42493e]">
             <span className="material-symbols-outlined text-[18px] text-[#904d00]">shutter_speed</span>
-            <span className="text-[11px] font-bold uppercase tracking-wider">Photography</span>
+            <span className="text-[12px] font-medium uppercase tracking-wide">Photography</span>
           </div>
           <div className="mt-2">
-            <span className="text-[16px] font-bold text-[#181c20] block leading-tight">
+            <span className="text-[20px] font-medium text-[#181c20] block leading-tight">
               {species.photographyDifficulty || (species.source ? 'Unrated' : 'Medium')}
             </span>
             {species.source && <button type="button" onClick={() => focusSection('photography-planning')} className="min-h-11 text-left text-[12px] font-semibold text-[#154212] underline">Motion, light &amp; gear</button>}
@@ -216,7 +216,7 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
             setIsSightingsExpanded(true);
             document.getElementById('sightings-sheet-anchor')?.scrollIntoView({ behavior: 'smooth' });
           }}
-          className="flex-1 h-12 rounded-xl bg-[#ebeef3] text-[#181c20] font-semibold text-[13px] flex items-center justify-center gap-2 hover:bg-[#e0e3e8] active:scale-[0.98] transition-all"
+          className="flex-1 h-12 rounded-lg bg-[#ebeef3] text-[#181c20] font-semibold text-[13px] flex items-center justify-center gap-2 hover:bg-[#e0e3e8] active:scale-[0.98] transition-all"
         >
           <span className="material-symbols-outlined text-[18px]">map</span>
           <span>VIEW SIGHTINGS</span>
@@ -226,7 +226,7 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
           type="button"
           aria-controls={species.source ? 'photography-planning' : undefined}
           onClick={() => species.source ? focusSection('photography-planning') : showToast(`Suggested early morning session for ${species.name}. Trip saving is not connected yet.`)}
-          className="flex-1 h-12 rounded-xl bg-[#2d5a27] text-white font-semibold text-[13px] flex items-center justify-center gap-2 shadow-sm hover:opacity-95 active:scale-[0.98] transition-all"
+          className="flex-1 h-12 rounded-lg bg-[#2d5a27] text-white font-semibold text-[13px] flex items-center justify-center gap-2 shadow-sm hover:opacity-95 active:scale-[0.98] transition-all"
         >
           <span className="material-symbols-outlined text-[18px]">add_a_photo</span>
           <span>PLAN A SHOT</span>
@@ -240,7 +240,7 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
             <div className="w-7 h-7 rounded-lg bg-[#ffdcc3] flex items-center justify-center text-[#6e3900]">
               <span className="material-symbols-outlined text-[16px]">tips_and_updates</span>
             </div>
-            <h3 className="text-[16px] font-bold text-[#181c20]">Field Guide & Technique</h3>
+            <h3 className="text-[18px] font-medium text-[#181c20]">Field Guide & Technique</h3>
             {species.source && onToggleSubscription && <InformationDisclosure className="reference-info-inline ml-auto" label="Species alerts">      {species.source&&onToggleSubscription&&<button type="button" aria-pressed={subscribed} onClick={onToggleSubscription} className="mx-4 mt-2 min-h-11 rounded-xl bg-white text-[#154212] text-[13px] font-semibold">{subscribed?'Unsubscribe from species alerts':'Subscribe to species alerts'}</button>}</InformationDisclosure>}
           </div>
           <details id="photography-planning" tabIndex={-1} aria-label="Field Guide and Technique" className="text-[13px] text-[#42493e]"><summary className="min-h-11 flex items-center cursor-pointer font-semibold">Species information and photography evidence</summary>

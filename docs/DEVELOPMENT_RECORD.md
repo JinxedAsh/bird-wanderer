@@ -62,6 +62,8 @@ Phase 1 is **not certified complete** against every detailed evidence/manual cri
 
 Presentation update (3 November): all reference screens were compared with running baseline screenshots; compact source/configuration controls and upload ordering are implemented. Independent 390/320 screenshots and scoped functional checks are recorded; exact design sign-off remains open. See [Design fidelity checklist](DESIGN_FIDELITY.md).
 
+A subsequent geometry pass is in progress on `ui-reference-geometry` (Entry61); it is not yet merged.
+
 ## 3. Chronological development history
 
 Entries are recorded in the order of work and decisions. Dates identify the known day of work; unknown times are not invented. The pre-existing frontend is credited as a starting point rather than presented as newly built during these increments.
@@ -908,6 +910,18 @@ The header logo now uses a bundled SVG following the supplied green bird emblem,
 **Verification checkpoint:** 171 full automated tests, TypeScript and production build pass. All 15 running screen types/16 reference views have independent dimension-validated screenshots at390/320. Scoped guide/habitat/call, refresh, profile, subscription, report scrolling and private custom-location validation/recovery/persistence checks passed. Offscreen information panels and long notes were reproduced and fixed; notification symbol encoding introduced during text editing was corrected and regression-tested. Latest asset `index-BKdAOXPE.js`. PR #45 tracks exact-head CI/delivery. [Design fidelity checklist](DESIGN_FIDELITY.md) records files, beginner explanation, demo route and unverified flows. **One-to-one visual parity is not complete:** spacing/radii/type details and real-data/unknown/imagery differences remain. No physical-phone, blocked-network POST or provider-outage acceptance is claimed.
 
 **Viva Notes:** JSX arranges existing controls; CSS governs spacing and panels. Native details/summary keeps supporting text expandable without a new framework. A small on-toggle function measures an opened panel and translates it inside viewport margins; Escape closes it. It does not modify business data. An input inside a closed details panel stays mounted, preserving the form state. Automated correctness checks and screenshot review answer different questions; both are necessary.
+
+### Entry 61 — Measured typography, icon sizing and reference geometry
+
+**Date/group:** 3 November 2026 IST; continuation of reference fidelity after PR #45/main63fe074, on `ui-reference-geometry`. All original 16 PNGs remain the design targets. Actual data, privacy, identification and provider limits remain truthful.
+
+**Root cause:** declared 14/18/20px icon sizes all computed24px in the browser. An unlayered local rule and the external font provider's unlayered stylesheet overrode Tailwind's layered utilities. The icon defaults now live in the base layer; `font-size: revert-layer` lets the existing component size utilities take effect despite the provider default. Real browser measurements now show14px badge icons and18px email/key/visibility/arrow icons; the password visibility button remains44px. This is a presentation correction, not a new icon library or dependency.
+
+**Reference-specific changes:** authentication uses measured text positions, 26px heading, 18px tagline, 14px body, 48px inputs, lighter labels and compact form/tab/button corners. Privacy sheet blur and selected-card border were removed to match the reference while retaining focus, keyboard selection, save and cancel. Messages/list/search names, notification body/icon cells, quiz options/feedback, profile counts/gallery, Journal tiles, species facts and hotspot report rows now use their reference-specific sizes, weights, radii and padding. All report rows remain in a bounded, keyboard-scrollable region; callbacks, validation, request and persistence logic are unchanged.
+
+**Verification checkpoint:** 171 full tests, TypeScript and production build pass on `index-CJfN-vuz.js`. Independent latest-build390/320 capture and interaction checks are active; this entry does not claim final acceptance, PR creation or merge. See DESIGN_FIDELITY.md for the precise active checkpoint and remaining next actions. Unrelated local documentation/domain/test files remain excluded from this increment.
+
+**Viva Notes:** CSS layers decide which group of rules wins before ordinary selector specificity is considered. The font provider's default was winning over the intended size utilities; the fix restores those existing declarations. Typography and border radius change appearance, while the same React state and event handlers keep behaviour. A screenshot must be checked at the same width as the design; a passing TypeScript check cannot prove visual geometry.
 
 ## 4. How the current application fits together
 

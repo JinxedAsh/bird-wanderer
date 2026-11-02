@@ -217,7 +217,7 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
           <button
             onClick={() => onNavigate('log-observation')}
             aria-label="Upload field photo"
-            className="h-11 px-3.5 bg-[#2d5a27] text-white font-semibold text-[13px] rounded-xl shadow-sm hover:opacity-95 active:scale-95 transition-all flex items-center gap-1.5 flex-shrink-0"
+            className="h-11 px-3.5 bg-[#2d5a27] text-white font-semibold text-[13px] rounded-lg shadow-sm hover:opacity-95 active:scale-95 transition-all flex items-center gap-1.5 flex-shrink-0"
           >
             <span className="material-symbols-outlined text-[18px]">add_a_photo</span>
             <span>+ Upload</span>
@@ -235,7 +235,7 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
               <button
                 key={opt.id}
                 onClick={() => setActiveFilter(opt.id)}
-                className={`h-8 px-3.5 rounded-full text-[12px] font-semibold flex-shrink-0 transition-all ${
+                className={`h-8 px-3.5 rounded-xl text-[12px] font-semibold flex-shrink-0 transition-all ${
                   isActive
                     ? 'bg-[#2d5a27] text-white shadow-sm'
                     : 'bg-[#ebeef3] text-[#42493e] hover:bg-[#e0e3e8]'

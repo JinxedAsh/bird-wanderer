@@ -81,3 +81,16 @@ The design's density and sections are restored, but exact one-to-one approval re
 Start the usual application with `pnpm dev` from frontend; open its existing local/LAN/HTTPS address and sign in with your own demo account. Explore shows main discovery content first. Use an information icon to show provenance, open a species and Plan a Shot, follow reported hotspots to weather/access/maps, then demonstrate one private upload and its Journal record. Missing source evidence stays unavailable. Do not use the isolated QA port or synthetic accounts as the normal demo deployment.
 
 Final markup-only correction: the quiz photo and its figcaption now share a semantic figure wrapper. Source-owner latest-build browser check confirmed the credit disclosure opens, its parent is FIGURE and page width fits390. Independent all-screen screenshots remain dated mixed-build evidence.
+
+
+## Active geometry pass after PR #45 (3 November)
+
+Base main `63fe074`; branch `ui-reference-geometry`. Owned source changes currently: AuthScreen, SettingsScreen, BirdQuizScreen, CommunityScreen, FieldChatScreen, GlobalSearchScreen, HotspotsScreen, HotspotDetailScreen, JournalScreen, LifeListScreen, NotificationsScreen, ProfileScreen, SpeciesDetailScreen and index.css. No backend/logic changes. The previous isolated database is reused by `%TEMP%/bird-geometry-preview.mjs` on4384; normal demo services remain untouched. Latest build `index-CJfN-vuz.js` (source frozen for independent final comparison).
+
+Measured defect: all declared 14/18/20/etc icon sizes previously computed24px. Both the local rule and the external Google font sheet supplied unlayered defaults. The local icon definition is now in the base layer, with an unlayered font-size:revert-layer correction to restore component utility sizes. Actual browser verification now shows14px eco/nature and18px email/key/visibility/arrow icons.
+
+Authentication work adjusts badge height, heading/tagline/body sizes, casing, form/tab/input/button radii and weights to image5. Settings work removes background blur and selected-option outlines and refines sheet/icon/option radii to image21. Type/build pass. The 171-test suite passed after the main geometry edits; final rerun after the last Auth/species/hotspot adjustments and independent latest-asset screenshot/interaction acceptance remain PENDING. Do not claim these changes accepted or merged.
+
+Authentication text-row evidence at390: baseline heading157/tagline197/paragraph234 versus reference150/186/218. A targeted gap/line-height correction follows these measurements. Other components now match reference-specific 4/8/12px corners, larger list/contact names, lighter weights and compact report rows. No interaction handlers were edited.
+
+Next actions: compare revised Auth/Settings screenshots against normalized references; finish measurable spacing/type/radius differences screen-by-screen, recapture all affected screens after the icon cascade fix, test their retained interactions, document measured remaining deviations, then focused PR/exact-head/main checks. Preserve the unrelated local Development Record/Final Acceptance/native push/domain/test files. No files are to be reset/stashed/deleted to simplify checkout.

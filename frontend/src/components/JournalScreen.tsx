@@ -119,7 +119,7 @@ export const JournalScreen: React.FC<JournalScreenProps> = ({
             <div
               key={entry.id}
               onClick={() => setActiveEntryId(entry.id)}
-              className={`group flex flex-col bg-white rounded-xl overflow-hidden shadow-sm cursor-pointer active:scale-[0.98] transition-all border ${
+              className={`group flex flex-col bg-white rounded-lg overflow-hidden shadow-xs cursor-pointer active:scale-[0.98] transition-all border ${
                 isSelected ? 'border-[#154212] ring-2 ring-[#154212]/30' : 'border-transparent'
               }`}
             >
@@ -167,7 +167,7 @@ export const JournalScreen: React.FC<JournalScreenProps> = ({
 
       {/* ACTIVE LOG ENTRY CARD */}
       {activeEntry && (
-        <div className="w-full bg-white rounded-2xl p-4 shadow-sm flex flex-col transition-all border border-[#f1f4f9]">
+        <div className="w-full bg-white rounded-lg p-4 shadow-xs flex flex-col transition-all border border-[#f1f4f9]">
           <div className="flex items-center justify-between pb-2.5">
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-[#154212]"></span>
@@ -205,7 +205,7 @@ export const JournalScreen: React.FC<JournalScreenProps> = ({
 
           {/* Details Bento */}
           <div className="grid grid-cols-2 gap-2 mb-3.5">
-            <div className="bg-[#f1f4f9] p-2.5 rounded-xl flex items-start gap-2">
+            <div className="bg-[#f1f4f9] p-2.5 rounded-lg flex items-start gap-2">
               <span className="material-symbols-outlined text-[#154212] text-[18px] mt-0.5">
                 location_on
               </span>
@@ -219,7 +219,7 @@ export const JournalScreen: React.FC<JournalScreenProps> = ({
               </div>
             </div>
 
-            <div className="bg-[#f1f4f9] p-2.5 rounded-xl flex items-start gap-2">
+            <div className="bg-[#f1f4f9] p-2.5 rounded-lg flex items-start gap-2">
               <span className="material-symbols-outlined text-[#154212] text-[18px] mt-0.5">
                 calendar_today
               </span>
@@ -233,7 +233,7 @@ export const JournalScreen: React.FC<JournalScreenProps> = ({
               </div>
             </div>
 
-            <div className="bg-[#f1f4f9] p-2.5 rounded-xl flex items-start gap-2">
+            <div className="bg-[#f1f4f9] p-2.5 rounded-lg flex items-start gap-2">
               <span className="material-symbols-outlined text-[#154212] text-[18px] mt-0.5">
                 camera
               </span>
@@ -247,7 +247,7 @@ export const JournalScreen: React.FC<JournalScreenProps> = ({
               </div>
             </div>
 
-            <div className="bg-[#f1f4f9] p-2.5 rounded-xl flex items-start gap-2">
+            <div className="bg-[#f1f4f9] p-2.5 rounded-lg flex items-start gap-2">
               <span className="material-symbols-outlined text-[#904d00] text-[18px] mt-0.5">
                 wb_sunny
               </span>

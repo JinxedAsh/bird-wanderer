@@ -118,7 +118,7 @@ export const NotificationsScreen: React.FC<NotificationsScreenProps> = ({
             tabIndex={0}
             onKeyDown={event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();onSelectNotification(notif);}}}
             onClick={() => onSelectNotification(notif)}
-            className={`relative flex items-start gap-3 p-3.5 rounded-2xl shadow-xs transition-all cursor-pointer border ${
+            className={`relative flex items-start gap-3 p-3.5 rounded-lg shadow-xs transition-all cursor-pointer border ${
               notif.isUnread
                 ? 'bg-white border-[#f1f4f9]'
                 : 'bg-white/60 hover:bg-white border-transparent'
@@ -126,7 +126,7 @@ export const NotificationsScreen: React.FC<NotificationsScreenProps> = ({
           >
             <div className="flex-shrink-0 mt-0.5 relative">
               <div
-                className={`w-10 h-10 rounded-full ${notif.iconBg} flex items-center justify-center ${notif.iconColor}`}
+                className={`w-10 h-10 rounded-xl ${notif.iconBg} flex items-center justify-center ${notif.iconColor}`}
               >
                 <span className="material-symbols-outlined text-[20px]">{notif.icon}</span>
               </div>
@@ -134,11 +134,11 @@ export const NotificationsScreen: React.FC<NotificationsScreenProps> = ({
 
             <div className="flex-1 min-w-0 pr-2">
               <div className="flex flex-col items-start gap-1 mb-0.5">
-                <h2 className="text-[13px] font-bold text-[#181c20] break-words leading-snug">{notif.title}</h2>
+                <h2 className="text-[14px] font-medium text-[#181c20] break-words leading-snug">{notif.title}</h2>
                 <time className="text-[11px] text-[#72796e] flex-shrink-0">{notif.timeAgo}</time>
               </div>
 
-              <p className="text-[12px] text-[#42493e] line-clamp-2 leading-relaxed">
+              <p className="text-[14px] text-[#42493e] line-clamp-2 leading-relaxed">
                 {notif.description}
               </p>
             </div>

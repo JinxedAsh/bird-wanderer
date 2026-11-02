@@ -391,8 +391,8 @@ export const FieldChatScreen: React.FC<FieldChatScreenProps> = ({
         /* CONVERSATION LIST VIEW */
         <section className="flex flex-col w-full px-4 py-2 space-y-3">
           {/* Search & New Chat Action Card */}
-          <div className="flex items-center justify-between gap-2 bg-[#ebeef3] rounded-2xl p-1.5 shadow-xs">
-            <div className="flex items-center gap-2 flex-1 bg-white rounded-xl px-3 py-2 shadow-xs">
+          <div className="flex items-center justify-between gap-2 bg-[#ebeef3] rounded p-1 shadow-xs">
+            <div className="flex items-center gap-2 flex-1 min-w-0 bg-white rounded px-3 py-2 shadow-xs">
               <span className="material-symbols-outlined text-[18px] text-[#72796e]">
                 search
               </span>
@@ -400,7 +400,7 @@ export const FieldChatScreen: React.FC<FieldChatScreenProps> = ({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search field notes & birders..."
-                className="w-full bg-transparent text-[13px] text-[#181c20] placeholder:text-[#72796e] focus:outline-none"
+                className="w-full min-w-0 bg-transparent text-[13px] text-[#181c20] placeholder:text-[#72796e] focus:outline-none"
               />
             </div>
             <button
@@ -409,7 +409,7 @@ export const FieldChatScreen: React.FC<FieldChatScreenProps> = ({
                 setPicker('people');
               }}
               aria-label="Start new field chat"
-              className="min-w-11 min-h-11 flex items-center justify-center rounded-xl bg-[#154212] text-white shadow-xs hover:bg-[#2d5a27] active:scale-95 transition-all flex-shrink-0"
+              className="min-w-11 min-h-11 flex items-center justify-center rounded bg-[#154212] text-white shadow-xs hover:bg-[#2d5a27] active:scale-95 transition-all flex-shrink-0"
             >
               <span className="material-symbols-outlined text-[20px]">
                 edit_square
@@ -469,7 +469,7 @@ export const FieldChatScreen: React.FC<FieldChatScreenProps> = ({
                 onClick={() => {
                   setActiveChatId(conv.id);
                 }}
-                className="flex items-start gap-3 p-3.5 bg-white rounded-2xl shadow-xs hover:bg-[#f1f4f9] active:bg-[#ebeef3] transition-all cursor-pointer relative text-left border border-[#f1f4f9]"
+                className="flex items-start gap-3 p-4 bg-white rounded-lg shadow-xs hover:bg-[#f1f4f9] active:bg-[#ebeef3] transition-all cursor-pointer relative text-left border border-[#f1f4f9]"
               >
                 <div className="relative flex-shrink-0">
                   <img
@@ -495,7 +495,7 @@ export const FieldChatScreen: React.FC<FieldChatScreenProps> = ({
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-0.5">
                     <div className="flex items-center gap-1.5 min-w-0">
-                      <span className="text-[14px] font-bold text-[#181c20] truncate">
+                      <span className="text-[18px] font-medium text-[#181c20] truncate">
                         {conv.contactName}
                       </span>
                       {conv.badge && (
@@ -509,7 +509,7 @@ export const FieldChatScreen: React.FC<FieldChatScreenProps> = ({
                     </span>
                   </div>
 
-                  <p className="text-[13px] text-[#181c20] font-medium line-clamp-1">
+                  <p className="text-[14px] text-[#181c20] font-normal line-clamp-1">
                     {conv.lastMessage}
                   </p>
 
@@ -542,7 +542,7 @@ export const FieldChatScreen: React.FC<FieldChatScreenProps> = ({
             </button>
           )}
           {/* Thoughtful Naturalist Journal Footer Note */}
-          <div className="flex items-center gap-3 p-3 bg-[#f1f4f9] rounded-xl">
+          <div className="flex items-center gap-3 p-3 bg-[#f1f4f9] rounded-lg">
             <div className="min-w-11 min-h-11 rounded-lg bg-[#e0e3e8] flex items-center justify-center text-[#20402b] flex-shrink-0">
               <span className="material-symbols-outlined text-[18px]">
                 nature_people
@@ -582,7 +582,7 @@ export const FieldChatScreen: React.FC<FieldChatScreenProps> = ({
 
               <div className="flex flex-col min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[14px] font-bold text-[#181c20] truncate">
+                  <span className="text-[18px] font-medium text-[#181c20] truncate">
                     {activeChat?.contactName}
                   </span>
                 </div>

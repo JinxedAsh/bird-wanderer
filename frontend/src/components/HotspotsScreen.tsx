@@ -71,7 +71,7 @@ export const HotspotsScreen: React.FC<HotspotsScreenProps> = ({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search locations"
-            className="w-full h-12 pl-12 pr-11 bg-white rounded-full text-[14px] text-[#181c20] placeholder:text-[#42493e]/70 focus:outline-none focus:ring-2 focus:ring-[#154212] shadow-sm transition-all"
+            className="w-full h-12 pl-12 pr-11 bg-white rounded-lg text-[14px] text-[#181c20] placeholder:text-[#42493e]/70 focus:outline-none focus:ring-2 focus:ring-[#154212] shadow-sm transition-all"
             type="text"
           />
           <button
@@ -91,7 +91,7 @@ export const HotspotsScreen: React.FC<HotspotsScreenProps> = ({
               <button
                 key={filter}
                 onClick={() => setActiveFilter(filter)}
-                className={`min-h-11 px-4 py-1.5 rounded-full text-[13px] font-semibold capitalize transition-all active:scale-95 whitespace-nowrap ${
+                className={`min-h-11 px-4 py-1.5 rounded-xl text-[13px] font-medium capitalize transition-all active:scale-95 whitespace-nowrap ${
                   isActive
                     ? 'bg-[#154212] text-white shadow-sm'
                     : 'bg-[#f1f4f9] text-[#42493e] hover:bg-[#ebeef3]'
