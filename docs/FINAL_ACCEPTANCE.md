@@ -44,6 +44,8 @@ Entry59/[PR #44](https://github.com/JinxedAsh/bird-wanderer/pull/44) implements 
 3. **Email recovery:** optional source is implemented in Entry 46;148 tests/type/build and frozen install/full-audit checks pass. Scoped browser verification, including the signed-in fragment regression fix, passed; delivered #38/4cc3507 after four exact-head d8009e6 checks and merged-main web/Android checks passed; actual email/provider/device acceptance is separate.
 4. **Recorded calls:** exact-species Wikidata P51/Commons licensed audio service and real controls implemented in Entry45. 139 automated tests/type/build and scoped independent real-audio browser acceptance passed; PR #37/e7abb0f delivered after four exact-head and merged-main web/Android checks passed. No-match, unsupported codec and missing evidence are explicit; true page-hide/physical codec checks remain manual.
 
+- **Presentation refinement (3 November, PR #45):** all15 screen types compared at390/320;171 automated tests/type/build and scoped browser flows pass. Exact one-to-one visual approval, physical-device acceptance and untested outage/retry flows remain open; see [Design fidelity checklist](DESIGN_FIDELITY.md).
+
 ## Unavailable evidence / external or manual inputs
 
 - Legitimate regional eBird historical export with checklist denominators and provenance, reliable measured difficulty and historical environmental context. Raw sightings, Commons timestamps or forecasts must not be substituted as proven seasonal activity/optimal settings.
