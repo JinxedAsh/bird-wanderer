@@ -44,7 +44,7 @@ export function ObservationConditionsPanel({ point, observedAt, utcOffset, disab
       {[
         ['Temperature', data.temperatureC, '°C'], ['Cloud', data.cloudCoverPercent, '%'],
         ['Wind', data.windKmh, ' km/h'], ['Humidity', data.humidityPercent, '%'],
-      ].map(([label, value, unit]) => <div key={label} className="min-w-0 rounded-lg bg-white p-2"><div className="text-[10px] text-[#42493e]">{label}</div><div className="mt-1 font-semibold break-words">{value == null ? 'Unavailable' : `${value}${unit}`}</div></div>)}
+      ].map(([label, value, unit]) => <div key={label} className="min-w-0 rounded-lg bg-white p-2"><div className="text-[10px] text-[#42493e]">{label}</div><div title={value == null ? 'Unavailable' : `${value}${unit}`} aria-label={`${label}: ${value == null ? 'Unavailable' : `${value}${unit}`}`} className="mt-1 font-semibold break-words">{value == null ? '—' : `${value}${unit}`}</div></div>)}
     </div>}
     {skipped && <p role="status">Conditions omitted. You can save the observation without weather.</p>}
   </section>;

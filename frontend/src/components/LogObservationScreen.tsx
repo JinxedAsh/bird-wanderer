@@ -294,7 +294,7 @@ export const LogObservationScreen: React.FC<LogObservationScreenProps> = ({
             ['Aperture', uploaded?.exif.aperture == null ? 'Unavailable' : `f/${uploaded.exif.aperture}`],
             ['Shutter', uploaded ? formatShutter(uploaded.exif.exposureSeconds) : 'Unavailable'],
             ['ISO', uploaded?.exif.iso == null ? 'Unavailable' : String(uploaded.exif.iso)],
-          ].map(([label, value], index) => <div key={label} className={`rounded-md bg-white p-2 min-w-0 ${index < 2 ? 'col-span-2 text-left' : ''}`}><span className="block text-[9px] uppercase">{label}</span><span className="block break-words">{value}</span></div>)}
+          ].map(([label, value], index) => <div key={label} className={`rounded-md bg-white p-2 min-w-0 ${index < 2 ? 'col-span-2 text-left' : ''}`}><span className="block text-[9px] uppercase">{label}</span><span title={value} aria-label={`${label}: ${value}`} className="block break-words">{index >= 2 && value === 'Unavailable' ? '—' : value}</span></div>)}
         </div>
       </section>
       <ObservationConditionsPanel key={uploaded?.id || 'draft'} point={weatherPoint} observedAt={observedAt} utcOffset={utcOffset} disabled={published || saving} onChange={setConditions} onSessionExpired={onSessionExpired} />

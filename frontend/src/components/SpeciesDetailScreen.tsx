@@ -1,3 +1,4 @@
+import { InformationDisclosure } from './InformationDisclosure';
 import React, { useState } from 'react';
 import { BirdSpecies, ScreenType } from '../types';
 import type { SpeciesLocations } from '../lib/discovery';
@@ -240,6 +241,7 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
               <span className="material-symbols-outlined text-[16px]">tips_and_updates</span>
             </div>
             <h3 className="text-[16px] font-bold text-[#181c20]">Field Guide & Technique</h3>
+            {species.source && onToggleSubscription && <InformationDisclosure className="reference-info-inline ml-auto" label="Species alerts">      {species.source&&onToggleSubscription&&<button type="button" aria-pressed={subscribed} onClick={onToggleSubscription} className="mx-4 mt-2 min-h-11 rounded-xl bg-white text-[#154212] text-[13px] font-semibold">{subscribed?'Unsubscribe from species alerts':'Subscribe to species alerts'}</button>}</InformationDisclosure>}
           </div>
           <details id="photography-planning" tabIndex={-1} aria-label="Field Guide and Technique" className="text-[13px] text-[#42493e]"><summary className="min-h-11 flex items-center cursor-pointer font-semibold">Species information and photography evidence</summary>
           {species.source && <SpeciesInfoPanel key={species.id} speciesId={species.id} onSessionExpired={onSessionExpired} />}
@@ -249,7 +251,7 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
           </p>}
 
           </details>
-      {species.source&&onToggleSubscription&&<button type="button" aria-pressed={subscribed} onClick={onToggleSubscription} className="mx-4 mt-2 min-h-11 rounded-xl bg-white text-[#154212] text-[13px] font-semibold">{subscribed?'Unsubscribe from species alerts':'Subscribe to species alerts'}</button>}
+
           <SpeciesRecording key={`recording-${species.id}`} speciesId={species.source ? species.id : undefined} onSessionExpired={onSessionExpired} />
         </div>
       </div>

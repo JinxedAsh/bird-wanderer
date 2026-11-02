@@ -255,6 +255,31 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
               </span>
             </button>
           )}
+          <InformationDisclosure label="Search options and history">
+      {(activeCategory === 'all' || activeCategory === 'birds') &&
+        externalDiscovery && (
+          <label className="mt-2 flex items-center gap-2 text-[12px] text-[#42493e]">
+            <input
+              type="checkbox"
+              checked={savedOnly}
+              onChange={(event) => setSavedOnly(event.target.checked)}
+            />
+            Saved birds only
+          </label>
+        )}
+      {onRecordSearch && (
+        <p className="mt-2 text-[11px] text-[#72796e]">
+          Press Enter or open a bird/hotspot result to keep this search.
+        </p>
+      )}
+
+      {externalDiscovery && (showPeople || showPosts) && (
+        <p className="text-[12px] text-[#42493e]">
+          People and posts are searched on the server using your current access.
+          Photos and identification remain user-reported.
+        </p>
+      )}
+      </InformationDisclosure>
         </div>
       </div>
 
@@ -281,31 +306,7 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
         )}
       </div>
 
-      <div className="flex justify-end"><InformationDisclosure label="Search options and history">
-      {(activeCategory === 'all' || activeCategory === 'birds') &&
-        externalDiscovery && (
-          <label className="mt-2 flex items-center gap-2 text-[12px] text-[#42493e]">
-            <input
-              type="checkbox"
-              checked={savedOnly}
-              onChange={(event) => setSavedOnly(event.target.checked)}
-            />
-            Saved birds only
-          </label>
-        )}
-      {onRecordSearch && (
-        <p className="mt-2 text-[11px] text-[#72796e]">
-          Press Enter or open a bird/hotspot result to keep this search.
-        </p>
-      )}
 
-      {externalDiscovery && (showPeople || showPosts) && (
-        <p className="text-[12px] text-[#42493e]">
-          People and posts are searched on the server using your current access.
-          Photos and identification remain user-reported.
-        </p>
-      )}
-      </InformationDisclosure></div>
       {/* Recent Searches */}
       {recentSearches.length > 0 && (
         <div className="pt-3 pb-2">
