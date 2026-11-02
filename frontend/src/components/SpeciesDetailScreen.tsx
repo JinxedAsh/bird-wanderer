@@ -55,15 +55,16 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
 
   const focusSection = (id: string) => {
     const section = document.getElementById(id);
-    const disclosure = section?.closest('details');
-    if (disclosure) disclosure.open = true;
+    let disclosure = section?.closest('details');
+    // Open every enclosing panel before navigating to a nested guide control.
+    while (disclosure) { disclosure.open = true; disclosure = disclosure.parentElement?.closest('details'); }
     section?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
     section?.focus({ preventScroll: true });
   };
 
   return (
     <div className="flex flex-col w-full pb-28 pt-1">
-      {species.source&&onToggleSubscription&&<button type="button" aria-pressed={subscribed} onClick={onToggleSubscription} className="mx-4 mt-2 min-h-11 rounded-xl bg-white text-[#154212] text-[13px] font-semibold">{subscribed?'Unsubscribe from species alerts':'Subscribe to species alerts'}</button>}
+
       {/* Top Action Rail */}
       <div className="px-4 py-2 flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -122,7 +123,7 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
 
       {/* Species Title & Nomenclature */}
       <div className="px-4 pt-1 pb-4">
-        <div className="flex items-baseline justify-between gap-2">
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h2 className="text-[26px] font-bold text-[#181c20] tracking-tight">{species.name}</h2>
           <span className="text-[11px] text-[#904d00] px-2 py-0.5 rounded bg-[#ffdcc3] uppercase tracking-widest font-bold">
             {species.iucnStatus || (species.source ? 'Status unavailable' : 'LC')}
@@ -144,10 +145,10 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
           </div>
           <div className="mt-2">
             <span className="text-[16px] font-bold text-[#181c20] block leading-tight">
-              {species.source ? 'Read species reference' : species.habitat || 'Wetlands'}
+              {species.source ? 'Reference' : species.habitat || 'Wetlands'}
             </span>
             <span className="text-[12px] text-[#42493e]">
-              {species.source ? <button type="button" onClick={() => focusSection('species-information')} className="font-semibold text-[#154212] underline">Identification &amp; habitat details</button> : species.habitatDetail || 'Rivers & reed ponds'}
+              {species.source ? <button type="button" onClick={() => focusSection('species-information')} className="font-semibold text-[#154212] underline">Identification &amp; habitat</button> : species.habitatDetail || 'Rivers & reed ponds'}
             </span>
           </div>
         </div>
@@ -163,7 +164,7 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
               {species.source ? 'Unverified' : species.bestTime || '06:30 – 08:30'}
             </span>
             <span className="text-[12px] text-[#42493e]">
-              {species.source ? <button type="button" onClick={() => focusSection('photography-planning')} className="font-semibold text-[#154212] underline">Seasonal, daylight &amp; access checks</button> : species.bestTimeDetail || 'Optimal low angle glare'}
+              {species.source ? <button type="button" onClick={() => focusSection('photography-planning')} className="font-semibold text-[#154212] underline">Timing &amp; access</button> : species.bestTimeDetail || 'Optimal low angle glare'}
             </span>
           </div>
         </div>
@@ -197,7 +198,7 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
             <span className="text-[16px] font-bold text-[#181c20] block leading-tight">
               {species.photographyDifficulty || (species.source ? 'Unrated' : 'Medium')}
             </span>
-            {species.source && <button type="button" onClick={() => focusSection('photography-planning')} className="min-h-11 text-left text-[12px] font-semibold text-[#154212] underline">Check motion, light &amp; gear demands</button>}
+            {species.source && <button type="button" onClick={() => focusSection('photography-planning')} className="min-h-11 text-left text-[12px] font-semibold text-[#154212] underline">Motion, light &amp; gear</button>}
             {!species.source && <div className="flex items-center gap-1 mt-1">
               <span className="w-3 h-1.5 rounded-full bg-[#904d00]"></span>
               <span className="w-3 h-1.5 rounded-full bg-[#904d00]"></span>
@@ -233,19 +234,22 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
 
       {/* Photography Field Note Card */}
       <div className="px-4 pb-5">
-        <div id="photography-planning" tabIndex={-1} role="region" aria-label="Field Guide and Technique" className="bg-white p-4 rounded-2xl shadow-sm border border-[#f1f4f9]">
+        <div className="bg-white p-4 rounded-2xl shadow-sm border border-[#f1f4f9]">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-7 h-7 rounded-lg bg-[#ffdcc3] flex items-center justify-center text-[#6e3900]">
               <span className="material-symbols-outlined text-[16px]">tips_and_updates</span>
             </div>
             <h3 className="text-[16px] font-bold text-[#181c20]">Field Guide & Technique</h3>
           </div>
+          <details id="photography-planning" tabIndex={-1} aria-label="Field Guide and Technique" className="text-[13px] text-[#42493e]"><summary className="min-h-11 flex items-center cursor-pointer font-semibold">Species information and photography evidence</summary>
           {species.source && <SpeciesInfoPanel key={species.id} speciesId={species.id} onSessionExpired={onSessionExpired} />}
           {species.source ? <PhotoPlanning key={`planning-${species.id}`} region={species.region} seasonalContext={species.seasonalContext} speciesName={species.name} speciesId={species.id} state={photoState} onSessionExpired={onSessionExpired} onChooseHotspot={() => focusSection('sightings-sheet-anchor')} /> : <p className="text-[13px] text-[#42493e] leading-relaxed">
             {species.fieldGuideNotes ||
               '400mm+ recommended. Kingfishers dive rapidly from low perches; maintain shutter speed at 1/2000s or faster in morning light. Look for regular fishing perches 1–2 meters above stagnant river channels.'}
           </p>}
 
+          </details>
+      {species.source&&onToggleSubscription&&<button type="button" aria-pressed={subscribed} onClick={onToggleSubscription} className="mx-4 mt-2 min-h-11 rounded-xl bg-white text-[#154212] text-[13px] font-semibold">{subscribed?'Unsubscribe from species alerts':'Subscribe to species alerts'}</button>}
           <SpeciesRecording key={`recording-${species.id}`} speciesId={species.source ? species.id : undefined} onSessionExpired={onSessionExpired} />
         </div>
       </div>

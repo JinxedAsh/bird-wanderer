@@ -3,6 +3,7 @@ import { BirdSpecies, ScreenType } from '../types';
 import { SpeciesPhoto } from './SpeciesPhoto';
 import type { LocationPoint } from '../lib/location';
 import type { HotspotWeather } from '../lib/discovery';
+import { InformationDisclosure } from './InformationDisclosure';
 
 interface ExploreScreenProps {
   location?: LocationPoint | null;
@@ -36,7 +37,7 @@ export const ExploreScreen: React.FC<ExploreScreenProps> = ({
   onQuickLog,
 }) => {
   const nearbyBirds = speciesList.slice(0, 4);
-  const notableBird = externalDiscovery ? undefined : speciesList.find((s) => s.id === 'hornbill') || speciesList[4];
+  const notableBird = externalDiscovery ? speciesList.find(bird => bird.recentObservations?.length) : speciesList.find((s) => s.id === 'hornbill') || speciesList[4];
 
   return (
     <div className="flex flex-col w-full px-4 pb-28 pt-2 space-y-6">
@@ -53,8 +54,8 @@ export const ExploreScreen: React.FC<ExploreScreenProps> = ({
               </span>
               {externalDiscovery ? location ? `${location.source} location · ${discoveryRegion || 'Region not loaded'}` : `${discoveryRegion || 'Region not loaded'} · Choose location` : 'Delhi, India'}
             </button>
-            <h2 className="text-[24px] font-bold text-[#181c20] tracking-tight">
-              Good morning, {observerName}
+            <h2 className="text-[26px] font-bold text-[#181c20] tracking-tight">
+              Good morning, {observerName.trim().split(/\s+/)[0]}
             </h2>
           </div>
           <button
@@ -82,18 +83,20 @@ export const ExploreScreen: React.FC<ExploreScreenProps> = ({
           <div className="flex items-center gap-1.5 text-[#42493e]">
             <span className="material-symbols-outlined text-[16px]">air</span>
             <span className="text-[12px] font-semibold">{externalDiscovery ? weather?.current.windKmh == null ? 'Unavailable' : `${weather.current.windKmh} km/h` : '8 km/h'}</span>
+            {externalDiscovery && (weather || location?.accuracyM !== undefined) && <InformationDisclosure className="reference-info-inline" label="Weather source and accuracy">
+              {weather && <p>Approximate point forecast · {weather.timezone} · {weather.current.time}. <a href={weather.sourceUrl} target="_blank" rel="noreferrer" className="underline">Open-Meteo</a> · <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer" className="underline">CC BY 4.0</a>. Retrieved {new Date(weather.fetchedAt).toLocaleString()}{weather.cached ? ' (cached)' : ''}.</p>}
+              {location?.accuracyM !== undefined && <p>Device accuracy estimate: ±{Math.round(location.accuracyM)} m. Hotspot distances are approximate.</p>}
+            </InformationDisclosure>}
           </div>
         </div>
-        {externalDiscovery && weather && <p className="text-[11px] text-[#72796e]">Approximate point forecast · {weather.timezone} · {weather.current.time}. <a href={weather.sourceUrl} target="_blank" rel="noreferrer" className="underline">Open-Meteo</a> · <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer" className="underline">CC BY 4.0</a>. Retrieved {new Date(weather.fetchedAt).toLocaleString()}{weather.cached ? ' (cached)' : ''}.</p>}
         {externalDiscovery && weatherError && <p role="status" className="text-[12px] text-[#904d00]">{weatherError} <button type="button" onClick={onRetryWeather} className="underline">Retry Explore weather</button></p>}
-        {location?.accuracyM !== undefined && <p className="text-[11px] text-[#72796e]">Device accuracy estimate: ±{Math.round(location.accuracyM)} m. Hotspot distances are approximate.</p>}
       </section>
 
       {/* Main Section: What's out there? */}
       <section className="flex flex-col space-y-3">
         <div className="flex items-center justify-between">
-          <div className="flex min-w-0 flex-col gap-1">
-            <h3 className="text-[20px] font-bold text-[#181c20]">What’s out there?</h3>
+          <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1">
+            <h3 className="text-[22px] font-bold text-[#181c20]">What’s out there?</h3>
             <span className="text-[10px] font-bold uppercase tracking-wider text-[#154212]">
               {externalDiscovery ? location ? 'Reports within 50 km' : 'Recent regional reports' : 'Active nearby'}
             </span>
@@ -118,12 +121,12 @@ export const ExploreScreen: React.FC<ExploreScreenProps> = ({
               <SpeciesPhoto key={bird.id} species={bird} onSessionExpired={onSessionExpired} frameClassName="w-16 h-16 rounded-lg overflow-hidden bg-[#ebeef3]" />
 
               <div className="flex-1 min-w-0 ml-3.5 flex flex-col">
-                <h4 className="text-[16px] font-bold text-[#181c20] truncate group-hover:text-[#154212] transition-colors">
+                <h4 className="text-[18px] font-semibold text-[#181c20] truncate group-hover:text-[#154212] transition-colors">
                   <button type="button" onClick={(e) => { e.stopPropagation(); onSelectSpecies(bird); }} className="text-left">
                     {bird.name}
                   </button>
                 </h4>
-                <span className="text-[12px] italic text-[#42493e] truncate">
+                <span className="text-[13px] italic text-[#42493e] truncate">
                   {bird.scientificName}
                 </span>
               </div>
@@ -196,7 +199,7 @@ export const ExploreScreen: React.FC<ExploreScreenProps> = ({
       {notableBird && (
         <section className="flex flex-col space-y-2">
           <div className="flex items-center justify-between">
-            <h3 className="text-[17px] font-semibold text-[#181c20]">Best birds today</h3>
+            <h3 className="text-[17px] font-semibold text-[#181c20]">{externalDiscovery ? 'Recent field reports' : 'Best birds today'}</h3>
             <span className="px-2 py-0.5 rounded-full bg-[#ffdcc3] text-[#6e3900] text-[10px] flex items-center gap-1 font-bold">
               <span
                 className="material-symbols-outlined text-[13px]"
@@ -204,7 +207,7 @@ export const ExploreScreen: React.FC<ExploreScreenProps> = ({
               >
                 star
               </span>
-              Notable
+              {externalDiscovery ? 'Recent' : 'Notable'}
             </span>
           </div>
 
@@ -228,7 +231,7 @@ export const ExploreScreen: React.FC<ExploreScreenProps> = ({
                   >
                     schedule
                   </span>
-                  <span className="text-[12px] truncate">Seen 2h ago at Sanjay Van</span>
+                  <span className="text-[12px] truncate">{externalDiscovery ? `${notableBird.recentObservations![0].observedAt} · ${notableBird.recentObservations![0].location}` : 'Seen 2h ago at Sanjay Van'}</span>
                 </div>
               </div>
             </div>

@@ -1,3 +1,4 @@
+import { InformationDisclosure } from './InformationDisclosure';
 import React, { useEffect, useRef, useState } from 'react';
 import { observations, type ObservationConditions } from '../lib/observations';
 import { SessionExpiredError } from '../lib/auth';
@@ -27,13 +28,24 @@ export function ObservationConditionsPanel({ point, observedAt, utcOffset, disab
   }, [key, attempt, skipped, disabled]);
   const data = result?.key === key ? result.conditions : null;
   return <section className="bg-[#f1f4f9] p-3.5 rounded-xl mb-4 space-y-2 text-[12px]">
-    <h3 className="text-[13px] font-bold">Conditions — historical estimate</h3>
-    <p>Only coordinates rounded to 0.1° (roughly 11 km latitude), date and time are sent to Open-Meteo. No photograph or account identity is sent. Weather models are not verified measurements at your camera.</p>
+    <div className="flex items-center justify-between gap-2">
+      <h3 className="text-[16px] font-semibold">Conditions</h3>
+      <span className="text-[10px] text-[#42493e]">Historical estimate</span>
+      <InformationDisclosure label="Weather source, privacy and options">
+        <p>Only coordinates rounded to 0.1° (roughly 11 km latitude), date and time are sent to Open-Meteo. No photograph or account identity is sent. Weather models are not verified measurements at your camera.</p>
+        {data && <><p>Rain {data.precipitationMm ?? 'Unavailable'} mm. {data.model} · hour {data.matchedTime} ({data.timezone}). {data.timeBasis}. Retrieved {data.fetchedAt}.</p><a href={data.sourceUrl} target="_blank" rel="noreferrer" className="underline">Open-Meteo · CC BY 4.0 · source and methodology</a></>}
+        {key && !disabled && <div className="flex flex-wrap gap-x-4"><button type="button" className="min-h-11 underline" onClick={() => { setSkipped(false); setAttempt(value => value + 1); }}>Retry conditions</button><button type="button" className="min-h-11 underline" onClick={() => { setSkipped(true); callbacks.current.onChange(null); }}>Save without conditions</button></div>}
+      </InformationDisclosure>
+    </div>
     {!key && <p>Choose a location and observation date/time to look up conditions.</p>}
     {key && loading && <p role="status">Loading conditions for the selected place and time… You can save without them.</p>}
-    {error && <p role="alert">{error}</p>}
-    {data && <div role="status" className="space-y-1"><p>{data.temperatureC ?? 'Unavailable'}°C · wind {data.windKmh ?? 'Unavailable'} km/h · rain {data.precipitationMm ?? 'Unavailable'} mm · cloud {data.cloudCoverPercent ?? 'Unavailable'}% · humidity {data.humidityPercent ?? 'Unavailable'}%</p><p>{data.model} · hour {data.matchedTime} ({data.timezone}). {data.timeBasis}. Retrieved {data.fetchedAt}.</p><a href={data.sourceUrl} target="_blank" rel="noreferrer" className="underline">Open-Meteo · CC BY 4.0 · source and methodology</a></div>}
+    {error && <div role="alert"><p>{error}</p>{!disabled && <button type="button" className="min-h-11 underline" onClick={() => { setSkipped(false); setAttempt(value => value + 1); }}>Retry conditions</button>}</div>}
+    {data && <div role="status" className="grid grid-cols-4 gap-2 text-center">
+      {[
+        ['Temperature', data.temperatureC, '°C'], ['Cloud', data.cloudCoverPercent, '%'],
+        ['Wind', data.windKmh, ' km/h'], ['Humidity', data.humidityPercent, '%'],
+      ].map(([label, value, unit]) => <div key={label} className="min-w-0 rounded-lg bg-white p-2"><div className="text-[10px] text-[#42493e]">{label}</div><div className="mt-1 font-semibold break-words">{value == null ? 'Unavailable' : `${value}${unit}`}</div></div>)}
+    </div>}
     {skipped && <p role="status">Conditions omitted. You can save the observation without weather.</p>}
-    {key && !disabled && <div className="flex flex-wrap gap-x-4"><button type="button" className="min-h-11 underline" onClick={() => { setSkipped(false); setAttempt(value => value + 1); }}>Retry conditions</button><button type="button" className="min-h-11 underline" onClick={() => { setSkipped(true); callbacks.current.onChange(null); }}>Save without conditions</button></div>}
   </section>;
 }

@@ -109,7 +109,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             <span className="text-[11px] font-bold uppercase tracking-wider text-[#42493e]">
               Account
             </span>
-            <span className="text-[11px] text-[#72796e]">Journal ID #4092</span>
+            <span className="text-[11px] text-[#72796e]">Account</span>
           </div>
 
           <div className="bg-white rounded-2xl shadow-xs flex flex-col overflow-hidden border border-[#f1f4f9]">
@@ -139,7 +139,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
               </span>
             </button>
 
-            <div className="w-full px-4 py-3 flex items-center justify-between">
+            <details><summary className="w-full min-h-11 px-4 py-3 flex items-center justify-between cursor-pointer" aria-label="Email and verification">
               <div className="flex items-center gap-2.5">
                 <span className="material-symbols-outlined text-[#42493e] text-[20px]">mail</span>
                 <span className="text-[13px] font-bold text-[#181c20]">Email</span>
@@ -147,8 +147,9 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
               <span className="text-[12px] text-[#42493e] truncate max-w-[180px]">
                 {email}
               </span>
-            </div>
+            </summary>
             <EmailVerification onSessionExpired={onSessionExpired} />
+            </details>
           </div>
         </div>
 

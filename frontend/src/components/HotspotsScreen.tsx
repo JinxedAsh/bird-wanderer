@@ -1,3 +1,4 @@
+import { InformationDisclosure } from './InformationDisclosure';
 import React, { useMemo, useState } from 'react';
 import { Hotspot, ScreenType } from '../types';
 import { HotspotMap } from './HotspotMap';
@@ -171,7 +172,7 @@ export const HotspotsScreen: React.FC<HotspotsScreenProps> = ({
           const hotspot = filteredHotspots.find((h) => h.id === id);
           if (hotspot) onSelectHotspot(hotspot);
         }} />
-        <p className="mt-2 text-[12px] text-[#42493e]">Select a pin to open its location. Popular filters by at least 15 species recorded all time. {nearbyEnabled ? 'Distances are straight-line estimates. Nearby uses 50 km within the configured eBird region; Popular and Saved include the whole loaded region.' : 'Choose a location for nearby filtering and distances; browsing the configured region still works.'}</p>
+        <div className="flex justify-end"><InformationDisclosure label="Map coverage and filters">        <p className="mt-2 text-[12px] text-[#42493e]">Select a pin to open its location. Popular filters by at least 15 species recorded all time. {nearbyEnabled ? 'Distances are straight-line estimates. Nearby uses 50 km within the configured eBird region; Popular and Saved include the whole loaded region.' : 'Choose a location for nearby filtering and distances; browsing the configured region still works.'}</p></InformationDisclosure></div>
       </div>}
       {/* Location Cards List */}
       <div className="px-4 pt-1 flex flex-col gap-2.5">

@@ -715,6 +715,7 @@ export default function App() {
             unreadCount={unreadNotifsCount}
             userProfile={userProfile}
             showToast={showToast}
+            information={['explore','search','hotspots'].includes(currentScreen) && discovery && !discoveryError ? <p>eBird - {discovery.coverageLabel || discovery.region}. Retrieved {new Date(discovery.fetchedAt).toLocaleString()}. Recent reports: past 14 days. {discovery.cached ? 'Using server cache.' : ''}</p> : undefined}
           />
         )}
 
@@ -738,7 +739,7 @@ export default function App() {
           {['journal','life-list','profile'].includes(currentScreen)&&userProfile.photosCount>journalEntries.length&&<p className="mx-4 text-xs text-[#42493e]">Showing {journalEntries.length} of {userProfile.photosCount} field records. Totals cover all records; load older pages to include their details/species.</p>}
           {['journal','life-list','profile'].includes(currentScreen)&&ownNext!==null&&<button disabled={recordsLoading} onClick={()=>setOwnPages(n=>n+1)} className="mx-4 min-h-11 underline">Load older field records</button>}
           {currentScreen==='community'&&<div className="mx-4 flex gap-4">{feedNext!==null&&<button disabled={recordsLoading} onClick={()=>setFeedPages(n=>n+1)} className="min-h-11 underline">Load older community posts</button>}{peopleNext!==null&&<button disabled={recordsLoading} onClick={()=>setPeoplePages(n=>n+1)} className="min-h-11 underline">Load more birders</button>}</div>}
-          {['explore', 'search', 'hotspots'].includes(currentScreen) && (
+          {['explore', 'search', 'hotspots'].includes(currentScreen) && (discoveryLoading || discoveryError || !discovery) && (
             <div role="status" className="mx-4 mt-2 rounded-xl bg-[#f1f4f9] p-3 text-[12px] text-[#42493e]">
               {discoveryLoading ? 'Loading birds and hotspots from eBird...' : discoveryError || (discovery ? `eBird - ${discovery.coverageLabel || discovery.region}. Retrieved ${new Date(discovery.fetchedAt).toLocaleString()}. Recent reports: past 14 days. ${discovery.cached ? 'Using server cache.' : ''}` : 'External discovery has not loaded.')}
               {discoveryError && <button type="button" className="ml-2 font-semibold text-[#154212] underline" onClick={() => setDiscoveryAttempt((prev) => prev + 1)}>Try again</button>}
@@ -889,7 +890,7 @@ export default function App() {
 
           {currentScreen === 'life-list' && (
             <LifeListScreen
-              speciesList={(discovery?.species || []).filter(bird=>journalEntries.some(entry=>entry.inLifeList&&entry.scientificName===bird.scientificName)||isDiscoverySaved('species',bird.id)).map(bird=>({ ...bird,isLogged:journalEntries.some(entry=>entry.inLifeList&&entry.scientificName===bird.scientificName),isWishlist:isDiscoverySaved('species',bird.id),photosCount:journalEntries.filter(entry=>entry.scientificName===bird.scientificName).length,firstSightingLocation:journalEntries.find(entry=>entry.scientificName===bird.scientificName)?.location }))}
+              speciesList={(discovery?.species || []).filter(bird=>journalEntries.some(entry=>entry.inLifeList&&entry.scientificName===bird.scientificName)||isDiscoverySaved('species',bird.id)).map(bird=>({ ...bird,image:journalEntries.find(entry=>entry.inLifeList&&entry.scientificName===bird.scientificName)?.imageUrl || bird.image,isLogged:journalEntries.some(entry=>entry.inLifeList&&entry.scientificName===bird.scientificName),isWishlist:isDiscoverySaved('species',bird.id),photosCount:journalEntries.filter(entry=>entry.scientificName===bird.scientificName).length,firstSightingLocation:journalEntries.find(entry=>entry.scientificName===bird.scientificName)?.location }))}
               onSelectSpecies={handleSelectSpecies}
               onNavigate={navigateTo}
             />

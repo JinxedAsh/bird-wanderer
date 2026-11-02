@@ -177,7 +177,7 @@ export const JournalScreen: React.FC<JournalScreenProps> = ({
             </div>
             <div className="flex items-center gap-1 text-[#42493e]">
               <span className="material-symbols-outlined text-[18px]">photo_camera_back</span>
-              <span className="text-[11px] font-semibold">Entry #{activeEntry.id.replace('entry-', '04')}</span>
+              <span title={`Entry ${activeEntry.id}`} className="text-[11px] font-semibold">Entry #{activeEntry.id.slice(0, 8)}</span>
             </div>
           </div>
 
@@ -273,7 +273,7 @@ export const JournalScreen: React.FC<JournalScreenProps> = ({
                 {activeEntry.habitatTag}
               </span>
             </div>
-            <p className="text-[13px] text-[#181c20] leading-relaxed">{activeEntry.notes}</p>
+            <p className="text-[13px] text-[#181c20] leading-relaxed [overflow-wrap:anywhere]">{activeEntry.notes}</p>
           </div>
 
           {/* Actions */}

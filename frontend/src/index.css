@@ -58,3 +58,21 @@
 
 /* Keep compact community icons usable as touch targets on a phone. */
 .community-screen button { min-width: 44px; min-height: 44px; }
+
+/* Supporting evidence stays beside its control, outside the default card flow. */
+.reference-info { position: relative; flex-shrink: 0; font-size: 12px; font-weight: 400; text-transform: none; letter-spacing: normal; }
+.reference-info > summary { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; cursor: pointer; list-style: none; border-radius: 12px; }
+.reference-info > summary::-webkit-details-marker { display: none; }
+.reference-info-panel { position: absolute; right: 0; top: 100%; width: min(300px, calc(100vw - 64px)); max-height: 60vh; overflow: auto; padding: 14px; border-radius: 12px; background: white; color: #42493e; box-shadow: 0 5px 24px #181c2030; z-index: 35; line-height: 1.5; overflow-wrap: anywhere; text-align: left; }
+.reference-info-panel p + p { margin-top: 8px; }
+:where(article, button, div):has(> figure.contents) { position: relative; }
+.photo-credit { position: absolute; top: 0; left: 0; z-index: 25; }
+.photo-credit > details > summary { background: #ffffffdb; width: 32px; height: 32px; border-radius: 0 0 10px 0; }
+.photo-credit .reference-info-panel { left: 0; right: auto; }
+.photo-credit-hero { left: auto; right: 8px; top: 8px; }
+.photo-credit-hero .reference-info-panel { right: 0; left: auto; }
+.photo-credit-hero > details > summary { border-radius: 12px; }
+.reference-info-inline > summary { width: 20px; height: 20px; position: relative; }
+.reference-info-inline > summary::before { content: ''; position: absolute; inset: -12px; }
+
+.reference-info.absolute { position: absolute; }

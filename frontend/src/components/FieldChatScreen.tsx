@@ -504,7 +504,7 @@ export const FieldChatScreen: React.FC<FieldChatScreenProps> = ({
                         </span>
                       )}
                     </div>
-                    <span className="text-[11px] text-[#904d00] font-semibold flex-shrink-0">
+                    <span title={conv.timeAgo} className="text-[11px] text-[#904d00] font-semibold max-w-20 truncate shrink-0">
                       {conv.timeAgo}
                     </span>
                   </div>
@@ -542,7 +542,7 @@ export const FieldChatScreen: React.FC<FieldChatScreenProps> = ({
             </button>
           )}
           {/* Thoughtful Naturalist Journal Footer Note */}
-          <div className="flex items-center gap-3 p-3.5 bg-[#f1f4f9] rounded-2xl">
+          <div className="flex items-center gap-3 p-3 bg-[#f1f4f9] rounded-xl">
             <div className="min-w-11 min-h-11 rounded-lg bg-[#e0e3e8] flex items-center justify-center text-[#20402b] flex-shrink-0">
               <span className="material-symbols-outlined text-[18px]">
                 nature_people

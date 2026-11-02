@@ -1,3 +1,4 @@
+import { InformationDisclosure } from './InformationDisclosure';
 import React, { useEffect, useRef, useState } from 'react';
 import { BirdSpecies, Hotspot, ScreenType, CommunityPost } from '../types';
 import {
@@ -280,6 +281,7 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
         )}
       </div>
 
+      <div className="flex justify-end"><InformationDisclosure label="Search options and history">
       {(activeCategory === 'all' || activeCategory === 'birds') &&
         externalDiscovery && (
           <label className="mt-2 flex items-center gap-2 text-[12px] text-[#42493e]">
@@ -297,6 +299,13 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
         </p>
       )}
 
+      {externalDiscovery && (showPeople || showPosts) && (
+        <p className="text-[12px] text-[#42493e]">
+          People and posts are searched on the server using your current access.
+          Photos and identification remain user-reported.
+        </p>
+      )}
+      </InformationDisclosure></div>
       {/* Recent Searches */}
       {recentSearches.length > 0 && (
         <div className="pt-3 pb-2">
@@ -313,11 +322,11 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
             </button>
           </div>
 
-          <div className="flex flex-wrap gap-1.5 pt-0.5">
+          <div className="flex gap-1.5 pt-0.5 overflow-x-auto no-scrollbar">
             {recentSearches.map((term) => (
               <div
                 key={term}
-                className="inline-flex max-w-full items-center gap-1.5 bg-[#f1f4f9] text-[#181c20] px-3 py-1 rounded-full text-[12px] font-medium"
+                className="inline-flex shrink-0 max-w-full items-center gap-1.5 bg-[#f1f4f9] text-[#181c20] px-3 py-1 rounded-full text-[12px] font-medium"
               >
                 <button
                   type="button"
@@ -370,12 +379,6 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
         </p>
       )}
       {/* Search Results Stream */}
-      {externalDiscovery && (showPeople || showPosts) && (
-        <p className="text-[12px] text-[#42493e]">
-          People and posts are searched on the server using your current access.
-          Photos and identification remain user-reported.
-        </p>
-      )}
       <div className="flex flex-col gap-2.5 pt-2">
         {/* Bird Result */}
         {showBirds &&
