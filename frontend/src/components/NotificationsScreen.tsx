@@ -132,7 +132,7 @@ export const NotificationsScreen: React.FC<NotificationsScreenProps> = ({
               </div>
             </div>
 
-            <div className="flex-1 min-w-0 pr-2">
+            <div className="flex-1 min-w-0 pr-3">
               <div className="flex items-baseline justify-between gap-2 mb-0.5">
                 <h2 className="text-[14px] font-medium text-[#181c20] truncate leading-snug">{notif.title}</h2>
                 <time title={notif.timeAgo} aria-label={notif.timeAgo} className="text-[11px] text-[#72796e] flex-shrink-0">{notif.timeAgo.split(',')[0]}</time>
