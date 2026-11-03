@@ -13,6 +13,8 @@ export function referenceRanges(photos: SpeciesPhoto[]) {
 
 export const ReferenceComparisons: React.FC<{ speciesId: string; onSessionExpired?: () => void; gallery?: boolean }> = ({ speciesId, onSessionExpired, gallery = false }) => {
   const frame = useRef<HTMLElement>(null);
+  const expired = useRef(onSessionExpired);
+  expired.current = onSessionExpired;
   const [open, setOpen] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const [result, setResult] = useState<{ speciesId: string; references: SpeciesPhoto[]; fetchedAt: string } | null>(null);
@@ -35,11 +37,11 @@ export const ReferenceComparisons: React.FC<{ speciesId: string; onSessionExpire
       if (!controller.signal.aborted) setResult(data);
     }).catch((failure) => {
       if (controller.signal.aborted) return;
-      if (failure instanceof SessionExpiredError) onSessionExpired?.();
+      if (failure instanceof SessionExpiredError) expired.current?.();
       else setError(failure.message || 'Reference photos could not load.');
     }).finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
-  }, [open, speciesId, attempt, onSessionExpired]);
+  }, [open, speciesId, attempt]);
   const photos = result?.speciesId === speciesId ? result.references : [];
   const imageUnavailable = (event: React.SyntheticEvent<HTMLImageElement>) => {
     if (!event.currentTarget.src.endsWith('/discovery-placeholder.svg')) {

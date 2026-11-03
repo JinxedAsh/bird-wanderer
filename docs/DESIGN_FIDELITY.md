@@ -54,7 +54,7 @@ A separate source-owner desktop browser check used a temporary isolated proxy to
 
 ## Verification and delivery checkpoint
 
-PR47 runtime `index-CxiIwUMM.js`:171/171 local tests, TypeScript and production build passed; all four exact-head checks and both merged-main workflows passed at741e65e. Entry63 candidate `index-D7_-E51N.js` passes173/173 tests, TypeScript and production build. Its browser interaction/DOM results are not screenshot acceptance.
+PR47 runtime `index-CxiIwUMM.js`:171/171 local tests, TypeScript and production build passed; all four exact-head checks and both merged-main workflows passed at741e65e. Entry63 final candidate `index-CPw4oS-J.js` passes173/173 tests, TypeScript and production build. Earlier D7 browser interaction/DOM results are not screenshot acceptance; the final callback-only correction passed a controlled HTTP503 error and keyboard retry back to three real references. The local proxy is stopped; no genuine provider-outage acceptance is claimed.
 
 Independent review accepted latest-strip keyboard activation and dated Settings/Hotspots/Upload/Quiz/Profile flows. Its final files labelled320 for the3 strips were actually390px and are excluded from independent narrow acceptance. Source-owner DOM checks establish320px bounds separately. Native supplemental screenshots have their actual dimensions recorded rather than assuming requested viewport height. The upload continuation comparison was incorrectly scrolled; its screenshot does not prove lower-form parity. Accepted switch/segment interaction measurements remain valid.
 
