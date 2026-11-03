@@ -849,6 +849,7 @@ export default function App() {
               onQuickLog={handleQuickLog}
               showToast={showToast}
               locations={speciesLocations.id === selectedSpecies.id ? speciesLocations.data : undefined}
+              hotspots={discovery?.hotspots || []}
               locationsError={speciesLocations.id === selectedSpecies.id ? speciesLocations.error : undefined}
               onRetryLocations={() => setDetailAttempt((prev) => prev + 1)}
               onSelectHotspotById={handleSelectHotspotById}

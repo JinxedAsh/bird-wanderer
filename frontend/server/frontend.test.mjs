@@ -522,6 +522,46 @@ test('external species details show genuine reports without fabricated photos, c
   assert.doesNotMatch(html, /Verified Field Shot|1\/2500|32 uploads|Okhla|Yamuna Bio-Diversity/);
 });
 
+test('species field map uses only reported catalogue coordinates and retains unmatched reports', () => {
+  const props = {
+    species: { id: 'comkin1', name: 'Common Kingfisher', scientificName: 'Alcedo atthis', source: 'eBird', image: '/discovery-placeholder.svg' },
+    onNavigate: noop, onQuickLog: noop, showToast: noop,
+    locations: { speciesId: 'comkin1', fetchedAt: '2026-11-03T00:00:00Z', cached: false, locations: [
+      { hotspotId: 'L1', name: 'Matched wetland', coordinates: '0, 0', observedAt: '2026-11-02 07:00', count: 2 },
+      { hotspotId: 'L2', name: 'Unmatched report', coordinates: '28.5, 77.2', observedAt: '2026-11-02 08:00', count: null },
+      { hotspotId: 'L3', name: 'Invalid catalogue point', coordinates: '28.6, 77.3', observedAt: '2026-11-02 09:00', count: 1 },
+    ] },
+    hotspots: [
+      { id: 'L1', name: 'Matched wetland', latitude: 0, longitude: 0 },
+      { id: 'L3', name: 'Invalid catalogue point', latitude: 91, longitude: 77.3 },
+      { id: 'L4', name: 'Unreported catalogue site', latitude: 28.7, longitude: 77.4 },
+    ],
+  };
+  const html = render('SpeciesDetailScreen', props);
+  assert.match(html, /aria-label="Reported hotspots for Common Kingfisher"/);
+  assert.match(html, /1 of 3 reported hotspots have coordinates/);
+  for (const name of ['Matched wetland', 'Unmatched report', 'Invalid catalogue point']) assert.match(html, new RegExp(`aria-label="Open hotspot ${name}"`));
+  assert.doesNotMatch(html, /Unreported catalogue site/);
+  assert.match(html, /Individual count unavailable/);
+  assert.match(html, /aria-expanded="true" aria-controls="species-reported-hotspots"/);
+  assert.match(html, /LOG YOUR SIGHTING/);
+  const missing = render('SpeciesDetailScreen', { ...props, hotspots: [] });
+  assert.match(missing, /0 of 3 reported hotspots have coordinates/);
+  assert.doesNotMatch(missing, /aria-label="Reported hotspots for/);
+  assert.match(missing, /Unmatched report/);
+});
+
+test('reference gallery starts with a truthful loading state and leaves comparison mode available', () => {
+  const gallery = render('ReferenceComparisons', { speciesId: 'comkin1', gallery: true });
+  assert.match(gallery, /Reference Field Captures/);
+  assert.match(gallery, /Wikimedia Commons references, not community uploads or recent sightings/);
+  assert.match(gallery, /Loading reference photographs/);
+  assert.doesNotMatch(gallery, /0 references|32 uploads|\+29|Compare reference photographs/);
+  const comparison = render('ReferenceComparisons', { speciesId: 'comkin1' });
+  assert.match(comparison, /Compare reference photographs &amp; gear/);
+  assert.doesNotMatch(comparison, /Reference Field Captures/);
+});
+
 test('external hotspot and search distinguish all-time species totals from unavailable daily activity and distance', () => {
   const hotspot = { id: 'L123', name: 'Roller Wetland', source: 'eBird', sourceUrl: 'https://ebird.org/hotspot/L123', region: 'IN-DL', coordinates: '28.5, 77.2', imageUrl: '/discovery-placeholder.svg', speciesCount: 0, activeTodayCount: null, distanceKm: null, recentSightings: [], photos: [], speciesList: [] };
   const html = render('HotspotDetailScreen', { hotspot, onToggleSave: noop, onNavigate: noop, onSelectSpeciesByName: noop, showToast: noop });

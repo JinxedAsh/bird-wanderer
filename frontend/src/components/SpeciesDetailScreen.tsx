@@ -1,11 +1,14 @@
 import { InformationDisclosure } from './InformationDisclosure';
-import React, { useState } from 'react';
-import { BirdSpecies, ScreenType } from '../types';
+import React, { useMemo, useState } from 'react';
+import { BirdSpecies, Hotspot, ScreenType } from '../types';
 import type { SpeciesLocations } from '../lib/discovery';
 import { SpeciesPhoto, type PhotoLoadState } from './SpeciesPhoto';
 import { PhotoPlanning } from './PhotoPlanning';
 import { SpeciesInfoPanel } from './SpeciesInfoPanel';
 import { SpeciesRecording } from './SpeciesRecording';
+import { ReferenceComparisons } from './ReferenceComparisons';
+import { HotspotMap } from './HotspotMap';
+import { hotspotCoordinates } from '../lib/maps';
 
 interface SpeciesDetailScreenProps {
   subscribed?: boolean;
@@ -15,6 +18,7 @@ interface SpeciesDetailScreenProps {
   onToggleBookmark?: () => void;
   onSessionExpired?: () => void;
   locations?: SpeciesLocations;
+  hotspots?: Hotspot[];
   locationsError?: string;
   onRetryLocations?: () => void;
   onSelectHotspotById?: (id: string) => void;
@@ -31,6 +35,7 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
   onToggleBookmark,
   onSessionExpired,
   locations,
+  hotspots = [],
   locationsError,
   onRetryLocations,
   onSelectHotspotById,
@@ -43,6 +48,10 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
   const isBookmarked = saved ?? localBookmark;
   const [isSightingsExpanded, setIsSightingsExpanded] = useState(true);
   const [photoState, setPhotoState] = useState<PhotoLoadState>({ speciesId: species.id, photo: null, loading: true, error: '' });
+  const mappedHotspots = useMemo(() => {
+    const reportedIds = new Set(locations?.locations.map((location) => location.hotspotId));
+    return hotspots.filter((hotspot) => reportedIds.has(hotspot.id) && hotspotCoordinates(hotspot));
+  }, [hotspots, locations]);
   const toggleBookmark = () => {
     if (onToggleBookmark) { onToggleBookmark(); return; }
     const next = !isBookmarked;
@@ -419,22 +428,32 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
         )}
       </section>
       </>}
+      {species.source && <ReferenceComparisons key={`gallery-${species.id}`} speciesId={species.id} gallery onSessionExpired={onSessionExpired} />}
       {species.source && (
-        <section id="sightings-sheet-anchor" tabIndex={-1} className="mx-4 rounded-xl bg-white p-4 text-[13px] text-[#42493e]">
-          <h3 className="font-bold text-[#181c20]">Recent Sightings &amp; Hotspots</h3>
-          <p className="mt-2">Latest report at each matching hotspot in {species.region}, within 14 days. Select a location for its map, weather and directions. Reports do not guarantee a sighting; the reported point is not a verified entrance.</p>
-          {!locations && !locationsError && <p role="status" className="mt-2">Loading locations for {species.name}...</p>}
-          {locationsError && <div role="alert" className="mt-2"><p>{locationsError}</p><button type="button" onClick={onRetryLocations} className="mt-2 font-semibold text-[#154212] underline">Try again</button></div>}
-          {locations && <p className="mt-2 text-[11px]">Retrieved {new Date(locations.fetchedAt).toLocaleString()}{locations.cached ? ' (cached)' : ''}. Observation times below are local to the location.</p>}
-          {locations?.locations.length === 0 && <p className="mt-2">No recent reports at hotspots in the loaded region. This does not establish that the species is absent.</p>}
-          {locations?.locations.map((location) => (
-            <button type="button" key={location.hotspotId} aria-label={`Open hotspot ${location.name}`} onClick={() => onSelectHotspotById?.(location.hotspotId)} className="mt-2 w-full rounded-xl bg-[#f1f4f9] p-3 text-left hover:bg-[#ebeef3]">
-              <span className="block font-semibold text-[#181c20]">{location.name}</span>
-              <span className="block text-[12px]">{location.coordinates} - {location.observedAt}</span>
-              <span className="block text-[12px]">{location.count === null ? 'Individual count unavailable' : `${location.count} individuals reported`}</span>
-            </button>
-          ))}
-          <a href={species.sourceUrl} target="_blank" rel="noreferrer" className="mt-3 inline-block font-semibold text-[#154212] underline">View species on eBird</a>
+        <section id="sightings-sheet-anchor" tabIndex={-1} className="w-full rounded-t-3xl border-t border-[#f1f4f9] bg-white pt-3 pb-6 text-[13px] text-[#42493e] shadow-md">
+          <div aria-hidden="true" className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-[#e0e3e8]" />
+          <button type="button" aria-expanded={isSightingsExpanded} aria-controls="species-reported-hotspots" onClick={() => setIsSightingsExpanded((value) => !value)} className="flex min-h-11 w-full items-center justify-between gap-2 px-4 text-left">
+            <span><span className="block text-[17px] font-medium text-[#181c20]">Sightings &amp; Field Map</span><span className="text-[11px]">Reported hotspots · past 14 days</span></span>
+            <span aria-hidden="true" className={`material-symbols-outlined text-[20px] ${isSightingsExpanded ? 'rotate-180' : ''}`}>expand_more</span>
+          </button>
+          {isSightingsExpanded && <div id="species-reported-hotspots" className="px-4 pt-2">
+            {locations && mappedHotspots.length > 0 && <HotspotMap hotspots={mappedHotspots} label={`Reported hotspots for ${species.name}`} onOpen={onSelectHotspotById} />}
+            {locations && locations.locations.length > 0 && <p className="mt-2 text-[12px]">{mappedHotspots.length} of {locations.locations.length} reported hotspots have coordinates in the loaded catalogue. All reports remain listed below.</p>}
+            <InformationDisclosure label="Sighting sources and map limits" className="mt-2"><p>Latest report at each matching hotspot in {species.region}, within 14 days. Select a location for its map, weather and directions. Reports do not guarantee a sighting; the reported point is not a verified entrance.</p>
+            {locations && <p className="mt-2 text-[11px]">Retrieved {new Date(locations.fetchedAt).toLocaleString()}{locations.cached ? ' (cached)' : ''}. Observation times below are local to the location.</p>}</InformationDisclosure>
+            {!locations && !locationsError && <p role="status" className="mt-2">Loading locations for {species.name}...</p>}
+            {locationsError && <div role="alert" className="mt-2"><p>{locationsError}</p><button type="button" onClick={onRetryLocations} className="mt-2 font-semibold text-[#154212] underline">Try again</button></div>}
+            {locations?.locations.length === 0 && <p className="mt-2">No recent reports at hotspots in the loaded region. This does not establish that the species is absent.</p>}
+            {locations?.locations.map((location) => (
+              <button type="button" key={location.hotspotId} aria-label={`Open hotspot ${location.name}`} onClick={() => onSelectHotspotById?.(location.hotspotId)} className="mt-2 w-full rounded-xl bg-[#f1f4f9] p-3 text-left hover:bg-[#ebeef3]">
+                <span className="block font-semibold text-[#181c20]">{location.name}</span>
+                <span className="block text-[12px]">{location.coordinates} - {location.observedAt}</span>
+                <span className="block text-[12px]">{location.count === null ? 'Individual count unavailable' : `${location.count} individuals reported`}</span>
+              </button>
+            ))}
+            <a href={species.sourceUrl} target="_blank" rel="noreferrer" className="mt-3 inline-block font-semibold text-[#154212] underline">View species on eBird</a>
+            <button type="button" onClick={() => onQuickLog(species)} className="mt-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-[#2d5a27] text-[13px] font-semibold text-white"><span aria-hidden="true" className="material-symbols-outlined text-[18px]">edit_location</span>LOG YOUR SIGHTING</button>
+          </div>}
         </section>
       )}
 
