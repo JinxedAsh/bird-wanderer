@@ -62,7 +62,7 @@ Phase 1 is **not certified complete** against every detailed evidence/manual cri
 
 Presentation update (3 November): all reference screens were compared with running baseline screenshots; compact source/configuration controls and upload ordering are implemented. Independent 390/320 screenshots and scoped functional checks are recorded; exact design sign-off remains open. See [Design fidelity checklist](DESIGN_FIDELITY.md).
 
-A subsequent geometry pass is in progress on `ui-reference-geometry` (Entry61); it is not yet merged.
+The measured geometry pass (Entry61) is merged through PR46/main7968821 with both main workflows passing. A focused density continuation (Entry62) is in progress on `ui-reference-density`; exact design sign-off remains open.
 
 ## 3. Chronological development history
 
@@ -926,6 +926,37 @@ The header logo now uses a bundled SVG following the supplied green bird emblem,
 **Controlled failure check:** a separate temporary loopback proxy returned503 before one private observation write. The browser retained the photo, species, location, date, notes and private draft. One retry saved successfully; Journal reload and an authenticated API read confirmed exactly one private disposable observation. This is desktop controlled-server-error evidence, not a network-block, real outage, phone or lost-response-after-commit claim. The proxy is stopped and normal demo services are unchanged.
 
 **Viva Notes:** CSS layers decide which group of rules wins before ordinary selector specificity is considered. The font provider's default was winning over the intended size utilities; the fix restores those existing declarations. Typography and border radius change appearance, while the same React state and event handlers keep behaviour. A screenshot must be checked at the same width as the design; a passing TypeScript check cannot prove visual geometry.
+
+**Delivery outcome:** PR46 merged at7968821 after all4 checks passed exact final heade51042c; both main workflows passed. The independent review accepted the scoped interactions and identified the precise remaining density work continued in Entry62. Full one-to-one parity was not claimed.
+
+### Entry 62 — Responsive density, readable source states and Quiz feedback
+
+**Date/group:** 3 November 2026 IST. Follows PR46/main7968821, delivered after four exact-head checks and two passing main workflows. All 14 unrelated local files were preserved byte-for-byte while advancing main. Branch: ui-reference-density; delivery tracked in PR47.
+
+**Why:** independent paired review found extra rows/spacing, unreadable camera/timestamp fields and contradictory Quiz feedback. A wrong selected answer stayed green with a check despite the failure message. Missing evidence was not replaced with screenshot examples.
+
+**Layout changes:** Explore has compact weather/caption/action layout and a one-line narrow greeting. Species uses a truthful Unknown badge, responsive title/guide sizes and corrected hero/title spacing. Life List/Quiz spacing, heading hierarchy, Journal weights and Profile density were refined. Upload has white inset bird/location surfaces, reference top spacing and 18px details/conditions headings; the same editable fields remain. Community camera/lens text wraps and unknown exposure values have explicit accessible labels. Chat uses an actual compact date/full accessible timestamp. Notification body copy wraps fully and its date has a 4px gap from the unread dot. All map pins remain; hotspot cards measure 76.1px rather than 78.1px. Narrow hotspot headings/captions no longer touch or wrap unnecessarily.
+
+**Quiz correction:** per-option correct/wrong state now comes from existing server feedback, independently of selection. A wrong chosen answer is red/cancel; the correct answer is green/check; pre-grade selection uses a radio marker. aria-pressed still describes the chosen option; result labels describe correctness. Grading, XP, API, disabled-action and Next logic remain unchanged.
+
+**Verification:** final candidate index-CxiIwUMM.js; 171/171 local tests, TypeScript and production build pass. The implementation session captured/reviewed 22 settled 320/390 views for 11 changed screen types. Upload top/lower and later Quiz/Profile/hotspot corrections have separate dated captures. Browser checks passed Life List empty filtering/drawer/focus, both Profile edit entries/focus, rig clearance, Messages composer bounds and private Upload edit/draft/submit clearance without publishing.
+
+**Negative/positive Quiz checks:** a wrong answer left XP at 50, marked the chosen option red/cancel and the correct option green/check, kept Check Answer disabled and Next enabled. Next advanced without XP. A correct answer then awarded 50 once, reaching 100. Refresh retained 100 and Next advanced without another award. The disposable session ended at Question 6/100XP. No observation, message or profile change was published in this check.
+
+**Evidence correction:** the independent density review was interrupted and remains partial. Audits found wrong/loading pages and dimension mismatches; those frames were rejected. Replacement implementation-session captures checked the intended page/content and separated preparation from capture so the browser frame caught up. Most 390px native images are 883px high rather than requested 884; actual dimensions are recorded. Mixed-build observations are not one final-build all-screen run. Private QA images/accounts/databases remain outside Git.
+
+**Remaining:** exact sign-off is open. Real-source Species still needs inline capture/map wiring using existing accessible records and known coordinates. Missing location imagery, reviewed operator logistics, annual seasonal denominators and measured difficulty remain data/evidence gaps. Physical phone, current tunnel and real provider-outage acceptance are separate; packaging remains deferred. See DESIGN_FIDELITY.md for the screen matrix and next increment.
+
+**Viva Notes:** CSS breakpoints adjust text/padding for narrow screens without changing callbacks. Accessible labels preserve full timestamps and missing-data meaning. Quiz styling previously confused selection with correctness; it now reads server feedback. The server still grades and awards XP. Compilation, browser geometry and physical-device checks answer different questions.
+
+**Likely viva questions:**
+
+1. Why keep unknown values? A design sample is not verified evidence.
+2. Why responsive font sizes? They avoid accidental wrapping while retaining content and controls.
+3. Why did a wrong answer look correct? Styling used selected state rather than the graded result.
+4. Did the fix change XP? No; wrong/correct/refresh/Next checks confirmed the server rules.
+5. Is Phase 1 fully accepted? No; structural/source-data and physical/manual criteria remain explicit.
+
 
 ## 4. How the current application fits together
 

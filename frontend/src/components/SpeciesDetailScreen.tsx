@@ -64,10 +64,10 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
   };
 
   return (
-    <div className="flex flex-col w-full pb-28 pt-1">
+    <div className="flex flex-col w-full pb-28">
 
       {/* Top Action Rail */}
-      <div className="px-4 py-2 flex items-center justify-between">
+      <div className="px-4 py-1.5 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#ffdcc3] text-[#6e3900] text-[12px] font-medium uppercase tracking-wide">
             <span
@@ -110,7 +110,7 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
       </div>
 
       {/* Hero Photo Stage */}
-      <div className="px-4 pb-3">
+      <div className="px-4 pb-2">
         <SpeciesPhoto key={species.id} species={species} hero onSessionExpired={onSessionExpired} onPhotoStateChange={setPhotoState} frameClassName="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-[#ebeef3] shadow-sm">
 
           {/* Ambient Badge */}
@@ -125,9 +125,9 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
       {/* Species Title & Nomenclature */}
       <div className="px-4 pt-1 pb-4">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="text-[26px] font-bold text-[#181c20] tracking-tight">{species.name}</h2>
-          <span className="text-[11px] text-[#904d00] px-2 py-0.5 rounded bg-[#ffdcc3] uppercase tracking-widest font-bold">
-            {species.iucnStatus || (species.source ? 'Status unavailable' : 'LC')}
+          <h2 className="text-[22px] min-[360px]:text-[26px] leading-tight font-bold text-[#181c20] tracking-tight">{species.name}</h2>
+          <span title={species.iucnStatus ? undefined : 'Status unavailable: conservation assessment'} aria-label={species.iucnStatus ? undefined : 'Status unavailable: conservation assessment'} className="text-[10px] shrink-0 text-[#904d00] px-2 py-0.5 rounded bg-[#ffdcc3] uppercase tracking-wide font-medium">
+            {species.iucnStatus || (species.source ? 'Unknown' : 'LC')}
           </span>
         </div>
         <p className="text-[14px] text-[#42493e] italic mt-0.5">
@@ -240,7 +240,7 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
             <div className="w-7 h-7 rounded-lg bg-[#ffdcc3] flex items-center justify-center text-[#6e3900]">
               <span className="material-symbols-outlined text-[16px]">tips_and_updates</span>
             </div>
-            <h3 className="text-[18px] font-medium text-[#181c20]">Field Guide & Technique</h3>
+            <h3 className="text-[17px] min-[360px]:text-[18px] leading-tight font-medium text-[#181c20]">Field Guide & Technique</h3>
             {species.source && onToggleSubscription && <InformationDisclosure className="reference-info-inline ml-auto" label="Species alerts">      {species.source&&onToggleSubscription&&<button type="button" aria-pressed={subscribed} onClick={onToggleSubscription} className="mx-4 mt-2 min-h-11 rounded-xl bg-white text-[#154212] text-[13px] font-semibold">{subscribed?'Unsubscribe from species alerts':'Subscribe to species alerts'}</button>}</InformationDisclosure>}
           </div>
           <details id="photography-planning" tabIndex={-1} aria-label="Field Guide and Technique" className="text-[13px] text-[#42493e]"><summary className="min-h-11 flex items-center cursor-pointer font-semibold">Species information and photography evidence</summary>

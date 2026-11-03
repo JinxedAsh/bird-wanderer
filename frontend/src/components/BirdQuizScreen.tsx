@@ -161,20 +161,20 @@ export const BirdQuizScreen: React.FC<BirdQuizScreenProps> = ({
     <div className="flex flex-col w-full pb-28 pt-2 px-4">
       {issue}
       {/* Quiz Meta & Progress Header */}
-      <section className="flex flex-col gap-2.5">
+      <section className="flex flex-col gap-1.5">
         <div className="flex items-center justify-between">
-          <div className="flex items-baseline gap-1.5">
-            <span className="text-[17px] font-bold text-[#181c20]">Question {question.questionNumber}</span>
-            <span className="text-[12px] text-[#42493e] font-semibold">/ {question.totalQuestions}</span>
+          <div className="flex shrink-0 items-baseline gap-1.5">
+            <span className="whitespace-nowrap text-[17px] font-bold text-[#181c20]">Question {question.questionNumber}</span>
+            <span className="whitespace-nowrap text-[12px] text-[#42493e] font-semibold">/ {question.totalQuestions}</span>
           </div>
 
-          <div className="flex items-center gap-1.5">
-            <div className="flex items-center gap-1 bg-[#ebeef3] px-2.5 py-1 rounded-full text-[#181c20]">
-              <span className="material-symbols-outlined text-[15px] text-[#904d00]">stars</span>
-              <span className="text-[12px] font-bold">{xp.toLocaleString()} XP</span>
+          <div className="flex shrink-0 items-center gap-1 min-[360px]:gap-1.5">
+            <div className="flex items-center gap-1 bg-[#ebeef3] px-2 min-[360px]:px-2.5 py-1 rounded-full text-[#181c20]">
+              <span className="material-symbols-outlined text-[13px] min-[360px]:text-[15px] text-[#904d00]">stars</span>
+              <span className="whitespace-nowrap text-[10px] min-[360px]:text-[12px] font-bold">{xp.toLocaleString()} XP</span>
             </div>
-            <div className="flex items-center gap-1 bg-[#ffdcc3] text-[#6e3900] px-2.5 py-1 rounded-full">
-              <span className="text-[12px] font-bold">{streak} day streak 🔥</span>
+            <div className="flex items-center gap-1 bg-[#ffdcc3] text-[#6e3900] px-2 min-[360px]:px-2.5 py-1 rounded-full">
+              <span className="whitespace-nowrap text-[10px] min-[360px]:text-[12px] font-bold">{streak} day streak 🔥</span>
             </div>
           </div>
         </div>
@@ -189,13 +189,13 @@ export const BirdQuizScreen: React.FC<BirdQuizScreenProps> = ({
       </section>
 
       {/* Question Prompt */}
-      <section className="pt-4 pb-1">
-        <h2 className="text-[20px] font-bold text-[#181c20]">{question.prompt}</h2>
+      <section className="pt-3 pb-1">
+        <h2 className="text-[22px] font-medium text-[#181c20]">{question.prompt}</h2>
         <p className="text-[12px] text-[#42493e] mt-0.5">{question.subPrompt}</p>
       </section>
 
       {/* Observation Photo Card */}
-      <figure className="relative py-2.5">
+      <figure className="relative pb-2.5">
         <div className="relative w-full rounded-lg overflow-hidden bg-[#ebeef3] shadow-sm aspect-[4/3]">
           <img
             key={`${question.imageUrl}:${photoAttempt}`}
@@ -234,11 +234,15 @@ export const BirdQuizScreen: React.FC<BirdQuizScreenProps> = ({
       <section className="flex flex-col gap-2 pt-1">
         {question.options.map((opt) => {
           const isSelected = selectedOptionId === opt.id;
+          const isRightAnswer = Boolean(feedback && feedback.correctOptionId === opt.id);
+          const isWrongAnswer = Boolean(feedback && isSelected && !feedback.correct);
+          const isHighlighted = isSelected || isRightAnswer;
           return (
             <button
               key={opt.id}
               type="button"
               aria-pressed={isSelected}
+              aria-label={`${opt.label} ${opt.text}${isWrongAnswer ? ', your answer, incorrect' : isRightAnswer ? ', correct answer' : ''}`}
               disabled={busy || isAnswerChecked || photoFailed}
               onClick={() => {
                 if (!isAnswerChecked) {
@@ -246,15 +250,17 @@ export const BirdQuizScreen: React.FC<BirdQuizScreenProps> = ({
                 }
               }}
               className={`w-full flex items-center justify-between p-3.5 rounded-lg text-left transition-all active:scale-[0.99] shadow-xs ${
-                isSelected
-                  ? 'bg-[#2d5a27] text-white shadow-sm'
-                  : 'bg-white text-[#181c20] hover:bg-[#f1f4f9]'
+                isWrongAnswer
+                  ? 'bg-[#ba1a1a] text-white shadow-sm'
+                  : isHighlighted
+                    ? 'bg-[#2d5a27] text-white shadow-sm'
+                    : 'bg-white text-[#181c20] hover:bg-[#f1f4f9]'
               }`}
             >
               <div className="flex items-center gap-3">
                 <span
                   className={`w-7 h-7 rounded-full flex items-center justify-center text-[12px] font-bold ${
-                    isSelected ? 'bg-white/20 text-white' : 'bg-[#e0e3e8] text-[#42493e]'
+                    isHighlighted ? 'bg-white/20 text-white' : 'bg-[#e0e3e8] text-[#42493e]'
                   }`}
                 >
                   {opt.label}
@@ -264,10 +270,10 @@ export const BirdQuizScreen: React.FC<BirdQuizScreenProps> = ({
 
               <div
                 className={`w-5 h-5 rounded-full flex items-center justify-center ${
-                  isSelected ? 'bg-white text-[#2d5a27]' : 'bg-[#e0e3e8]'
+                  isWrongAnswer ? 'bg-white text-[#ba1a1a]' : isHighlighted ? 'bg-white text-[#2d5a27]' : 'bg-[#e0e3e8]'
                 }`}
               >
-                {isSelected && <span className="material-symbols-outlined text-[16px] font-bold">done</span>}
+                {isHighlighted && <span aria-hidden="true" className="material-symbols-outlined text-[16px] font-bold">{isWrongAnswer ? 'cancel' : isRightAnswer ? 'done' : 'radio_button_checked'}</span>}
               </div>
             </button>
           );

@@ -392,19 +392,19 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
                 <p className="text-[14px] text-[#181c20] leading-relaxed [overflow-wrap:anywhere]">{post.caption}</p>
 
                 {/* Minimal EXIF Bar */}
-                <div className="bg-[#f1f4f9] rounded-xl px-3 py-2 flex items-center justify-between text-[#42493e] text-[12px]">
-                  <div className="flex items-center gap-1 min-w-0">
+                <div className="bg-[#f1f4f9] rounded-xl px-3 py-2 flex flex-wrap items-center justify-between gap-x-2 gap-y-1 text-[#42493e] text-[11px]">
+                  <div className="flex flex-1 items-center gap-1 min-w-[120px]">
                     <span className="material-symbols-outlined text-[14px] flex-shrink-0">photo_camera</span>
-                    <span className="truncate">
+                    <span className="break-words">
                       {post.exif.camera} · {post.exif.lens}
                     </span>
                   </div>
                   <div className="flex items-center gap-1.5 font-mono text-[11px] text-[#181c20] flex-shrink-0">
-                    <span>ISO {post.exif.iso}</span>
+                    <span aria-label={`ISO ${post.exif.iso}`}>ISO {post.exif.iso === 'Unavailable' ? '—' : post.exif.iso}</span>
                     <span>·</span>
-                    <span>{post.exif.aperture}</span>
+                    <span aria-label={`Aperture ${post.exif.aperture}`}>{post.exif.aperture === 'Unavailable' ? '—' : post.exif.aperture}</span>
                     <span>·</span>
-                    <span>{post.exif.shutter}</span>
+                    <span aria-label={`Shutter ${post.exif.shutter}`}>{post.exif.shutter === 'Unavailable' ? '—' : post.exif.shutter}</span>
                   </div>
                 </div>
 

@@ -40,9 +40,9 @@ export const ExploreScreen: React.FC<ExploreScreenProps> = ({
   const notableBird = externalDiscovery ? speciesList.find(bird => bird.recentObservations?.length) : speciesList.find((s) => s.id === 'hornbill') || speciesList[4];
 
   return (
-    <div className="flex flex-col w-full px-4 pb-28 pt-2 space-y-6">
+    <div className="flex flex-col w-full px-4 pb-28 space-y-6">
       {/* Greeting & Environmental Observation Module */}
-      <section className="flex flex-col space-y-2.5 pt-1">
+      <section className="flex flex-col space-y-2 pt-1">
         <div className="flex items-start justify-between">
           <div className="flex flex-col">
             <button type="button" onClick={onChooseLocation} className="text-[12px] font-medium text-[#42493e] flex items-center gap-1.5 text-left">
@@ -54,7 +54,7 @@ export const ExploreScreen: React.FC<ExploreScreenProps> = ({
               </span>
               {externalDiscovery ? location ? `${location.source} location · ${discoveryRegion || 'Region not loaded'}` : `${discoveryRegion || 'Region not loaded'} · Choose location` : 'Delhi, India'}
             </button>
-            <h2 className="text-[26px] font-bold text-[#181c20] tracking-tight">
+            <h2 className="text-[22px] min-[360px]:text-[26px] leading-tight font-bold text-[#181c20] tracking-tight">
               Good morning, {observerName.trim().split(/\s+/)[0]}
             </h2>
           </div>
@@ -68,19 +68,18 @@ export const ExploreScreen: React.FC<ExploreScreenProps> = ({
         </div>
 
         {/* Weather & Field Conditions Pill */}
-        <div className="flex items-center justify-between gap-2 flex-wrap px-4 py-2.5 rounded-xl bg-[#f1f4f9] shadow-sm">
-          <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between gap-2 px-4 py-2.5 rounded-xl bg-[#f1f4f9] shadow-sm">
+          <div className="flex min-w-0 items-center gap-2">
             <span
               className="material-symbols-outlined text-[18px] text-[#fe932c]"
               style={{ fontVariationSettings: "'FILL' 1" }}
             >
               wb_sunny
             </span>
-            <span className="text-[14px] font-bold text-[#181c20]">{externalDiscovery ? !location ? 'Choose location for weather' : weatherError ? 'Weather unavailable' : !weather ? 'Loading weather…' : weather.current.temperatureC == null ? 'Unavailable' : `${weather.current.temperatureC}°C` : '24°C'}</span>
-            <span className="text-[#c2c9bb] text-[12px]">•</span>
-            <span className="text-[14px] text-[#42493e]">{externalDiscovery ? weather?.current.condition || '' : 'Clear'}</span>
+            <span className="text-[14px] font-semibold text-[#181c20] truncate" title={!location && externalDiscovery ? 'Choose location for weather' : undefined}>{externalDiscovery ? !location ? 'Choose location' : weatherError ? 'Weather unavailable' : !weather ? 'Loading weather…' : weather.current.temperatureC == null ? 'Unavailable' : `${weather.current.temperatureC}°C` : '24°C'}</span>
+            {(!externalDiscovery || weather?.current.condition) && <><span className="text-[#c2c9bb] text-[12px]">•</span><span className="text-[14px] text-[#42493e] truncate">{externalDiscovery ? weather?.current.condition : 'Clear'}</span></>}
           </div>
-          <div className="flex items-center gap-1.5 text-[#42493e]">
+          <div className="flex shrink-0 items-center gap-1.5 text-[#42493e]">
             <span className="material-symbols-outlined text-[16px]">air</span>
             <span className="text-[12px] font-semibold">{externalDiscovery ? weather?.current.windKmh == null ? 'Unavailable' : `${weather.current.windKmh} km/h` : '8 km/h'}</span>
             {externalDiscovery && (weather || location?.accuracyM !== undefined) && <InformationDisclosure className="reference-info-inline" label="Weather source and accuracy">
@@ -96,14 +95,14 @@ export const ExploreScreen: React.FC<ExploreScreenProps> = ({
       <section className="flex flex-col space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1">
-            <h3 className="text-[22px] font-bold text-[#181c20]">What’s out there?</h3>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-[#154212]">
-              {externalDiscovery ? location ? 'Reports within 50 km' : 'Recent regional reports' : 'Active nearby'}
+            <h3 className="text-[20px] font-medium text-[#181c20]">What’s out there?</h3>
+            <span aria-label={externalDiscovery ? location ? 'Reports within 50 km' : 'Recent regional reports' : 'Active nearby'} className="sr-only min-[360px]:not-sr-only text-[10px] font-bold uppercase tracking-wider text-[#154212]">
+              {externalDiscovery ? location ? 'Within 50 km' : 'Regional reports' : 'Active nearby'}
             </span>
           </div>
           <button
             onClick={() => onNavigate(externalDiscovery ? 'search' : 'life-list')}
-            className="min-h-11 shrink-0 whitespace-nowrap text-[12px] font-semibold text-[#154212] hover:text-[#2d5a27] transition-colors flex items-center gap-0.5"
+            className="reference-filter h-7 shrink-0 whitespace-nowrap text-[12px] font-semibold text-[#154212] hover:text-[#2d5a27] transition-colors flex items-center gap-0.5"
           >
             All sights
             <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
@@ -148,18 +147,18 @@ export const ExploreScreen: React.FC<ExploreScreenProps> = ({
       </section>
 
       {/* Quick Actions Section */}
-      <section className="flex flex-col space-y-2.5">
-        <h3 className="text-[17px] font-semibold text-[#181c20]">Quick actions</h3>
+      <section className="flex flex-col space-y-2">
+        <h3 className="text-[18px] font-medium text-[#181c20]">Quick actions</h3>
         <div className="grid grid-cols-3 gap-2.5">
           {/* 1. Community */}
           <button
             onClick={() => onNavigate('community')}
-            className="flex flex-col items-center text-center p-3 rounded-xl bg-white shadow-sm hover:bg-[#f1f4f9] active:scale-[0.98] transition-all group"
+            className="flex flex-col items-center text-center p-2 rounded-lg bg-white shadow-sm hover:bg-[#f1f4f9] active:scale-[0.98] transition-all group"
           >
-            <div className="w-10 h-10 rounded-full bg-[#ebeef3] flex items-center justify-center text-[#154212] group-hover:bg-[#154212] group-hover:text-white transition-colors">
+            <div className="w-10 h-10 rounded-lg bg-[#ebeef3] flex items-center justify-center text-[#154212] group-hover:bg-[#154212] group-hover:text-white transition-colors">
               <span className="material-symbols-outlined text-[20px]">groups</span>
             </div>
-            <span className="text-[12px] font-semibold text-[#181c20] mt-2 truncate w-full">
+            <span className="text-[12px] font-semibold text-[#181c20] mt-1 truncate w-full">
               Community
             </span>
             <span className="text-[10px] text-[#42493e] mt-0.5">Share logs</span>
@@ -168,12 +167,12 @@ export const ExploreScreen: React.FC<ExploreScreenProps> = ({
           {/* 2. Nearby Hotspots */}
           <button
             onClick={() => onNavigate('hotspots')}
-            className="flex flex-col items-center text-center p-3 rounded-xl bg-white shadow-sm hover:bg-[#f1f4f9] active:scale-[0.98] transition-all group"
+            className="flex flex-col items-center text-center p-2 rounded-lg bg-white shadow-sm hover:bg-[#f1f4f9] active:scale-[0.98] transition-all group"
           >
-            <div className="w-10 h-10 rounded-full bg-[#ebeef3] flex items-center justify-center text-[#154212] group-hover:bg-[#154212] group-hover:text-white transition-colors">
+            <div className="w-10 h-10 rounded-lg bg-[#ebeef3] flex items-center justify-center text-[#154212] group-hover:bg-[#154212] group-hover:text-white transition-colors">
               <span className="material-symbols-outlined text-[20px]">explore_nearby</span>
             </div>
-            <span className="text-[12px] font-semibold text-[#181c20] mt-2 truncate w-full">
+            <span className="text-[12px] font-semibold text-[#181c20] mt-1 truncate w-full">
               Hotspots
             </span>
             <span className="text-[10px] text-[#42493e] mt-0.5">{externalDiscovery ? 'Explore region' : '14 nearby'}</span>
@@ -182,12 +181,12 @@ export const ExploreScreen: React.FC<ExploreScreenProps> = ({
           {/* 3. Bird Quiz */}
           <button
             onClick={() => onNavigate('quiz')}
-            className="flex flex-col items-center text-center p-3 rounded-xl bg-white shadow-sm hover:bg-[#f1f4f9] active:scale-[0.98] transition-all group"
+            className="flex flex-col items-center text-center p-2 rounded-lg bg-white shadow-sm hover:bg-[#f1f4f9] active:scale-[0.98] transition-all group"
           >
-            <div className="w-10 h-10 rounded-full bg-[#ebeef3] flex items-center justify-center text-[#904d00] group-hover:bg-[#fe932c] group-hover:text-white transition-colors">
+            <div className="w-10 h-10 rounded-lg bg-[#ebeef3] flex items-center justify-center text-[#904d00] group-hover:bg-[#fe932c] group-hover:text-white transition-colors">
               <span className="material-symbols-outlined text-[20px]">quiz</span>
             </div>
-            <span className="text-[12px] font-semibold text-[#181c20] mt-2 truncate w-full">
+            <span className="text-[12px] font-semibold text-[#181c20] mt-1 truncate w-full">
               Bird quiz
             </span>
             <span className="text-[10px] text-[#42493e] mt-0.5">Test ear</span>
@@ -199,7 +198,7 @@ export const ExploreScreen: React.FC<ExploreScreenProps> = ({
       {notableBird && (
         <section className="flex flex-col space-y-2">
           <div className="flex items-center justify-between">
-            <h3 className="text-[17px] font-semibold text-[#181c20]">{externalDiscovery ? 'Recent field reports' : 'Best birds today'}</h3>
+            <h3 className="text-[18px] font-medium text-[#181c20]">{externalDiscovery ? 'Recent field reports' : 'Best birds today'}</h3>
             <span className="px-2 py-0.5 rounded-full bg-[#ffdcc3] text-[#6e3900] text-[10px] flex items-center gap-1 font-bold">
               <span
                 className="material-symbols-outlined text-[13px]"

@@ -1,12 +1,20 @@
 # Design comparison and acceptance
 
-Updated 3 November 2026. PR [#45](https://github.com/JinxedAsh/bird-wanderer/pull/45) delivered the initial layout pass at main `63fe074`. PR [#46](https://github.com/JinxedAsh/bird-wanderer/pull/46), branch `ui-reference-geometry`, continues measured reference matching. Its focused browser review is complete; exact-head documentation delivery is in progress. The original mapping is in [design-reference/README.md](design-reference/README.md).
+Updated 3 November 2026. PR [#45](https://github.com/JinxedAsh/bird-wanderer/pull/45) delivered the initial layout pass at main `63fe074`. PR [#46](https://github.com/JinxedAsh/bird-wanderer/pull/46) is merged at main 7968821 after 4 exact-head checks and 2 passing main workflows. The density and graded-feedback continuation is tracked in PR47 on `ui-reference-density` (Development Record Entry62). The original mapping is in [design-reference/README.md](design-reference/README.md).
 
 ## Scope and evidence
 
 All 16 original PNGs were opened and compared with 15 running screen types. Capture widths are 390 and 320 CSS pixels; reference heights are proportionally normalized. Upload has two reference views. Screenshots and disposable accounts stay outside Git. Real source data, unknown values, privacy defaults and working actions are preserved. This pass adds no backend, API, schema, environment or dependency changes.
 
-Independent QA captured a consistent 32-view matrix on `index-CgVTSSnf.js`, then recaptured changed screens on dated later assets. The latest production candidate is `index-Cp5Fm5PR.js`. These are mixed-build observations, not one atomic final-build end-to-end acceptance run. Independent latest-asset keyboard checks passed for all3 strips; source-owner narrow-layout/history checks are attributed separately below.
+Independent QA captured a consistent 32-view matrix on `index-CgVTSSnf.js`, then recaptured changed screens on dated later assets. PR46 final production candidate was `index-Cp5Fm5PR.js`; the final density candidate is `index-CxiIwUMM.js`. These are mixed-build observations, not one atomic final-build end-to-end acceptance run. Independent latest-asset keyboard checks passed for all 3 strips; source-owner narrow-layout/history checks are attributed separately below.
+
+## Final density verification outcome
+
+Local 171/171 tests, TypeScript and production build pass on `index-CxiIwUMM.js` (489.24kB main bundle). The implementation session captured and visually reviewed 22 settled views for 11 changed screen types at 320/390 on `index-BSzpwD3y.js`. Actual native dimensions are320x884 and mostly390x883, recorded rather than assumed. Upload has separate correctly framed top/lower captures on D5P0qccP. Quiz/Profile/hotspot refinements have later CM0YJBNX overrides; finalCxi changes only an equivalent marker expression and the narrow gallery heading, whose 16.5px caption clearance was measured again. This is mixed-build evidence, not one atomic final-build 32-view run.
+
+Earlier independent density frames showing loading/previous pages or wrong dimensions were rejected. The independent review remained partial after browser disconnection. Replacement implementation-session captures checked the intended page and loaded content, with preparation and capture in separate calls so the rendered frame caught up. Private images/accounts/databases remain outside Git.
+
+Retained-flow checks passed Life List empty filtering/drawer/focus, both Profile edit entries/focus/rig clearance, loaded Messages composer bounds, and private Upload editing/draft/submit clearance without publishing. Quiz wrong/correct/refresh/Next checks verified the corrected result markers and retained XP rules. The disposable session ended atQuestion6/100XP. No profile edit or new observation/message was saved in these final checks.
 
 ## Current screen checklist
 
@@ -15,15 +23,15 @@ Independent QA captured a consistent 32-view matrix on `index-CgVTSSnf.js`, then
 | Authentication / image5 | Measured text placement, 26px title, 18px tagline, 48px inputs, compact corners | Form top312px at390; heading painted row151 versus reference150. Font rasterization differs slightly. |
 | Explore / image13 | Compact weather/source information, greeting and credits, real recent report | 390/320 captures reviewed. Real data and available imagery differ from examples. |
 | Species / image3 | Compact hero credits; 20px facts; whole-phrase wrapping; expandable guide and section jumps | 390/320 captured; guide/call/habitat controls exercised. Missing measured difficulty, EXIF and gallery evidence remain unavailable. |
-| Community / image1 | Reference card corners/type; search width restored;32px filter pills; top132px/first-card184px; refresh retained after filters | Latest keyboard filters/refresh passed independently. Source-owner320/390 bounds passed; camera metadata allocation still needs review at320. |
-| Upload / images16,4 | Reference section order, editable metadata, compact conditions;44x24 switch and segmented visibility | Keyboard toggles and all3 visibility modes passed on dated candidate; private restored and manual draft retained. |
+| Community / image1 | Reference card corners/type; search width restored;32px filter pills; top132px/first-card184px; refresh retained after filters | Latest keyboard filters/refresh passed independently. Source-owner320/390 bounds passed; camera/lens wrapping and explicit unavailable exposure labels passed at320. |
+| Upload / images16,4 | Reference section order, editable metadata, compact conditions;44x24 switch and segmented visibility | True top/lower captures at both widths; photo top80/height268.8 and identification heading372.8 at390. White inset fields retain keyboard editing, manual date/offset/notes and Private. Submit48px, in bounds; no publish. |
 | Hotspots / image8 | Full-width map, compact pills/cards; help overlay; attribution retained | Search/filter/map/first-card tops72/128/168/416px at390. Edge-hit filtering, map zoom/popup, info bounds passed. Real marker density differs. |
 | Hotspot detail / image10 | Hero first; closed access/report disclosures; compact report rows in192px scroll region | Every returned report retained; keyboard scrolling and source access passed. Operator fees/access facts remain evidence-dependent. |
 | Journal / image12 | Compact tiles/corners and short display ID; full ID available | 390/320 captured; saved private observation survived reload. Actual records/counts differ. |
 | Life List / image11 | Owner photograph when available; reference name/corner sizing | 390/320 captures and empty state checked. Uses actual logged species/counts. |
-| Quiz / image7 | Compact photo/answer/feedback shapes; Check Answer stays visible but disabled after grading | Latest quiz check confirmed disabled action, enabled Next, question2 and unchanged50XP. Real question/answer state differs. |
-| Messages / image6 |18px contact names; compact timestamps/search/footer; narrow-input bounds | 390/320 captures and composer flow checked. Actual conversations differ. |
-| Profile / image18 | Square avatar, lighter tabs/counts/gallery; collapsed Quick Edit preview | Both edit triggers open existing dialog and regain focus after Escape. At320, keyboard scroll exposes rig fully above preview. Actual profile/rig differs. |
+| Quiz / image7 | Compact photo/answer/feedback shapes; Check Answer stays visible but disabled after grading | Wrong selection now red/cancel, server-correct option green/check with result labels. Wrong XP50 unchanged; correct XP50 to100 once; refresh/Next retained100. Narrow header fits one line. Real question/answer state differs. |
+| Messages / image6 |18px contact names; compact timestamps/search/footer; narrow-input bounds | 390/320 captures and composer flow checked. Actual conversations differ; loaded320px composer input138px and Send44px remain in bounds; no message sent. |
+| Profile / image18 | Square avatar, lighter tabs/counts/gallery; collapsed Quick Edit preview | Both edit triggers and Escape focus return passed again. Narrow action labels fit one line; rig clears the preview after scrolling. Actual profile/rig differs. |
 | Search / image22 | Compact result names/credits; advanced help disclosure;28px category pills | Prior search/history flows captured. Latest categories passed independently; owner checked320px history selection/removal/restoration and wrapping. Final independent320 screenshot was invalid, not counted. |
 | Notifications / image17 | Compact inbox/cards/icons; settings disclosed;28px filter buttons | Latest keyboard filters passed independently; owner320/390 bounds passed. Working Followers category retained in addition to reference's3 categories. |
 | Settings / image21 | Unblurred privacy sheet; reference title/option/button sizes and spacing | Independent390x1256 sheet top780.45/height475.55 versus780/476 target. Save x16,y1184,w358.4,h48. At320x740 Tab/Enter saved unchanged preferences without overflow. |
@@ -46,7 +54,7 @@ A separate source-owner desktop browser check used a temporary isolated proxy to
 
 ## Verification and delivery checkpoint
 
-Latest candidate `index-Cp5Fm5PR.js`:171/171 tests passed, TypeScript checking passed, production build passed; main bundle488.06kB. Source commit4669052 passed all4 GitHub checks. The final documentation commit still requires its own exact-head checks before PR46 merge, then post-merge main checks.
+Final runtime candidate `index-CxiIwUMM.js`:171/171 local tests, TypeScript and production build pass. Merge PR47 only after all checks pass its exact latest head, then verify the exact merged main workflows. PR46 was delivered at7968821 with both main workflows passing.
 
 Independent review accepted latest-strip keyboard activation and dated Settings/Hotspots/Upload/Quiz/Profile flows. Its final files labelled320 for the3 strips were actually390px and are excluded from independent narrow acceptance. Source-owner DOM checks establish320px bounds separately. Native supplemental screenshots have their actual dimensions recorded rather than assuming requested viewport height. The upload continuation comparison was incorrectly scrolled; its screenshot does not prove lower-form parity. Accepted switch/segment interaction measurements remain valid.
 
@@ -72,22 +80,16 @@ Likely viva questions:
 
 Start the usual application with `pnpm dev` from frontend and use its existing local/LAN/HTTPS address with your own account. Show discovery, source disclosure, species guide, hotspot map/access/weather, then a private upload and its Journal record. The isolated QA port and synthetic fixtures are not the demo deployment.
 
-Next: deliver the verified PR46 milestone after exact-head checks, then continue the following measured visual work in a focused branch. These are open criteria, not generic improvement claims:
+PR46 is delivered and PR47 closes the measured density and wrong-answer-feedback defects described above. Remaining criteria are explicit:
 
-| Screen | Next correction / limit |
+| Criterion | Next action / evidence limit |
 | --- | --- |
-| Explore | Compact unknown-weather and regional-caption rows; they push actions materially below the reference. |
-| Species | Keep truthful unknown-status badge beside title where possible; prevent320px guide-heading wrap. |
-| Community | Review truncated camera metadata allocation at320; preserve every field and unavailable state. |
-| Upload | Match Photo Details/Conditions hierarchy and capture the correctly scrolled lower form. |
-| Hotspots | Review78px card versus approximately76px target. Keep real markers; static4-pin density is not real-data acceptance. |
-| Hotspot detail | Refine Recent Sightings, Field Notes and Map Access heading hierarchy. |
-| Journal | Refine title/Recent Photos weights and selected-card outline against reference. |
-| Life List | Reduce approximately17px extra intro/filter spacing. |
-| Quiz | Reduce approximately15px extra photo/prompt offset without affecting grading. |
-| Messages | Improve timestamp legibility and compact privacy explanation. |
-| Profile | Align identity/action/statistic spacing; preview/focus/rig access already passed. |
-| Search / Notifications | Review final narrow source-density/timestamp/body truncation. Preserve all categories and real events. |
-| Settings | Sheet matches measured target; review behind-sheet account/privacy row density. |
+| Real-source Species capture strip and inline map | Wire existing access-controlled records and matching catalogue hotspot coordinates into the reference sections. Current report links/hotspot navigation work; this structural integration remains open. Never fabricate upload totals or locations. |
+| Location imagery and operator logistics | Use photographs with location evidence/appropriate rights and reviewed operator facts. Current hero/gallery/access coverage is incomplete; coordinates are not verified entry gates. |
+| Annual seasonality and measured difficulty | Available source data does not supply annual frequencies/sample denominators or a measured difficulty rating. Keep observations, forecasts, general guidance and missing evidence separate. |
+| Physical/device/provider acceptance | Oppo keyboard/orientation/text scaling, genuine provider outages, current public tunnel and signed distribution require separate evidence. Packaging remains deferred. |
 
+CSS spacing, readable metadata, known narrow-control wrapping and contradictory Quiz feedback are resolved within the checked flows. Source-data differences and missing structural integration above remain open; exact one-to-one sign-off and full Phase1 acceptance are not claimed.
 Authentication has only raster-sensitive1–3px text residuals; avoid arbitrary per-glyph positioning. Missing source images/maps/statistics, real names/counts and extra delivered controls remain the explicit data/state boundaries above. Physical acceptance and exact visual sign-off remain open.
+
+Quiz Viva addition: `isRightAnswer` and `isWrongAnswer` now read existing server feedback separately from selection. Before grading a radio marker describes selection; afterward cancel/red describes a wrong choice and check/green identifies the server-correct option. `aria-pressed` still describes the actual choice. No grading, XP or API code changed, and the correct answer is not revealed before feedback.

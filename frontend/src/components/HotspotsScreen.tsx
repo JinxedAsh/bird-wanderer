@@ -191,7 +191,7 @@ export const HotspotsScreen: React.FC<HotspotsScreenProps> = ({
                   onSelectHotspot(hotspot);
                 }
               }}
-              className={`bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-all active:scale-[0.99] flex items-center justify-between gap-3 cursor-pointer border ${
+              className={`bg-white rounded-xl px-4 py-[15px] shadow-sm hover:shadow-md transition-all active:scale-[0.99] flex items-center justify-between gap-3 cursor-pointer border ${
                 isHighlighted ? 'border-[#154212] ring-2 ring-[#154212]/30' : 'border-transparent'
               }`}
             >

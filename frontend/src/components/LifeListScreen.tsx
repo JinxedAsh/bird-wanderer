@@ -41,7 +41,7 @@ export const LifeListScreen: React.FC<LifeListScreenProps> = ({
   return (
     <div className="flex flex-col w-full pb-28 pt-1">
       {/* Top Summary & Life List Counter */}
-      <section className="px-4 pt-2 pb-2 flex flex-col gap-1">
+      <section className="px-4 pt-2 flex flex-col">
         <div className="flex items-center justify-between">
           <div className="flex items-baseline gap-2">
             <span className="text-[32px] font-bold text-[#181c20] tracking-tight">{speciesList.filter(item => item.isLogged).length}</span>
@@ -122,7 +122,7 @@ export const LifeListScreen: React.FC<LifeListScreenProps> = ({
       </section>
 
       {/* Species Rows List */}
-      <section className="px-4 pt-2 flex flex-col gap-2">
+      <section className="px-4 pt-1 flex flex-col gap-2">
         {filteredList.map((item) => {
           const isWishlist = item.isWishlist || (item.photosCount || 0) === 0;
           return (
