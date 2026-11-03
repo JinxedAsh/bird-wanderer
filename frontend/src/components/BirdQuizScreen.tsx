@@ -196,7 +196,7 @@ export const BirdQuizScreen: React.FC<BirdQuizScreenProps> = ({
 
       {/* Observation Photo Card */}
       <figure className="relative py-2.5">
-        <div className="relative w-full rounded-2xl overflow-hidden bg-[#ebeef3] shadow-sm aspect-[4/3]">
+        <div className="relative w-full rounded-lg overflow-hidden bg-[#ebeef3] shadow-sm aspect-[4/3]">
           <img
             key={`${question.imageUrl}:${photoAttempt}`}
             onError={() => setPhotoFailed(true)}
@@ -245,7 +245,7 @@ export const BirdQuizScreen: React.FC<BirdQuizScreenProps> = ({
                   setSelectedOptionId(opt.id);
                 }
               }}
-              className={`w-full flex items-center justify-between p-3.5 rounded-xl text-left transition-all active:scale-[0.99] shadow-xs ${
+              className={`w-full flex items-center justify-between p-3.5 rounded-lg text-left transition-all active:scale-[0.99] shadow-xs ${
                 isSelected
                   ? 'bg-[#2d5a27] text-white shadow-sm'
                   : 'bg-white text-[#181c20] hover:bg-[#f1f4f9]'
@@ -259,7 +259,7 @@ export const BirdQuizScreen: React.FC<BirdQuizScreenProps> = ({
                 >
                   {opt.label}
                 </span>
-                <span className="text-[15px] font-semibold">{opt.text}</span>
+                <span className="text-[16px] font-normal">{opt.text}</span>
               </div>
 
               <div
@@ -275,23 +275,22 @@ export const BirdQuizScreen: React.FC<BirdQuizScreenProps> = ({
       </section>
 
       {/* Primary Action: Check Answer */}
-      {!isAnswerChecked ? (
-        <div className="pt-3 pb-1">
+      <div className="pt-3 pb-1">
           <button
             type="button"
             onClick={handleCheckAnswer}
-            disabled={busy || !selectedOptionId || photoFailed}
-            className="w-full h-12 rounded-xl bg-[#2d5a27] text-white font-bold text-[13px] tracking-wider uppercase shadow-sm flex items-center justify-center gap-2 active:opacity-90 transition-opacity"
+            disabled={isAnswerChecked || busy || !selectedOptionId || photoFailed}
+            className="w-full h-12 rounded bg-[#2d5a27] text-white font-bold text-[13px] tracking-wider uppercase shadow-sm flex items-center justify-center gap-2 active:opacity-90 transition-opacity"
           >
             <span>Check Answer</span>
             <span className="material-symbols-outlined text-[18px]">verified</span>
           </button>
         </div>
-      ) : (
+      {isAnswerChecked && (
         /* Verified Feedback Card */
         <section className="pt-2 animate-in fade-in">
           <div
-            className={`w-full rounded-2xl p-4 shadow-sm flex flex-col gap-2.5 ${
+            className={`w-full rounded-lg p-4 shadow-xs flex flex-col gap-2.5 ${
               isCorrect ? 'bg-[#c7ecce] text-[#01210f]' : 'bg-[#ffdad6] text-[#93000a]'
             }`}
           >
@@ -324,7 +323,7 @@ export const BirdQuizScreen: React.FC<BirdQuizScreenProps> = ({
                 type="button"
                 onClick={handleNextQuestion}
                 disabled={busy}
-                className="w-full h-11 rounded-xl bg-[#20402b] text-white font-bold text-[13px] flex items-center justify-center gap-2 active:opacity-90 shadow-sm transition-opacity"
+                className="w-full h-11 rounded bg-[#20402b] text-white font-bold text-[13px] flex items-center justify-center gap-2 active:opacity-90 shadow-sm transition-opacity"
               >
                 <span>
                   {busy

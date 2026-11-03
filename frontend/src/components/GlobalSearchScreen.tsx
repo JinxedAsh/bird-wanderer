@@ -287,7 +287,7 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
       </div>
 
       {/* Category Filter Pills */}
-      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-2">
         {(['all', 'birds', 'people', 'hotspots', 'posts'] as const).map(
           (cat) => {
             const isActive = activeCategory === cat;
@@ -296,7 +296,7 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
                 key={cat}
                 type="button"
                 onClick={() => setActiveCategory(cat)}
-                className={`min-h-11 px-3.5 py-1.5 rounded-full text-[12px] font-semibold capitalize transition-all whitespace-nowrap ${
+                className={`reference-filter h-7 px-3.5 rounded-xl text-[12px] font-medium capitalize transition-all whitespace-nowrap ${
                   isActive
                     ? 'bg-[#154212] text-white shadow-xs'
                     : 'bg-[#ebeef3] text-[#42493e] hover:bg-[#e0e3e8]'
@@ -326,11 +326,11 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
             </button>
           </div>
 
-          <div className="flex gap-1.5 pt-0.5 overflow-x-auto no-scrollbar">
+          <div className="flex flex-wrap gap-x-2 gap-y-4 py-2">
             {recentSearches.map((term) => (
               <div
                 key={term}
-                className="inline-flex shrink-0 max-w-full items-center gap-1.5 bg-[#f1f4f9] text-[#181c20] px-3 py-1 rounded-full text-[12px] font-medium"
+                className="inline-flex max-w-full items-center gap-1.5 bg-[#f1f4f9] text-[#181c20] px-3 rounded-full text-[12px] font-medium"
               >
                 <button
                   type="button"
@@ -339,7 +339,7 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
                     setQuery(term);
                     onRecordSearch?.(term);
                   }}
-                  className="min-h-11 min-w-0 text-left break-words cursor-pointer hover:text-[#154212]"
+                  className="reference-filter min-h-7 min-w-0 text-left break-words cursor-pointer hover:text-[#154212]"
                 >
                   {term}
                 </button>
@@ -348,7 +348,7 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
                   aria-label={`Remove ${term} from recent searches`}
                   disabled={historyDisabled}
                   onClick={() => onRemoveSearch?.(term)}
-                  className="h-11 w-11 shrink-0 flex items-center justify-center text-[#72796e] hover:text-[#181c20]"
+                  className="reference-filter h-7 w-11 shrink-0 flex items-center justify-center text-[#72796e] hover:text-[#181c20]"
                 >
                   <span className="material-symbols-outlined text-[14px]">
                     close
@@ -390,13 +390,13 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
             <article
               key={bird.id}
               onClick={() => selectBird(bird)}
-              className="w-full text-left grid grid-cols-[64px_1fr_auto] items-center gap-x-3 p-3 bg-white rounded-xl shadow-xs hover:bg-[#f1f4f9] transition-all cursor-pointer border border-[#f1f4f9]"
+              className="w-full text-left grid grid-cols-[64px_1fr_auto] items-center gap-x-3 p-2 bg-white rounded-lg shadow-xs hover:bg-[#f1f4f9] transition-all cursor-pointer border border-[#f1f4f9]"
             >
               <SpeciesPhoto
                 key={bird.id}
                 species={bird}
                 onSessionExpired={onSessionExpired}
-                frameClassName="w-16 h-16 rounded-xl overflow-hidden bg-[#ebeef3]"
+                frameClassName="w-16 h-16 rounded-lg overflow-hidden bg-[#ebeef3]"
               />
               <div className="flex flex-col min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
@@ -406,7 +406,7 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
                       event.stopPropagation();
                       selectBird(bird);
                     }}
-                    className="text-left text-[15px] font-bold text-[#181c20] truncate"
+                    className="text-left text-[18px] font-medium text-[#181c20] truncate"
                   >
                     {bird.name}
                   </button>
@@ -553,7 +553,7 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
               }}
               className="w-full text-left flex items-center gap-3 p-3 bg-white rounded-xl shadow-xs hover:bg-[#f1f4f9] transition-all cursor-pointer border border-[#f1f4f9]"
             >
-              <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 bg-[#ebeef3]">
+              <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-[#ebeef3]">
                 <img
                   src={post.imageUrl}
                   alt={post.speciesName}

@@ -137,7 +137,7 @@ export const LifeListScreen: React.FC<LifeListScreenProps> = ({
                 }
               }}
               onClick={() => setSelectedDrawerSpecies(item)}
-              className="group flex items-center justify-between p-3 rounded-xl bg-white hover:bg-[#f1f4f9] transition-all cursor-pointer shadow-xs border border-[#f1f4f9] active:scale-[0.99]"
+              className="group flex items-center justify-between p-3 rounded-lg bg-white hover:bg-[#f1f4f9] transition-all cursor-pointer shadow-xs border border-[#f1f4f9] active:scale-[0.99]"
             >
               <div className="flex items-center gap-3 min-w-0 pr-2">
                 <div className="w-12 h-12 rounded-lg bg-[#ebeef3] overflow-hidden flex-shrink-0 relative">
@@ -155,7 +155,7 @@ export const LifeListScreen: React.FC<LifeListScreenProps> = ({
                 </div>
 
                 <div className="flex flex-col min-w-0">
-                  <span className="text-[14px] font-bold text-[#181c20] truncate group-hover:text-[#154212]">
+                  <span className="text-[16px] font-medium text-[#181c20] truncate group-hover:text-[#154212]">
                     {item.name}
                   </span>
                   <span className="text-[12px] italic text-[#72796e] truncate">

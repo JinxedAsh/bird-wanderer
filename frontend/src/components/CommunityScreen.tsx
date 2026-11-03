@@ -188,7 +188,7 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
         {pullDistance >= 64 ? 'Release to refresh' : 'Pull to refresh'}
       </div>}
       {/* Search and Action Hub */}
-      <div className="px-4 pt-2 pb-2 flex flex-col gap-2.5 bg-[#f7f9ff] sticky top-16 z-20">
+      <div className="px-4 pt-2 pb-1.5 flex flex-col gap-1.5 bg-[#f7f9ff] sticky top-16 z-20">
         <div className="flex items-center gap-2">
           <div className="relative flex-1 min-w-0">
             <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#42493e] text-[20px] pointer-events-none">
@@ -217,7 +217,7 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
           <button
             onClick={() => onNavigate('log-observation')}
             aria-label="Upload field photo"
-            className="h-11 px-3.5 bg-[#2d5a27] text-white font-semibold text-[13px] rounded-xl shadow-sm hover:opacity-95 active:scale-95 transition-all flex items-center gap-1.5 flex-shrink-0"
+            className="h-11 px-3.5 bg-[#2d5a27] text-white font-semibold text-[13px] rounded-lg shadow-sm hover:opacity-95 active:scale-95 transition-all flex items-center gap-1.5 flex-shrink-0"
           >
             <span className="material-symbols-outlined text-[18px]">add_a_photo</span>
             <span>+ Upload</span>
@@ -225,17 +225,14 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
         </div>
 
         {/* Filter Pills */}
-        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
-          {onRefresh && <button type="button" onClick={onRefresh} disabled={refreshing} aria-label={refreshing ? 'Refreshing community' : 'Refresh community'} title="Refresh community" className="h-11 w-11 shrink-0 rounded-xl bg-white text-[#154212] shadow-sm disabled:opacity-50">
-            <span aria-hidden="true" className={`material-symbols-outlined text-[22px] ${refreshing ? 'animate-spin motion-reduce:animate-none' : ''}`}>refresh</span>
-          </button>}
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1.5">
           {filterOptions.map((opt) => {
             const isActive = activeFilter === opt.id;
             return (
               <button
                 key={opt.id}
                 onClick={() => setActiveFilter(opt.id)}
-                className={`h-8 px-3.5 rounded-full text-[12px] font-semibold flex-shrink-0 transition-all ${
+                className={`reference-filter h-8 px-3.5 rounded-xl text-[12px] font-semibold flex-shrink-0 transition-all ${
                   isActive
                     ? 'bg-[#2d5a27] text-white shadow-sm'
                     : 'bg-[#ebeef3] text-[#42493e] hover:bg-[#e0e3e8]'
@@ -245,6 +242,9 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
               </button>
             );
           })}
+          {onRefresh && <button type="button" onClick={onRefresh} disabled={refreshing} aria-label={refreshing ? 'Refreshing community' : 'Refresh community'} title="Refresh community" className="reference-filter h-8 w-11 shrink-0 rounded-xl bg-white text-[#154212] shadow-sm disabled:opacity-50">
+            <span aria-hidden="true" className={`material-symbols-outlined text-[22px] ${refreshing ? 'animate-spin motion-reduce:animate-none' : ''}`}>refresh</span>
+          </button>}
         </div>
       </div>
 

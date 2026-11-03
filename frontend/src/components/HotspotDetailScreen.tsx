@@ -115,8 +115,8 @@ export const HotspotDetailScreen: React.FC<HotspotDetailScreenProps> = ({
 
       {/* Summary Metric Chips Panel */}
       <div className="px-4 pt-3">
-        <div className="grid grid-cols-3 gap-2 bg-[#f1f4f9] p-3 rounded-2xl shadow-xs">
-          <div className="flex flex-col items-center justify-center text-center p-2 rounded-xl bg-white shadow-xs">
+        <div className="grid grid-cols-3 gap-2 bg-[#f1f4f9] p-3 rounded-xl shadow-xs">
+          <div className="flex flex-col items-center justify-center text-center p-2 rounded-lg bg-white shadow-xs">
             <span className="material-symbols-outlined text-[20px] text-[#2d5a27] mb-0.5">
               flutter_dash
             </span>
@@ -126,7 +126,7 @@ export const HotspotDetailScreen: React.FC<HotspotDetailScreenProps> = ({
             <span className="text-[10px] text-[#42493e] font-semibold mt-0.5">Active today</span>
           </div>
 
-          <div className="flex flex-col items-center justify-center text-center p-2 rounded-xl bg-white shadow-xs">
+          <div className="flex flex-col items-center justify-center text-center p-2 rounded-lg bg-white shadow-xs">
             <span className="material-symbols-outlined text-[20px] text-[#904d00] mb-0.5">
               wb_twilight
             </span>
@@ -134,7 +134,7 @@ export const HotspotDetailScreen: React.FC<HotspotDetailScreenProps> = ({
             <span className="text-[10px] text-[#42493e] font-semibold mt-0.5">{hotspot.source ? 'Peak time' : 'Peak (06–09h)'}</span>
           </div>
 
-          <div className="flex flex-col items-center justify-center text-center p-2 rounded-xl bg-white shadow-xs">
+          <div className="flex flex-col items-center justify-center text-center p-2 rounded-lg bg-white shadow-xs">
             <span className="material-symbols-outlined text-[20px] text-[#154212] mb-0.5">
               thermostat
             </span>
@@ -154,7 +154,7 @@ export const HotspotDetailScreen: React.FC<HotspotDetailScreenProps> = ({
           onClick={handleToggleSave}
           disabled={saveDisabled}
           aria-pressed={isSaved}
-          className={`h-11 flex items-center justify-center gap-1.5 rounded-xl font-semibold text-[13px] transition-all active:scale-95 ${
+          className={`h-11 flex items-center justify-center gap-1.5 rounded font-semibold text-[13px] transition-all active:scale-95 ${
             isSaved
               ? 'bg-[#ffdcc3] text-[#6e3900]'
               : 'bg-[#ebeef3] hover:bg-[#e0e3e8] text-[#181c20]'
@@ -174,7 +174,7 @@ export const HotspotDetailScreen: React.FC<HotspotDetailScreenProps> = ({
             setOpenAccordion('visit');
             document.getElementById('accordion-visit')?.scrollIntoView({ behavior: 'smooth' });
           }}
-          className="h-11 flex items-center justify-center gap-1.5 rounded-xl bg-[#2d5a27] text-white font-semibold text-[13px] shadow-sm active:scale-95 transition-all"
+          className="h-11 flex items-center justify-center gap-1.5 rounded bg-[#2d5a27] text-white font-semibold text-[13px] shadow-sm active:scale-95 transition-all"
         >
           <span className="material-symbols-outlined text-[18px]">navigation</span>
           <span>PLAN VISIT</span>
@@ -185,7 +185,7 @@ export const HotspotDetailScreen: React.FC<HotspotDetailScreenProps> = ({
             setOpenAccordion('species');
             document.getElementById('accordion-species')?.scrollIntoView({ behavior: 'smooth' });
           }}
-          className="h-11 flex items-center justify-center gap-1.5 rounded-xl bg-[#ebeef3] hover:bg-[#e0e3e8] text-[#181c20] font-semibold text-[13px] active:scale-95 transition-all"
+          className="h-11 flex items-center justify-center gap-1.5 rounded bg-[#ebeef3] hover:bg-[#e0e3e8] text-[#181c20] font-semibold text-[13px] active:scale-95 transition-all"
         >
           <span className="material-symbols-outlined text-[18px]">menu_book</span>
           <span>SPECIES</span>
@@ -208,7 +208,7 @@ export const HotspotDetailScreen: React.FC<HotspotDetailScreenProps> = ({
           <span className="text-[11px] text-[#42493e] font-semibold">{hotspot.source ? 'This hotspot, past 14 days' : 'Past 4 hours'}</span>
         </div>
 
-        <div className="flex flex-col gap-2 max-h-72 overflow-y-auto" tabIndex={0} role="region" aria-label="Recent hotspot reports">
+        <div className="flex flex-col gap-2 max-h-48 overflow-y-auto" tabIndex={0} role="region" aria-label="Recent hotspot reports">
 
           {hotspot.source && !details && !detailsError && <p role="status" className="text-[12px] text-[#42493e]">Loading hotspot reports and species...</p>}
           {hotspot.source && detailsError && <div role="alert" className="text-[12px] text-[#42493e]"><p>{detailsError}</p><button type="button" onClick={onRetryDetails} className="mt-2 font-semibold text-[#154212] underline">Try again</button></div>}
@@ -221,16 +221,16 @@ export const HotspotDetailScreen: React.FC<HotspotDetailScreenProps> = ({
               tabIndex={0}
               onClick={() => selectSpecies(sight.speciesId, sight.species)}
               onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); selectSpecies(sight.speciesId, sight.species); } }}
-              className="flex items-center justify-between p-2.5 bg-white rounded-xl shadow-xs hover:shadow-sm transition-all cursor-pointer"
+              className="flex items-center justify-between p-2 bg-white rounded-lg shadow-xs hover:shadow-sm transition-all cursor-pointer"
             >
               <div className="flex items-center gap-3 min-w-0">
                 <img
                   src={sight.image}
                   alt={sight.species}
-                  className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
+                  className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
                 />
                 <div className="flex flex-col min-w-0">
-                  <span className="text-[14px] font-bold text-[#181c20] truncate">
+                  <span className="text-[13px] font-semibold text-[#181c20] truncate">
                     {sight.species}
                   </span>
                   <span className="text-[11px] italic text-[#42493e] truncate">

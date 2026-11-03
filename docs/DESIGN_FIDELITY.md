@@ -1,83 +1,93 @@
 # Design comparison and acceptance
 
-Updated 3 November 2026. This is a presentation-only increment on `ui-design-fidelity`, based on main `b861d59`. It preserves the existing React/Express/SQLite architecture and all delivered features. The reference mapping is in [design-reference/README.md](design-reference/README.md).
+Updated 3 November 2026. PR [#45](https://github.com/JinxedAsh/bird-wanderer/pull/45) delivered the initial layout pass at main `63fe074`. PR [#46](https://github.com/JinxedAsh/bird-wanderer/pull/46), branch `ui-reference-geometry`, continues measured reference matching. Its focused browser review is complete; exact-head documentation delivery is in progress. The original mapping is in [design-reference/README.md](design-reference/README.md).
 
-## Method and evidence
+## Scope and evidence
 
-All 16 original PNGs were opened and visually compared with 15 running screen types. Baseline production asset: `index-BrIlWYvM.js`. Each baseline was captured at 390 CSS pixels wide with the reference image's proportional height; actual JPEG dimensions were checked. Settings was captured with its privacy sheet open; upload has top and continuation views. Screenshots with an accidental default crop were corrected before comparison.
+All 16 original PNGs were opened and compared with 15 running screen types. Capture widths are 390 and 320 CSS pixels; reference heights are proportionally normalized. Upload has two reference views. Screenshots and disposable accounts stay outside Git. Real source data, unknown values, privacy defaults and working actions are preserved. This pass adds no backend, API, schema, environment or dependency changes.
 
-Baseline and side-by-side images are private QA artifacts, outside Git. Repository documentation records findings rather than publishing synthetic accounts or personal screenshots. Source and automated checks alone do not establish visual acceptance.
+Independent QA captured a consistent 32-view matrix on `index-CgVTSSnf.js`, then recaptured changed screens on dated later assets. The latest production candidate is `index-Cp5Fm5PR.js`. These are mixed-build observations, not one atomic final-build end-to-end acceptance run. Independent latest-asset keyboard checks passed for all3 strips; source-owner narrow-layout/history checks are attributed separately below.
 
-## Screen checklist
+## Current screen checklist
 
-| Screen | Reference | Implemented presentation change | Final browser status |
-| --- | --- | --- | --- |
-| Authentication | image5 | Earlier brand/form placement; simpler form radius/shadow | 390/320 screenshots captured and reviewed; exact parity open |
-| Explore | image13 | Compact weather/source details; first-name greeting; compact photo credits; real recent report card | 390/320 screenshots captured and reviewed; exact parity open |
-| Species detail | image3 | Hero credits/EXIF in info; title before technical detail; compact facts; expandable guide with working section jumps | 390/320 screenshots captured and reviewed; exact parity open |
-| Community | image1 | Refresh moved beside filter pills, restoring search width | 390/320 screenshots captured and reviewed; exact parity open |
-| Upload | image16, image4 | Photo, identification, field notes, metadata, conditions, privacy, visibility, submit order; editable species/location panels; compact EXIF/weather cells | 390/320 screenshots captured and reviewed; exact parity open |
-| Hotspots | image8 | Source and map explanation accessible without expanded default paragraphs | 390/320 screenshots captured and reviewed; exact parity open |
-| Hotspot detail | image10 | Hero first; report information/alerts expandable; report list independently scrollable; accordions initially closed | 390/320 screenshots captured and reviewed; exact parity open |
-| Journal | image12 | Short displayed entry ID; full ID remains available in title | 390/320 screenshots captured and reviewed; exact parity open |
-| Life List | image11 | Uses the owner's actual logged image when available instead of catalogue placeholder | 390/320 screenshots captured and reviewed; exact parity open |
-| Quiz | image7 | Source/licence disclosure on photograph instead of extra row | 390/320 screenshots captured and reviewed; exact parity open |
-| Messages | image6 | Compact timestamp with full value in title; footer radius/padding | 390/320 screenshots captured and reviewed; exact parity open |
-| Profile | image18 | Rounded-square avatar; Field Chats retained as utility icon instead of extra full row | 390/320 screenshots captured and reviewed; exact parity open |
-| Search | image22 | Compact credits; advanced options and history help in info; horizontally scrollable recent chips | 390/320 screenshots captured and reviewed; exact parity open |
-| Notifications | image17 | Inbox heading first; alert settings/subscriptions collapsed; errors remain visible | 390/320 screenshots captured and reviewed; exact parity open |
-| Settings | image21 | Verification inside Email disclosure; existing privacy controls retained | 390/320 screenshots captured and reviewed; exact parity open |
+| Screen / reference | Presentation implemented | Evidence and remaining difference |
+| --- | --- | --- |
+| Authentication / image5 | Measured text placement, 26px title, 18px tagline, 48px inputs, compact corners | Form top312px at390; heading painted row151 versus reference150. Font rasterization differs slightly. |
+| Explore / image13 | Compact weather/source information, greeting and credits, real recent report | 390/320 captures reviewed. Real data and available imagery differ from examples. |
+| Species / image3 | Compact hero credits; 20px facts; whole-phrase wrapping; expandable guide and section jumps | 390/320 captured; guide/call/habitat controls exercised. Missing measured difficulty, EXIF and gallery evidence remain unavailable. |
+| Community / image1 | Reference card corners/type; search width restored;32px filter pills; top132px/first-card184px; refresh retained after filters | Latest keyboard filters/refresh passed independently. Source-owner320/390 bounds passed; camera metadata allocation still needs review at320. |
+| Upload / images16,4 | Reference section order, editable metadata, compact conditions;44x24 switch and segmented visibility | Keyboard toggles and all3 visibility modes passed on dated candidate; private restored and manual draft retained. |
+| Hotspots / image8 | Full-width map, compact pills/cards; help overlay; attribution retained | Search/filter/map/first-card tops72/128/168/416px at390. Edge-hit filtering, map zoom/popup, info bounds passed. Real marker density differs. |
+| Hotspot detail / image10 | Hero first; closed access/report disclosures; compact report rows in192px scroll region | Every returned report retained; keyboard scrolling and source access passed. Operator fees/access facts remain evidence-dependent. |
+| Journal / image12 | Compact tiles/corners and short display ID; full ID available | 390/320 captured; saved private observation survived reload. Actual records/counts differ. |
+| Life List / image11 | Owner photograph when available; reference name/corner sizing | 390/320 captures and empty state checked. Uses actual logged species/counts. |
+| Quiz / image7 | Compact photo/answer/feedback shapes; Check Answer stays visible but disabled after grading | Latest quiz check confirmed disabled action, enabled Next, question2 and unchanged50XP. Real question/answer state differs. |
+| Messages / image6 |18px contact names; compact timestamps/search/footer; narrow-input bounds | 390/320 captures and composer flow checked. Actual conversations differ. |
+| Profile / image18 | Square avatar, lighter tabs/counts/gallery; collapsed Quick Edit preview | Both edit triggers open existing dialog and regain focus after Escape. At320, keyboard scroll exposes rig fully above preview. Actual profile/rig differs. |
+| Search / image22 | Compact result names/credits; advanced help disclosure;28px category pills | Prior search/history flows captured. Latest categories passed independently; owner checked320px history selection/removal/restoration and wrapping. Final independent320 screenshot was invalid, not counted. |
+| Notifications / image17 | Compact inbox/cards/icons; settings disclosed;28px filter buttons | Latest keyboard filters passed independently; owner320/390 bounds passed. Working Followers category retained in addition to reference's3 categories. |
+| Settings / image21 | Unblurred privacy sheet; reference title/option/button sizes and spacing | Independent390x1256 sheet top780.45/height475.55 versus780/476 target. Save x16,y1184,w358.4,h48. At320x740 Tab/Enter saved unchanged preferences without overflow. |
 
-## Deliberate differences and unclosed criteria
+## Retained behaviour and failure evidence
 
-- Real species, photos, accounts, counts, dates and observations differ from the examples. Missing EXIF, measured difficulty, seasonality, opening hours and best times remain unknown. No sample photograph, statistic, badge or entrance is presented as verified real evidence.
-- Page headings retain their meaningful names (for example Global Search and Field Chats) rather than copying the reference's repeated Species Detail title onto unrelated pages.
-- Private remains the default upload visibility. Extra delivered actions (Followers filter, alerts, verification, refresh, Android connection, manual location and EXIF reset) remain accessible even when absent from the original drawings.
-- Maps retain all filtered real hotspots, live tiles and required attribution; marker density differs from a static drawing. A bounded report region retains every returned report.
-- Physical Oppo, native keyboard, text scaling, genuine provider outages and current public tunnel are not accepted by desktop viewport simulation.
-- Pixel-perfect parity is NOT established. All 15 screen types have independent 390/320 captures with validated dimensions. The scoped flows and exceptions below are recorded separately. Exact design sign-off remains open; the implementation is closer, not identical.
+Independent dated browser checks include Plan a Shot opening its guide; habitat and recordings; Community refresh; Profile navigation; species/hotspot subscriptions restored after testing; keyboard scrolling all hotspot reports; source/licence access; and missing-date validation retaining a private custom-location upload, followed by persistence in Journal. Earlier320px source-panel and long-note overflow defects were reproduced, fixed and retested.
+
+A separate source-owner desktop browser check used a temporary isolated proxy to return503 before the first observation write. Photo, species, site, date, notes and private visibility remained. One retry succeeded; Journal reload and authenticated API read confirmed exactly one private disposable record. The proxy is stopped. This does not establish browser request blocking, genuine provider outage, physical-phone behaviour or recovery after a committed write whose response was lost.
+
+## Deliberate differences and unclosed acceptance
+
+- Real accounts, counts, dates, photographs and records differ from screenshot examples. Unsupported EXIF, difficulty, seasonal statistics, permissions, fees and best times stay unavailable; no fake values or verification badges are added.
+- Headings retain meaningful screen names rather than copying the repeated Species Detail label onto unrelated screens.
+- Private remains the upload default. Extra delivered controls, including followers, alerts, verification, refresh, manual location and Android connection, remain accessible.
+- Live maps keep all filtered hotspots and attribution. Missing external hotspot/gallery photography is not replaced with fabricated evidence.
+- Search history now wraps; its16px row gaps preserve separate44px hit areas around28px chips. The reference uses tighter rows, so touch spacing remains an explicit visual difference.
+- Physical Oppo, native keyboard/orientation/text scaling, genuine provider outages and the current public tunnel have not been accepted by desktop viewport checks.
+- Exact one-to-one visual sign-off is open. Measured targets and retained flows listed above are accepted within their stated evidence; the specific remaining presentation corrections below remain open.
+
+## Verification and delivery checkpoint
+
+Latest candidate `index-Cp5Fm5PR.js`:171/171 tests passed, TypeScript checking passed, production build passed; main bundle488.06kB. Source commit4669052 passed all4 GitHub checks. The final documentation commit still requires its own exact-head checks before PR46 merge, then post-merge main checks.
+
+Independent review accepted latest-strip keyboard activation and dated Settings/Hotspots/Upload/Quiz/Profile flows. Its final files labelled320 for the3 strips were actually390px and are excluded from independent narrow acceptance. Source-owner DOM checks establish320px bounds separately. Native supplemental screenshots have their actual dimensions recorded rather than assuming requested viewport height. The upload continuation comparison was incorrectly scrolled; its screenshot does not prove lower-form parity. Accepted switch/segment interaction measurements remain valid.
+
+Unrelated Development Record, Final Acceptance, native-push documentation, domain scripts and test-case work remain outside these commits. Do not reset or stash them to simplify delivery.
 
 ## Beginner explanation and Viva Notes
 
-The change is primarily JSX and CSS: it changes how existing information is arranged, not how the database or APIs work. HTML `details` and `summary` provide expandable information with native keyboard behaviour. `InformationDisclosure` gives these controls a consistent information icon and a bounded, scrollable panel. Attribution, provenance and unknown-data explanations are retained inside the panels.
+React still holds the same draft, profile and quiz state and calls the existing handlers. JSX and CSS now arrange it closer to the designs. Profile's two entry points reuse `handleOpenProfile`, which copies current values into the existing editor. Keeping the collapsed trigger mounted lets `useDialogFocus` restore focus after closing. Quiz grading remains unchanged; its already-used action stays visible but disabled to prevent grading twice.
 
-The upload component keeps its existing state and callbacks. Its inputs remain mounted inside editable panels, so closing a panel does not intentionally discard a draft. EXIF parsing, manual-entry precedence, historical-weather cancellation, publish validation and private-location handling are unchanged. Section navigation opens every enclosing disclosure before scrolling/focusing its target.
+CSS layers decide precedence before selector specificity. The font provider's unlayered24px default overrode intended14/18/20px utilities. Moving local defaults into the base layer and applying `font-size: revert-layer` restores the component sizes. Independent checks confirmed1,083 explicitly sized icons matched their intended size.
+
+Compact pills use a transparent `::before` extension within row padding so visible28/32px controls retain44px hit areas. The extension changes the clickable area without changing the layout. Upload's switch remains a native button with `role="switch"` and `aria-checked`; visibility buttons retain `aria-pressed` and keyboard activation. No new UI framework is needed.
 
 Likely viva questions:
 
-1. **Why collapse source information?** The design prioritizes the bird or photograph; supporting evidence is still available beside it without occupying the default page.
-2. **Why native details instead of a new UI framework?** It provides a small, understandable expandable control using the browser's existing semantics.
-3. **Did this change authentication or storage?** No. Existing endpoints, sessions and SQLite tables are retained.
-4. **Why not fill the design's missing values?** Example values are not evidence; unsupported facts must remain unavailable.
-5. **How is regression risk controlled?** Existing tests, type checking, production builds and real browser flows complement reference screenshots. Desktop checks do not prove physical-phone acceptance.
+1. **Why did icon sizes ignore the utility classes?** Unlayered provider CSS won over layered utilities; restoring layer precedence fixed the existing declarations.
+2. **How can a compact filter remain usable on a phone?** A transparent pseudo-element extends its hit area into reserved padding without making the visible pill taller.
+3. **How are edits kept consistent between Profile entry points?** Both call the same initializer and open the same existing editor and save handler.
+4. **Why keep unknown data instead of copying example values?** A design example is not evidence; inventing metadata or access claims would mislead users.
+5. **Do passing tests prove the design matches?** No. Tests check behaviour and types; reference-width browser captures and measurements check appearance, and physical-phone checks remain separate.
 
-## Verification checkpoint
+## Demo and continuation
 
-- Final full suite: 171/171 passed; TypeScript and production build passed.
-- Latest production asset: `index-BKdAOXPE.js` (486.93 kB main bundle). PR [#45](https://github.com/JinxedAsh/bird-wanderer/pull/45) tracks delivery; merge requires passing checks for its exact latest commit.
-- No backend/API/schema/environment/dependency changes. Unrelated local documentation and domain/test scripts are preserved outside this increment's commits.
+Start the usual application with `pnpm dev` from frontend and use its existing local/LAN/HTTPS address with your own account. Show discovery, source disclosure, species guide, hotspot map/access/weather, then a private upload and its Journal record. The isolated QA port and synthetic fixtures are not the demo deployment.
 
+Next: deliver the verified PR46 milestone after exact-head checks, then continue the following measured visual work in a focused branch. These are open criteria, not generic improvement claims:
 
-## Scoped browser outcomes (3 November)
+| Screen | Next correction / limit |
+| --- | --- |
+| Explore | Compact unknown-weather and regional-caption rows; they push actions materially below the reference. |
+| Species | Keep truthful unknown-status badge beside title where possible; prevent320px guide-heading wrap. |
+| Community | Review truncated camera metadata allocation at320; preserve every field and unavailable state. |
+| Upload | Match Photo Details/Conditions hierarchy and capture the correctly scrolled lower form. |
+| Hotspots | Review78px card versus approximately76px target. Keep real markers; static4-pin density is not real-data acceptance. |
+| Hotspot detail | Refine Recent Sightings, Field Notes and Map Access heading hierarchy. |
+| Journal | Refine title/Recent Photos weights and selected-card outline against reference. |
+| Life List | Reduce approximately17px extra intro/filter spacing. |
+| Quiz | Reduce approximately15px extra photo/prompt offset without affecting grading. |
+| Messages | Improve timestamp legibility and compact privacy explanation. |
+| Profile | Align identity/action/statistic spacing; preview/focus/rig access already passed. |
+| Search / Notifications | Review final narrow source-density/timestamp/body truncation. Preserve all categories and real events. |
+| Settings | Sheet matches measured target; review behind-sheet account/privacy row density. |
 
-Independent Test chat captured all 15 screen types / 16 reference views at 390 and 320 CSS pixels, with dimension validation and paired original/final review. These were real browser screenshots of the isolated app, real discovery data and disposable account records. Early captures intentionally record intermediate assets; changed screens were recaptured after fixes. They are not claimed as one atomic end-to-end run on the final bundle.
-
-Observed passes include Plan a Shot opening its guide; habitat and recorded-call controls; Community refresh; Profile navigation; species/hotspot subscription toggles (restored afterwards); keyboard scrolling of all hotspot reports; source/photo-credit access; and a private custom-location observation saved after a missing-date validation failure, preserving its draft and persisted Journal result. The 320px offscreen source panel and long-note overflow were reproduced, fixed and independently retested. Source-owner checks additionally confirmed final notification thresholds and 320px panel bounds.
-
-The custom-location validation recovery is NOT the blocked-network POST retry test. Fresh browser network blocking, genuine provider outages, every authentication/recovery flow, new-password entry, native keyboard/orientation/text scaling and physical Oppo acceptance remain unverified in this increment. Existing automated tests cover the delivered API/auth/data behaviour; earlier dated browser evidence remains earlier evidence.
-
-## Remaining visual work
-
-The design's density and sections are restored, but exact one-to-one approval remains open. Remaining visible differences include control radii/weights/spacing, additional accessible information icons, long real titles/badges, missing real hotspot/gallery imagery, map marker density and different question/record states. Meaningful page headings and privacy/verification wording intentionally stay truthful. Do not mark these as pixel-perfect or fill gaps with fake data. Continue by comparing the final paired screenshots per screen, adjusting only verified presentation differences, and repeating affected flow checks.
-
-## Files changed
-
-- App shell and shared presentation: `frontend/src/App.tsx`, `frontend/src/index.css`, `frontend/src/components/Header.tsx`, `InformationDisclosure.tsx`, `SpeciesPhoto.tsx`.
-- Screens: `AuthScreen.tsx`, `ExploreScreen.tsx`, `SpeciesDetailScreen.tsx`, `CommunityScreen.tsx`, `LogObservationScreen.tsx`, `ObservationConditionsPanel.tsx`, `HotspotsScreen.tsx`, `HotspotDetailScreen.tsx`, `JournalScreen.tsx`, `BirdQuizScreen.tsx`, `FieldChatScreen.tsx`, `ProfileScreen.tsx`, `GlobalSearchScreen.tsx`, `NotificationsScreen.tsx`, `SettingsScreen.tsx`. Life List presentation receives an owner's image through App; its own component is unchanged.
-- Tests/documentation: `frontend/server/frontend.test.mjs`, `README.md`, `docs/DEVELOPMENT_RECORD.md`, `docs/FINAL_ACCEPTANCE.md`, this checklist.
-
-## Demo route
-
-Start the usual application with `pnpm dev` from frontend; open its existing local/LAN/HTTPS address and sign in with your own demo account. Explore shows main discovery content first. Use an information icon to show provenance, open a species and Plan a Shot, follow reported hotspots to weather/access/maps, then demonstrate one private upload and its Journal record. Missing source evidence stays unavailable. Do not use the isolated QA port or synthetic accounts as the normal demo deployment.
-
-Final markup-only correction: the quiz photo and its figcaption now share a semantic figure wrapper. Source-owner latest-build browser check confirmed the credit disclosure opens, its parent is FIGURE and page width fits390. Independent all-screen screenshots remain dated mixed-build evidence.
+Authentication has only raster-sensitive1–3px text residuals; avoid arbitrary per-glyph positioning. Missing source images/maps/statistics, real names/counts and extra delivered controls remain the explicit data/state boundaries above. Physical acceptance and exact visual sign-off remain open.
