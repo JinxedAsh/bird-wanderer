@@ -962,7 +962,7 @@ The header logo now uses a bundled SVG following the supplied green bird emblem,
 
 ### Entry 63 — Real-source Species photographs and inline field map
 
-**Date/group:** 3 November 2026 IST; presentation continuation after PR47. Branch: `ui-species-reference-sections`. The living specification was re-read through Google Drive (Group13, modified 5 October): Phase1 relies on external discovery and open-source photograph metadata, with maps prominent and detailed logistics under progressive disclosure. No backend, API, schema, dependency or new community functionality is added.
+**Date/group:** 3 November 2026 IST; presentation continuation after PR47. Delivery: PR [#48](https://github.com/JinxedAsh/bird-wanderer/pull/48), branch `ui-species-reference-sections`; merge requires passing checks on its exact latest head and subsequent merged-main verification. The living specification was re-read through Google Drive (Group13, modified 5 October): Phase1 relies on external discovery and open-source photograph metadata, with maps prominent and detailed logistics under progressive disclosure. No backend, API, schema, dependency or new community functionality is added.
 
 **Acceptance checklist and implementation order:**
 

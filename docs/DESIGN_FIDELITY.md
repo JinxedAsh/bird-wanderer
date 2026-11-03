@@ -1,6 +1,6 @@
 # Design comparison and acceptance
 
-Updated 3 November 2026. PR [#45](https://github.com/JinxedAsh/bird-wanderer/pull/45) delivered the initial layout pass at main `63fe074`. PR [#46](https://github.com/JinxedAsh/bird-wanderer/pull/46) is merged at main7968821. PR [#47](https://github.com/JinxedAsh/bird-wanderer/pull/47) delivered density and graded feedback at main741e65e after four exact-head checks and two passing merged-main workflows. Entry63 continues the Species structural sections on `ui-species-reference-sections`. The original mapping is in [design-reference/README.md](design-reference/README.md).
+Updated 3 November 2026. PR [#45](https://github.com/JinxedAsh/bird-wanderer/pull/45) delivered the initial layout pass at main `63fe074`. PR [#46](https://github.com/JinxedAsh/bird-wanderer/pull/46) is merged at main7968821. PR [#47](https://github.com/JinxedAsh/bird-wanderer/pull/47) delivered density and graded feedback at main741e65e after four exact-head checks and two passing merged-main workflows. Entry63 continues the Species structural sections in PR [#48](https://github.com/JinxedAsh/bird-wanderer/pull/48) on `ui-species-reference-sections`. The original mapping is in [design-reference/README.md](design-reference/README.md).
 
 ## Scope and evidence
 
