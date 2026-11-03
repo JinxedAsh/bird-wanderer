@@ -121,7 +121,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
         <div className="grid grid-cols-3 gap-1.5 w-full mt-3 max-w-sm">
           <button
             onClick={handleOpenProfile}
-            className="h-11 px-2 bg-[#2d5a27] hover:bg-[#154212] text-white rounded-lg text-[12px] font-semibold flex items-center justify-center gap-1 shadow-xs active:scale-[0.98] transition-transform"
+            className="h-11 px-1 min-[360px]:px-2 whitespace-nowrap bg-[#2d5a27] hover:bg-[#154212] text-white rounded-lg text-[11px] min-[360px]:text-[12px] font-semibold flex items-center justify-center gap-1 shadow-xs active:scale-[0.98] transition-transform"
           >
             <span className="material-symbols-outlined text-[16px]">edit</span>
             <span>Edit profile</span>
@@ -129,7 +129,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
 
           <button
             onClick={() => onNavigate('settings')}
-            className="h-11 px-2 bg-[#ebeef3] hover:bg-[#e0e3e8] text-[#181c20] rounded-lg text-[12px] font-semibold flex items-center justify-center gap-1 transition-colors"
+            className="h-11 px-1 min-[360px]:px-2 whitespace-nowrap bg-[#ebeef3] hover:bg-[#e0e3e8] text-[#181c20] rounded-lg text-[11px] min-[360px]:text-[12px] font-semibold flex items-center justify-center gap-1 transition-colors"
           >
             <span className="material-symbols-outlined text-[16px]">tune</span>
             <span>Settings</span>
@@ -137,7 +137,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
 
           <button
             onClick={() => onNavigate('notifications')}
-            className="h-11 px-2 bg-[#ebeef3] hover:bg-[#e0e3e8] text-[#181c20] rounded-lg text-[12px] font-semibold flex items-center justify-center gap-1 transition-colors"
+            className="h-11 px-1 min-[360px]:px-2 whitespace-nowrap bg-[#ebeef3] hover:bg-[#e0e3e8] text-[#181c20] rounded-lg text-[11px] min-[360px]:text-[12px] font-semibold flex items-center justify-center gap-1 transition-colors"
           >
             <span className="material-symbols-outlined text-[16px]">notifications_none</span>
             <span>Alerts</span>

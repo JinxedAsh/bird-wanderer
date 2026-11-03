@@ -205,7 +205,7 @@ export const HotspotDetailScreen: React.FC<HotspotDetailScreenProps> = ({
           {details && <p className="text-[11px] text-[#42493e]">Retrieved {new Date(details.fetchedAt).toLocaleString()}{details.cached ? ' (cached)' : ''}. Observation times are local to the location.</p>}
       </InformationDisclosure>
           </div>
-          <span className="text-[11px] text-[#42493e] font-semibold">{hotspot.source ? 'This hotspot, past 14 days' : 'Past 4 hours'}</span>
+          <span title={hotspot.source ? 'This hotspot, past 14 days' : undefined} className="shrink-0 text-[11px] text-[#42493e] font-semibold">{hotspot.source ? 'Past 14 days' : 'Past 4 hours'}</span>
         </div>
 
         <div className="flex flex-col gap-2 max-h-48 overflow-y-auto" tabIndex={0} role="region" aria-label="Recent hotspot reports">
@@ -253,7 +253,7 @@ export const HotspotDetailScreen: React.FC<HotspotDetailScreenProps> = ({
       {/* Section 2: Recent Photographs Strip */}
       <div className="pt-5">
         <div className="px-4 flex items-center justify-between mb-2">
-          <h3 className="text-[18px] font-medium text-[#181c20]">Recent Field Photographs</h3>
+          <h3 className="text-[17px] min-[360px]:text-[18px] font-medium text-[#181c20]">Recent Field Photographs</h3>
           <span className="text-[11px] text-[#42493e] font-semibold">Local birders</span>
         </div>
 
