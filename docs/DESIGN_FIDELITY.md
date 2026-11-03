@@ -1,6 +1,6 @@
 # Design comparison and acceptance
 
-Updated 3 November 2026. PR [#45](https://github.com/JinxedAsh/bird-wanderer/pull/45) delivered the initial layout pass at main `63fe074`. PR [#46](https://github.com/JinxedAsh/bird-wanderer/pull/46) is merged at main 7968821 after 4 exact-head checks and 2 passing main workflows. The density and graded-feedback continuation is tracked in PR47 on `ui-reference-density` (Development Record Entry62). The original mapping is in [design-reference/README.md](design-reference/README.md).
+Updated 3 November 2026. PR [#45](https://github.com/JinxedAsh/bird-wanderer/pull/45) delivered the initial layout pass at main `63fe074`. PR [#46](https://github.com/JinxedAsh/bird-wanderer/pull/46) is merged at main7968821. PR [#47](https://github.com/JinxedAsh/bird-wanderer/pull/47) delivered density and graded feedback at main741e65e after four exact-head checks and two passing merged-main workflows. Entry63 continues the Species structural sections in PR [#48](https://github.com/JinxedAsh/bird-wanderer/pull/48) on `ui-species-reference-sections`. The original mapping is in [design-reference/README.md](design-reference/README.md).
 
 ## Scope and evidence
 
@@ -22,7 +22,7 @@ Retained-flow checks passed Life List empty filtering/drawer/focus, both Profile
 | --- | --- | --- |
 | Authentication / image5 | Measured text placement, 26px title, 18px tagline, 48px inputs, compact corners | Form top312px at390; heading painted row151 versus reference150. Font rasterization differs slightly. |
 | Explore / image13 | Compact weather/source information, greeting and credits, real recent report | 390/320 captures reviewed. Real data and available imagery differ from examples. |
-| Species / image3 | Compact hero credits; 20px facts; whole-phrase wrapping; expandable guide and section jumps | 390/320 captured; guide/call/habitat controls exercised. Missing measured difficulty, EXIF and gallery evidence remain unavailable. |
+| Species / image3 | Compact hero credits/facts/guide; real Commons reference strip; expandable inline reported-hotspot map | Earlier390/320 captures cover the pre-strip screen. New strip/map interactions and DOM bounds pass at320/390; screenshot capture currently fails. External photo provenance is explicit; measured difficulty and some source metadata remain unavailable. |
 | Community / image1 | Reference card corners/type; search width restored;32px filter pills; top132px/first-card184px; refresh retained after filters | Latest keyboard filters/refresh passed independently. Source-owner320/390 bounds passed; camera/lens wrapping and explicit unavailable exposure labels passed at320. |
 | Upload / images16,4 | Reference section order, editable metadata, compact conditions;44x24 switch and segmented visibility | True top/lower captures at both widths; photo top80/height268.8 and identification heading372.8 at390. White inset fields retain keyboard editing, manual date/offset/notes and Private. Submit48px, in bounds; no publish. |
 | Hotspots / image8 | Full-width map, compact pills/cards; help overlay; attribution retained | Search/filter/map/first-card tops72/128/168/416px at390. Edge-hit filtering, map zoom/popup, info bounds passed. Real marker density differs. |
@@ -54,7 +54,7 @@ A separate source-owner desktop browser check used a temporary isolated proxy to
 
 ## Verification and delivery checkpoint
 
-Final runtime candidate `index-CxiIwUMM.js`:171/171 local tests, TypeScript and production build pass. Merge PR47 only after all checks pass its exact latest head, then verify the exact merged main workflows. PR46 was delivered at7968821 with both main workflows passing.
+PR47 runtime `index-CxiIwUMM.js`:171/171 local tests, TypeScript and production build passed; all four exact-head checks and both merged-main workflows passed at741e65e. Entry63 final candidate `index-CPw4oS-J.js` passes173/173 tests, TypeScript and production build. Earlier D7 browser interaction/DOM results are not screenshot acceptance; the final callback-only correction passed a controlled HTTP503 error and keyboard retry back to three real references. The local proxy is stopped; no genuine provider-outage acceptance is claimed.
 
 Independent review accepted latest-strip keyboard activation and dated Settings/Hotspots/Upload/Quiz/Profile flows. Its final files labelled320 for the3 strips were actually390px and are excluded from independent narrow acceptance. Source-owner DOM checks establish320px bounds separately. Native supplemental screenshots have their actual dimensions recorded rather than assuming requested viewport height. The upload continuation comparison was incorrectly scrolled; its screenshot does not prove lower-form parity. Accepted switch/segment interaction measurements remain valid.
 
@@ -84,12 +84,12 @@ PR46 is delivered and PR47 closes the measured density and wrong-answer-feedback
 
 | Criterion | Next action / evidence limit |
 | --- | --- |
-| Real-source Species capture strip and inline map | Wire existing access-controlled records and matching catalogue hotspot coordinates into the reference sections. Current report links/hotspot navigation work; this structural integration remains open. Never fabricate upload totals or locations. |
+| Real-source Species capture strip and inline map | Implemented with existing Commons references and matching catalogue coordinates. No private/account observation data is consumed by the strip. Source label deliberately differs from Community Field Captures; no invented uploads. Browser source-credit, keyboard sheet, marker navigation and private logging flows pass; new visual capture/sign-off remains pending because both QA sessions' screenshot calls failed. |
 | Location imagery and operator logistics | Use photographs with location evidence/appropriate rights and reviewed operator facts. Current hero/gallery/access coverage is incomplete; coordinates are not verified entry gates. |
 | Annual seasonality and measured difficulty | Available source data does not supply annual frequencies/sample denominators or a measured difficulty rating. Keep observations, forecasts, general guidance and missing evidence separate. |
 | Physical/device/provider acceptance | Oppo keyboard/orientation/text scaling, genuine provider outages, current public tunnel and signed distribution require separate evidence. Packaging remains deferred. |
 
-CSS spacing, readable metadata, known narrow-control wrapping and contradictory Quiz feedback are resolved within the checked flows. Source-data differences and missing structural integration above remain open; exact one-to-one sign-off and full Phase1 acceptance are not claimed.
+CSS spacing, readable metadata, known narrow-control wrapping, contradictory Quiz feedback and the missing Species strip/map structure are implemented within the stated checks. Source-data differences and new-section visual sign-off remain open; exact one-to-one sign-off and full Phase1 acceptance are not claimed.
 Authentication has only raster-sensitive1–3px text residuals; avoid arbitrary per-glyph positioning. Missing source images/maps/statistics, real names/counts and extra delivered controls remain the explicit data/state boundaries above. Physical acceptance and exact visual sign-off remain open.
 
 Quiz Viva addition: `isRightAnswer` and `isWrongAnswer` now read existing server feedback separately from selection. Before grading a radio marker describes selection; afterward cancel/red describes a wrong choice and check/green identifies the server-correct option. `aria-pressed` still describes the actual choice. No grading, XP or API code changed, and the correct answer is not revealed before feedback.

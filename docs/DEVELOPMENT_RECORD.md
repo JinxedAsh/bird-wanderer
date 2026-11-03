@@ -1,6 +1,6 @@
 # Bird Wanderer — Development Record
 
-- **Last updated:** 31 October 2026, India Standard Time (Asia/Kolkata).
+- **Last updated:** 3 November 2026, India Standard Time (Asia/Kolkata).
 - **Current project phase:** Phase 1 delivered foundation; full-project completion now authorized across Phases 1–4 and Android.
 - **Required final deliverable:** an Android application/APK.
 - **Audience:** team members, evaluators and the developer; no code knowledge is required for the main sections.
@@ -49,7 +49,7 @@ Bird Wanderer helps birdwatchers and wildlife photographers discover species and
 | Personal discovery activity | eBird bird/hotspot saved IDs and the latest ten real searches persist per account in SQLite. Existing Saved hotspot filtering and Search saved-bird filtering use the same confirmed records. See Entry 21. |
 | Species recordings | Exact-species P51/Commons licensed audio source and real playback controls implemented in Entry45; no supported match remains explicit. Browser acceptance/delivery pending. |
 | Species information | Credited identification, habitat and behaviour excerpts load on demand with exact taxonomy/article identity checks. Missing sections remain unavailable; local seasonal timing and difficulty are unverified. See Entry 20. |
-| Species photographs and planning | Credited Commons photos and same-file EXIF are connected. The hero example remains; an on-demand disclosure compares up to three exact-species references with independent sample counts/ranges/credits. Forecast light windows and explicit condition heuristics support preparation. Imported annual statistics, measured difficulty and verified historical environment matching remain unsupported; limited seasonal narratives are scoped/cited. See Entries 28–29. |
+| Species photographs and planning | Credited Commons photos and same-file EXIF are connected. The hero and lazy reference strip use credited exact-species Commons photos; the existing on-demand disclosure compares up to three references with independent sample counts/ranges/credits. Entry63 adds the source-labelled strip and inline reported-hotspot map; new visual sign-off is pending. Forecast light windows and explicit condition heuristics support preparation. Imported annual statistics, measured difficulty and verified historical environment matching remain unsupported; limited seasonal narratives are scoped/cited. See Entries 28–29. |
 | Nearby discovery and Explore weather | Optional one-time GPS/manual point enables 50-km filtering and nearest-first straight-line hotspot distances within the configured region. Explore uses the rounded selected point for attributed forecasts; no account location is persisted. See Entry 22. |
 | Maps and logistics | Maps/directions/forecasts are implemented. Delhi also covers Gautam Buddha Nagar, explicitly labelled. Reviewed access covers four venues (Lodhi, Sunder, Yamuna I/II and three Okhla records). Conflicting hours, historical fees and unknown entrances/permissions are explicit. 320/390px browser checks passed; phone/outage acceptance remains pending. |
 | Journal, profiles and social activity | First persistent slice delivered in PR #24/28218af: real uploads/EXIF, owned observations, profile/privacy preferences, journal/life-list membership and computed statistics. Private/follower/profile media access is server-enforced. Community likes/comments/follows/report UI is delivered in PR #25/50d6d7d with 94 passing tests, exact-head/main CI and scoped browser checks. Its 44px post controls/dismiss handle passed the followup browser check in Entry33. Sighting/forecast alerts and field messaging (#29/e085f4e) are delivered; global search/social notifications/pagination (#30/da676b7) are delivered. Journal editing/action acknowledgement and latest100 comments are implemented on PR #32, delivered in #32/564ce92 after scoped browser acceptance and four passing exact-head checks; merged-main CI passed; see Entry39 and FINAL_ACCEPTANCE.md. |
@@ -62,7 +62,7 @@ Phase 1 is **not certified complete** against every detailed evidence/manual cri
 
 Presentation update (3 November): all reference screens were compared with running baseline screenshots; compact source/configuration controls and upload ordering are implemented. Independent 390/320 screenshots and scoped functional checks are recorded; exact design sign-off remains open. See [Design fidelity checklist](DESIGN_FIDELITY.md).
 
-The measured geometry pass (Entry61) is merged through PR46/main7968821 with both main workflows passing. A focused density continuation (Entry62) is in progress on `ui-reference-density`; exact design sign-off remains open.
+The measured geometry pass (Entry61) is merged through PR46/main7968821. The density and Quiz feedback continuation (Entry62) is merged through PR47/main741e65e; both exact merged-main workflows passed for each increment. Entry63 adds the real-source Species reference strip and inline reported-hotspot map using existing services. Exact visual sign-off and the separately listed evidence/device criteria remain open.
 
 ## 3. Chronological development history
 
@@ -957,6 +957,47 @@ The header logo now uses a bundled SVG following the supplied green bird emblem,
 4. Did the fix change XP? No; wrong/correct/refresh/Next checks confirmed the server rules.
 5. Is Phase 1 fully accepted? No; structural/source-data and physical/manual criteria remain explicit.
 
+
+**Entry62 delivery outcome:** PR [#47](https://github.com/JinxedAsh/bird-wanderer/pull/47) merged at `741e65e44230192be0b278d487e61cdaa9f64b20` after all four checks passed its exact final head `064882f`. Both merged-main workflows also passed. The open Species structural item above is continued in Entry63 rather than silently marked complete.
+
+### Entry 63 — Real-source Species photographs and inline field map
+
+**Date/group:** 3 November 2026 IST; presentation continuation after PR47. Delivery: PR [#48](https://github.com/JinxedAsh/bird-wanderer/pull/48), branch `ui-species-reference-sections`; merge requires passing checks on its exact latest head and subsequent merged-main verification. The living specification was re-read through Google Drive (Group13, modified 5 October): Phase1 relies on external discovery and open-source photograph metadata, with maps prominent and detailed logistics under progressive disclosure. No backend, API, schema, dependency or new community functionality is added.
+
+**Acceptance checklist and implementation order:**
+
+| Criterion | Starting state | Result / remaining limit |
+| --- | --- | --- |
+| Source photo strip in Species | Missing; comparison service already existed | Implemented using the same exact-species Commons references, up to three actual images, source links and complete existing rights disclosures. Labelled Reference Field Captures, explicitly not community uploads or recent sightings. No fabricated upload count. |
+| Inline species field map | Report links existed; map required opening another screen | Implemented using existing HotspotMap and catalogue coordinates matched to reported IDs. All reports stay listed, including unmatched sites. Mapping coverage is explicit. |
+| Existing actions and privacy | Working callbacks and private logging | Retained; map popup opens real hotspot detail and logging preselects the species without choosing a location. Private and hide-exact-location defaults passed browser checks; nothing published. |
+| Loading, failure and missing evidence | Existing service/provider tests and retry behaviour | Retained; lazy photo loading, retry, genuine empty-photo/report states, session expiry and cancelled-request handling remain distinct. Automated tests cover invalid/missing coordinates and loading states. No real provider-outage claim. |
+| Final appearance at 320/390 | Existing earlier screen captures | DOM widths/interactions checked at both widths. New screenshots could not be captured in either implementation or Test chat; visual sign-off remains awaiting manual verification. |
+| Seasonal/difficulty/operator evidence | Partial or unsupported | Unchanged: annual denominators, measured difficulty, matched historical conditions and complete reviewed fees/permission/gate coverage are missing. Not marked complete. |
+
+**How it works:** ReferenceComparisons has an optional gallery display. IntersectionObserver starts its existing request when the strip approaches the viewport; leaving the screen cancels outstanding work. The original manually opened gear-comparison disclosure remains available. Each image keeps its existing source, licence, author and taxonomy-match disclosure. Broken-image fallback retains source access. No account observations are read by this strip, so private/follower records cannot enter it.
+
+SpeciesDetailScreen matches reported hotspot IDs to the loaded catalogue, checks coordinates with the existing hotspotCoordinates helper and passes that subset to HotspotMap. Coordinate strings in reports are not parsed into guessed pins. Valid zero coordinates are retained; out-of-range values and unrelated catalogue sites are excluded. The original complete report list, retrieval time, source link, local observation times, counts, loading/error/retry states and navigation remain. The sheet has a native keyboard-operable toggle with aria-expanded. Log your sighting calls the existing onQuickLog handler and does not imply that a reported point is the user's location or an entrance.
+
+**Verification:** 173/173 tests, TypeScript and production build passed; final candidate `index-CPw4oS-J.js`, 492.88 kB main bundle. Earlier successful layout/flow observations used index-D7_-E51N.js; the final change only stabilizes the callback reference used by photo loading. Two new tests cover reported/catalogue matching, unmatched report retention, invalid and zero coordinates, truthful gallery loading and preservation of comparison mode. Existing source/provider/privacy tests also pass. Independent Test chat and implementation-session browser checks are recorded separately; these are desktop checks, not physical Oppo acceptance.
+
+**Independent Test chat:** the focused Species continuation also passed three-photo loading/credits, keyboard toggles, marker-to-matching-hotspot navigation and species-prefilled Private logging without publishing. Its screenshot capture also failed, so its final report explicitly leaves visual sign-off incomplete.
+
+**Implementation-session browser evidence:** three real Commons Kingfisher thumbnails loaded with source/rights links. At 320px document width remained 320; the third photograph's credit panel measured left40/right296. At 390px document width remained390. Enter collapsed the field sheet and removed the map; Space reopened it. The Surajpur marker popup opened hotspot `L38809537`. Log your sighting opened a Common Kingfisher draft with Private selected and exact-location hiding enabled. No observation was submitted. Browser screenshot methods repeatedly returned “Unable to capture screenshot”; no new screenshot or full visual comparison is claimed. Private JSON evidence remains outside Git.
+
+**Controlled failure and correction:** a disposable loopback proxy held the reference endpoint at HTTP503. The gallery displayed its explicit error and Retry references rather than a false zero-photo result. After proxy recovery, keyboard Enter on Retry references restored three real references and removed the error on the final CPw build. The proxy is stopped. This is simulated failure evidence, not an actual provider outage. ReferenceComparisons now keeps the latest session-expiry callback in a ref, matching SpeciesPhoto, so an unrelated parent callback identity change does not restart the request. This also preserves the existing comparison disclosure.
+
+**Files:** frontend/src/App.tsx, frontend/src/components/ReferenceComparisons.tsx, frontend/src/components/SpeciesDetailScreen.tsx, frontend/server/frontend.test.mjs, docs/DEVELOPMENT_RECORD.md and docs/DESIGN_FIDELITY.md. Unrelated local documentation/scripts/test cases remain untouched and excluded from delivery.
+
+**Demo:** open Common Kingfisher, scroll to Reference Field Captures, open its photo credit, expand Sightings & Field Map, choose a marker and open the hotspot. Return and choose Log your sighting to demonstrate species selection and private defaults; select your actual location/date before any real submission. Missing photos/reports must remain honest empty states for other species.
+
+**Viva Notes:** React reuses existing components and callbacks; no second map or photo backend was created. useMemo recalculates the reported-site subset when catalogue/reports change. IntersectionObserver delays external photo work until useful. AbortController prevents an abandoned request from updating the old screen. Source provenance describes where a photo came from; it does not prove a recent sighting or typical camera settings.
+
+1. **Why not call these community captures?** They are licensed Commons references; a community label would misrepresent their origin.
+2. **Why are some reports absent from the map?** Only reports matched to valid loaded catalogue coordinates get pins; all reports remain readable.
+3. **Why reuse HotspotMap?** It already handles Leaflet, attribution, accessible markers, errors and navigation consistently.
+4. **Does logging from a species select the reported location?** No. It selects the species; the user must supply their actual observation location and time.
+5. **Do passing tests mean Phase1 is complete?** No. Visual/device checks and missing scientific/operator evidence are separately open.
 
 ## 4. How the current application fits together
 
