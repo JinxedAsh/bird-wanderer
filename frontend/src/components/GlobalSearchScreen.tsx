@@ -287,7 +287,7 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
       </div>
 
       {/* Category Filter Pills */}
-      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-2">
         {(['all', 'birds', 'people', 'hotspots', 'posts'] as const).map(
           (cat) => {
             const isActive = activeCategory === cat;
@@ -296,7 +296,7 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
                 key={cat}
                 type="button"
                 onClick={() => setActiveCategory(cat)}
-                className={`min-h-11 px-3.5 py-1.5 rounded-xl text-[12px] font-medium capitalize transition-all whitespace-nowrap ${
+                className={`reference-filter h-7 px-3.5 rounded-xl text-[12px] font-medium capitalize transition-all whitespace-nowrap ${
                   isActive
                     ? 'bg-[#154212] text-white shadow-xs'
                     : 'bg-[#ebeef3] text-[#42493e] hover:bg-[#e0e3e8]'

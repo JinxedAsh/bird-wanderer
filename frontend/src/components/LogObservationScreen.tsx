@@ -300,7 +300,7 @@ export const LogObservationScreen: React.FC<LogObservationScreenProps> = ({
       <ObservationConditionsPanel key={uploaded?.id || 'draft'} point={weatherPoint} observedAt={observedAt} utcOffset={utcOffset} disabled={published || saving} onChange={setConditions} onSessionExpired={onSessionExpired} />
       <section className="bg-[#f1f4f9] p-3.5 rounded-xl mb-4">
         <div className="flex items-center justify-between gap-2">
-          <h3 className="text-[15px] font-bold">Location Privacy</h3>
+          <h3 className="text-[18px] font-medium">Location Privacy</h3>
           <button
             type="button"
             role="switch"
@@ -308,19 +308,21 @@ export const LogObservationScreen: React.FC<LogObservationScreenProps> = ({
             aria-checked={hideExactLocation}
             disabled={published || saving}
             onClick={() => setHideExactLocation((value) => !value)}
-            className={`min-h-11 px-3 rounded-xl text-[12px] font-semibold ${hideExactLocation ? 'bg-[#2d5a27] text-white' : 'bg-white'}`}
+            className="h-11 w-11 shrink-0 flex items-center justify-center"
           >
-            {hideExactLocation ? 'Hidden' : 'Generalized'}
+            <span aria-hidden="true" className={`relative h-6 w-11 rounded-full ${hideExactLocation ? 'bg-[#154212]' : 'bg-[#c2c9bb]'}`}><span className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow-xs transition-transform ${hideExactLocation ? 'translate-x-5' : ''}`} /></span>
+            <span className="sr-only">{hideExactLocation ? 'Hidden' : 'Generalized'}</span>
           </button>
         </div>
-        <div className="flex items-center justify-between"><p className="text-[12px]">Hide exact location</p><InformationDisclosure className="reference-info-inline" label="Location privacy details">        <p className="text-[11px] mt-2">
+        <div className="flex items-center justify-between"><p className="text-[14px]">Hide exact location</p><InformationDisclosure className="reference-info-inline" label="Location privacy details">        <p className="text-[11px] mt-2">
           Exact EXIF and chosen coordinates are private to you. Hidden custom locations also withhold conditions; generalized custom areas use 0.1-degree rounding. Custom labels stay private. Image metadata is removed. This protection currently applies to every species, without claiming a reviewed
           endangered-species classification.
         </p></InformationDisclosure></div>
+        <p className="mt-1 text-[12px] text-[#42493e]">Exact photo coordinates stay private. Sharing follows the selected visibility.</p>
       </section>
       <section className="bg-[#f1f4f9] p-3.5 rounded-xl mb-4">
-        <h3 className="text-[15px] font-bold mb-2">Post visibility</h3>
-        <div className="flex gap-2">
+        <h3 className="text-[16px] font-medium mb-2">Post visibility</h3>
+        <div className="flex gap-1 rounded-lg bg-[#ebeef3] p-1">
           {(['public', 'followers', 'private'] as const).map((mode) => (
             <button
               key={mode}
@@ -328,9 +330,9 @@ export const LogObservationScreen: React.FC<LogObservationScreenProps> = ({
               disabled={published || saving}
               aria-pressed={visibility === mode}
               onClick={() => setVisibility(mode)}
-              className={`flex-1 min-h-11 rounded-xl text-[12px] font-semibold capitalize ${visibility === mode ? 'bg-[#2d5a27] text-white' : 'bg-white'}`}
+              className={`visibility-segment flex-1 min-h-9 rounded text-[12px] font-semibold capitalize flex items-center justify-center gap-1.5 ${visibility === mode ? 'bg-[#2d5a27] text-white' : 'text-[#181c20]'}`}
             >
-              {mode}
+              <span aria-hidden="true" className="material-symbols-outlined text-[16px]">{mode === 'public' ? 'public' : mode === 'followers' ? 'group' : 'lock'}</span>{mode}
             </button>
           ))}
         </div>

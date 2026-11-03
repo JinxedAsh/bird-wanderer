@@ -275,19 +275,18 @@ export const BirdQuizScreen: React.FC<BirdQuizScreenProps> = ({
       </section>
 
       {/* Primary Action: Check Answer */}
-      {!isAnswerChecked ? (
-        <div className="pt-3 pb-1">
+      <div className="pt-3 pb-1">
           <button
             type="button"
             onClick={handleCheckAnswer}
-            disabled={busy || !selectedOptionId || photoFailed}
+            disabled={isAnswerChecked || busy || !selectedOptionId || photoFailed}
             className="w-full h-12 rounded bg-[#2d5a27] text-white font-bold text-[13px] tracking-wider uppercase shadow-sm flex items-center justify-center gap-2 active:opacity-90 transition-opacity"
           >
             <span>Check Answer</span>
             <span className="material-symbols-outlined text-[18px]">verified</span>
           </button>
         </div>
-      ) : (
+      {isAnswerChecked && (
         /* Verified Feedback Card */
         <section className="pt-2 animate-in fade-in">
           <div

@@ -32,6 +32,13 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   const photoGrid = entries.map(entry => ({ name: entry.speciesName, image: entry.imageUrl }));
   const logged = entries.filter((entry,index,all) => entry.inLifeList && all.findIndex(other => other.inLifeList && other.scientificName === entry.scientificName) === index);
 
+  const handleOpenProfile = () => {
+    setNameInput(userProfile.name);
+    setBioInput(userProfile.bio);
+    setGearInput(userProfile.primaryRig);
+    setIsEditDrawerOpen(true);
+  };
+
   const handleSaveProfile = async () => {
     if (nameInput.trim().length < 2 || nameInput.trim().length > 80) {
       showToast('Display name must be between 2 and 80 characters.');
@@ -48,7 +55,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   };
 
   return (
-    <div className="flex flex-col w-full pb-28 pt-1">
+    <div className="flex flex-col w-full pb-40 pt-1">
       {/* Top Utility Context Bar */}
       <div className="flex items-center justify-between px-4 py-2 bg-[#f7f9ff]">
         <div className="flex items-center gap-1.5 text-[#42493e]">
@@ -113,12 +120,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
         {/* Quick Action Row */}
         <div className="grid grid-cols-3 gap-1.5 w-full mt-4 max-w-sm">
           <button
-            onClick={() => {
-              setNameInput(userProfile.name);
-              setBioInput(userProfile.bio);
-              setGearInput(userProfile.primaryRig);
-              setIsEditDrawerOpen(true);
-            }}
+            onClick={handleOpenProfile}
             className="h-11 px-2 bg-[#2d5a27] hover:bg-[#154212] text-white rounded-lg text-[12px] font-semibold flex items-center justify-center gap-1 shadow-xs active:scale-[0.98] transition-transform"
           >
             <span className="material-symbols-outlined text-[16px]">edit</span>
@@ -278,6 +280,13 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
         {entries.slice(0,10).map(entry => <div key={entry.id} className="p-4 bg-white rounded-2xl border border-[#f1f4f9]"><p className="font-bold text-[13px]">{entry.speciesName}</p><p className="text-[12px]">{entry.location} - {entry.date}</p></div>)}
         {!entries.length && <p className="text-[13px]">No field activity yet.</p>}
       </div>}
+
+      {/* The reference shows the existing editor as a collapsed bottom sheet. */}
+      <button type="button" aria-haspopup="dialog" onClick={handleOpenProfile} className="fixed bottom-16 inset-x-0 z-20 mx-auto h-20 w-full max-w-md rounded-t-2xl bg-white px-4 pt-2 pb-2 text-left shadow-[0_-2px_12px_#181c2008]">
+        <span aria-hidden="true" className="block h-1 w-10 rounded-full bg-[#c2c9bb] mx-auto mb-2" />
+        <span className="flex h-8 items-center gap-2 text-[14px] font-medium"><span aria-hidden="true" className="material-symbols-outlined text-[20px] text-[#154212]">badge</span>Quick Edit Profile<span aria-hidden="true" className="material-symbols-outlined text-[18px] ml-auto">expand_less</span></span>
+        <span aria-hidden="true" className="block mt-1 text-[10px] uppercase text-[#42493e]">Display name</span>
+      </button>
 
       {/* Quick Edit Profile Bottom Sheet Drawer */}
       {isEditDrawerOpen && (

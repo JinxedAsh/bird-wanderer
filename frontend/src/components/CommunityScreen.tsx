@@ -225,17 +225,14 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
         </div>
 
         {/* Filter Pills */}
-        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
-          {onRefresh && <button type="button" onClick={onRefresh} disabled={refreshing} aria-label={refreshing ? 'Refreshing community' : 'Refresh community'} title="Refresh community" className="h-11 w-11 shrink-0 rounded-xl bg-white text-[#154212] shadow-sm disabled:opacity-50">
-            <span aria-hidden="true" className={`material-symbols-outlined text-[22px] ${refreshing ? 'animate-spin motion-reduce:animate-none' : ''}`}>refresh</span>
-          </button>}
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1.5">
           {filterOptions.map((opt) => {
             const isActive = activeFilter === opt.id;
             return (
               <button
                 key={opt.id}
                 onClick={() => setActiveFilter(opt.id)}
-                className={`h-8 px-3.5 rounded-xl text-[12px] font-semibold flex-shrink-0 transition-all ${
+                className={`reference-filter h-8 px-3.5 rounded-xl text-[12px] font-semibold flex-shrink-0 transition-all ${
                   isActive
                     ? 'bg-[#2d5a27] text-white shadow-sm'
                     : 'bg-[#ebeef3] text-[#42493e] hover:bg-[#e0e3e8]'
@@ -245,6 +242,9 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
               </button>
             );
           })}
+          {onRefresh && <button type="button" onClick={onRefresh} disabled={refreshing} aria-label={refreshing ? 'Refreshing community' : 'Refresh community'} title="Refresh community" className="reference-filter h-8 w-11 shrink-0 rounded-xl bg-white text-[#154212] shadow-sm disabled:opacity-50">
+            <span aria-hidden="true" className={`material-symbols-outlined text-[22px] ${refreshing ? 'animate-spin motion-reduce:animate-none' : ''}`}>refresh</span>
+          </button>}
         </div>
       </div>
 

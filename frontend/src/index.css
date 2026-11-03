@@ -93,3 +93,13 @@
 /* Compact visible pills keep a 44px hit area inside the filter row's padding. */
 .hotspot-filter { position: relative; }
 .hotspot-filter::before { content: ''; position: absolute; inset: -8px 0; }
+
+/* Segmented visibility keeps the reference shape and a 44px effective target. */
+.visibility-segment { position: relative; }
+.visibility-segment::before { content: ''; position: absolute; inset: -4px 0; }
+
+/* Compact filters retain 44px hit areas in the surrounding row padding. */
+.reference-filter { position: relative; }
+.reference-filter::before { content: ""; position: absolute; inset: -8px 0; }
+.community-screen .reference-filter { min-height: 32px; }
+.community-screen .reference-filter::before { inset: -6px 0; }

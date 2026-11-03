@@ -89,14 +89,14 @@ export const NotificationsScreen: React.FC<NotificationsScreenProps> = ({
 
       {/* Filter Tabs */}
       <nav aria-label="Notification filters" className="px-4 pb-3">
-        <div className="flex items-center gap-1.5 bg-[#f1f4f9] p-1 rounded-xl overflow-x-auto">
+        <div className="flex items-center gap-1.5 bg-[#f1f4f9] px-1 py-2 rounded-xl overflow-x-auto">
           {(['all', 'mentions', 'alerts', 'followers'] as const).map((tab) => {
             const isActive = activeTab === tab;
             return (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`min-h-11 flex-1 shrink-0 py-1.5 px-2 rounded-lg text-[13px] text-center capitalize transition-all ${
+                className={`reference-filter h-7 flex-1 shrink-0 px-2 rounded-lg text-[13px] text-center capitalize transition-all ${
                   isActive
                     ? 'bg-white text-[#154212] font-bold shadow-xs'
                     : 'text-[#42493e] hover:text-[#181c20]'

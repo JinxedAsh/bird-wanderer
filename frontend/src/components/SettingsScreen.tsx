@@ -357,11 +357,11 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 transition-opacity animate-in fade-in duration-200">
           <div className="absolute inset-0" onClick={() => setIsSheetOpen(false)}></div>
 
-          <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Location privacy" tabIndex={-1} className="relative w-full max-w-md bg-white rounded-t-2xl shadow-xl max-h-[85dvh] overflow-y-auto flex flex-col p-5 pb-6 z-10 animate-in slide-in-from-bottom duration-300">
-            <div className="w-10 h-1.5 rounded-full bg-[#e0e3e8] mx-auto mb-3"></div>
+          <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Location privacy" tabIndex={-1} className="relative w-full max-w-md bg-white rounded-t-2xl shadow-xl max-h-[85dvh] overflow-y-auto flex flex-col px-4 pt-3 pb-6 z-10 animate-in slide-in-from-bottom duration-300">
+            <div className="w-10 h-1 rounded-full bg-[#e0e3e8] mx-auto mb-2.5"></div>
 
             <div className="flex items-start justify-between pb-2">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
                 <div className="w-8 h-8 rounded-lg bg-[#154212]/10 text-[#154212] flex items-center justify-center">
                   <span className="material-symbols-outlined text-[20px]">nest_protect</span>
                 </div>
@@ -395,7 +395,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                   }
                 }}
                 onClick={() => setSelectedOption('approximate')}
-                className={`cursor-pointer p-3.5 rounded-xl transition-all flex items-start gap-3 border ${
+                className={`cursor-pointer px-[15px] py-[13px] rounded-xl transition-all flex items-start gap-2 border ${
                   selectedOption === 'approximate'
                     ? 'bg-[#f1f4f9] border-transparent'
                     : 'bg-[#f1f4f9]/40 border-transparent'
@@ -439,7 +439,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                   }
                 }}
                 onClick={() => setSelectedOption('hide')}
-                className={`cursor-pointer p-3.5 rounded-xl transition-all flex items-start gap-3 border ${
+                className={`cursor-pointer px-[15px] py-[13px] rounded-xl transition-all flex items-start gap-2 border ${
                   selectedOption === 'hide'
                     ? 'bg-[#f1f4f9] border-transparent'
                     : 'bg-[#f1f4f9]/40 border-transparent'
@@ -476,7 +476,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                   }
                 }}
                 onClick={() => setSelectedOption('private')}
-                className={`cursor-pointer p-3.5 rounded-xl transition-all flex items-start gap-3 border ${
+                className={`cursor-pointer px-[15px] py-[13px] rounded-xl transition-all flex items-start gap-2 border ${
                   selectedOption === 'private'
                     ? 'bg-[#f1f4f9] border-transparent'
                     : 'bg-[#f1f4f9]/40 border-transparent'
