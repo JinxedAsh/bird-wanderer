@@ -95,7 +95,7 @@ export const JournalScreen: React.FC<JournalScreenProps> = ({
       {/* Section Header */}
       <div className="flex items-center justify-between mb-3.5">
         <div className="flex items-center gap-2">
-          <h2 className="text-[18px] font-bold text-[#181c20]">Recent photographs</h2>
+          <h2 className="text-[18px] font-medium text-[#181c20]">Recent photographs</h2>
           <span className="bg-[#e0e3e8] text-[#42493e] text-[11px] font-bold px-2 py-0.5 rounded-full">
             {entries.length}
           </span>
@@ -120,7 +120,7 @@ export const JournalScreen: React.FC<JournalScreenProps> = ({
               key={entry.id}
               onClick={() => setActiveEntryId(entry.id)}
               className={`group flex flex-col bg-white rounded-lg overflow-hidden shadow-xs cursor-pointer active:scale-[0.98] transition-all border ${
-                isSelected ? 'border-[#154212] ring-2 ring-[#154212]/30' : 'border-transparent'
+                isSelected ? 'border-[#c2c9bb]' : 'border-transparent'
               }`}
             >
               <div className="relative w-full aspect-[4/3] overflow-hidden bg-[#ebeef3]">
@@ -144,7 +144,7 @@ export const JournalScreen: React.FC<JournalScreenProps> = ({
 
               <div className="p-2.5 flex flex-col flex-1 justify-between">
                 <div>
-                  <h3 className="text-[13px] font-bold text-[#181c20] truncate">
+                  <h3 className="text-[14px] font-medium text-[#181c20] truncate">
                     {entry.speciesName}
                   </h3>
                   <p className="text-[11px] italic text-[#42493e] truncate">

@@ -1,12 +1,12 @@
 # Design comparison and acceptance
 
-Updated 3 November 2026. PR [#45](https://github.com/JinxedAsh/bird-wanderer/pull/45) delivered the initial layout pass at main `63fe074`. PR [#46](https://github.com/JinxedAsh/bird-wanderer/pull/46), branch `ui-reference-geometry`, continues measured reference matching. Its focused browser review is complete; exact-head documentation delivery is in progress. The original mapping is in [design-reference/README.md](design-reference/README.md).
+Updated 3 November 2026. PR [#45](https://github.com/JinxedAsh/bird-wanderer/pull/45) delivered the initial layout pass at main `63fe074`. PR [#46](https://github.com/JinxedAsh/bird-wanderer/pull/46) is merged at main7968821 after4 exact-head checks and2 passing main workflows. The remaining density work is in progress on `ui-reference-density` (Development Record Entry62). The original mapping is in [design-reference/README.md](design-reference/README.md).
 
 ## Scope and evidence
 
 All 16 original PNGs were opened and compared with 15 running screen types. Capture widths are 390 and 320 CSS pixels; reference heights are proportionally normalized. Upload has two reference views. Screenshots and disposable accounts stay outside Git. Real source data, unknown values, privacy defaults and working actions are preserved. This pass adds no backend, API, schema, environment or dependency changes.
 
-Independent QA captured a consistent 32-view matrix on `index-CgVTSSnf.js`, then recaptured changed screens on dated later assets. The latest production candidate is `index-Cp5Fm5PR.js`. These are mixed-build observations, not one atomic final-build end-to-end acceptance run. Independent latest-asset keyboard checks passed for all3 strips; source-owner narrow-layout/history checks are attributed separately below.
+Independent QA captured a consistent 32-view matrix on `index-CgVTSSnf.js`, then recaptured changed screens on dated later assets. PR46 final production candidate was `index-Cp5Fm5PR.js`; the current density candidate is `index-CfVareHe.js`. These are mixed-build observations, not one atomic final-build end-to-end acceptance run. Independent latest-asset keyboard checks passed for all3 strips; source-owner narrow-layout/history checks are attributed separately below.
 
 ## Current screen checklist
 
@@ -46,7 +46,7 @@ A separate source-owner desktop browser check used a temporary isolated proxy to
 
 ## Verification and delivery checkpoint
 
-Latest candidate `index-Cp5Fm5PR.js`:171/171 tests passed, TypeScript checking passed, production build passed; main bundle488.06kB. Source commit4669052 passed all4 GitHub checks. The final documentation commit still requires its own exact-head checks before PR46 merge, then post-merge main checks.
+Latest candidate `index-Cp5Fm5PR.js`:171/171 tests passed, TypeScript checking passed, production build passed; main bundle488.06kB. PR46 final heade51042c passed all4 checks, merged at7968821, and both main workflows passed. Current density assetCfVareHe passes171 tests/type/build; independent affected-screen review and its own PR delivery are pending.
 
 Independent review accepted latest-strip keyboard activation and dated Settings/Hotspots/Upload/Quiz/Profile flows. Its final files labelled320 for the3 strips were actually390px and are excluded from independent narrow acceptance. Source-owner DOM checks establish320px bounds separately. Native supplemental screenshots have their actual dimensions recorded rather than assuming requested viewport height. The upload continuation comparison was incorrectly scrolled; its screenshot does not prove lower-form parity. Accepted switch/segment interaction measurements remain valid.
 
@@ -72,22 +72,22 @@ Likely viva questions:
 
 Start the usual application with `pnpm dev` from frontend and use its existing local/LAN/HTTPS address with your own account. Show discovery, source disclosure, species guide, hotspot map/access/weather, then a private upload and its Journal record. The isolated QA port and synthetic fixtures are not the demo deployment.
 
-Next: deliver the verified PR46 milestone after exact-head checks, then continue the following measured visual work in a focused branch. These are open criteria, not generic improvement claims:
+PR46 is delivered. Entry62 implements the following measured corrections; final affected-screen verification and delivery remain pending. Implemented does not mean independently accepted:
 
 | Screen | Next correction / limit |
 | --- | --- |
-| Explore | Compact unknown-weather and regional-caption rows; they push actions materially below the reference. |
-| Species | Keep truthful unknown-status badge beside title where possible; prevent320px guide-heading wrap. |
-| Community | Review truncated camera metadata allocation at320; preserve every field and unavailable state. |
-| Upload | Match Photo Details/Conditions hierarchy and capture the correctly scrolled lower form. |
-| Hotspots | Review78px card versus approximately76px target. Keep real markers; static4-pin density is not real-data acceptance. |
-| Hotspot detail | Refine Recent Sightings, Field Notes and Map Access heading hierarchy. |
-| Journal | Refine title/Recent Photos weights and selected-card outline against reference. |
-| Life List | Reduce approximately17px extra intro/filter spacing. |
-| Quiz | Reduce approximately15px extra photo/prompt offset without affecting grading. |
-| Messages | Improve timestamp legibility and compact privacy explanation. |
-| Profile | Align identity/action/statistic spacing; preview/focus/rig access already passed. |
-| Search / Notifications | Review final narrow source-density/timestamp/body truncation. Preserve all categories and real events. |
+| Explore | Implemented compact weather/caption/actions. Root390px first-card233.5 and quick-actions601.5 measured; independent320/390 review pending. |
+| Species | Implemented responsive inline Unknown badge and guide/title sizes. Root320px one-row title/status and guide verified; independent review pending. |
+| Community | Implemented camera/lens wrapping and accessible unavailable exposure labels; final320px review pending. |
+| Upload | Implemented18px medium Photo Details/Conditions headings; correctly framed top/lower captures remain required. |
+| Hotspots | Card vertical padding reduced2px total, pending final measurement. Real markers retained; static4-pin density is not real-data acceptance. |
+| Hotspot detail | Implemented18px medium heading hierarchy; final review pending. |
+| Journal | Implemented14px medium card names, lighter Recent photographs and subtle selected border; final review pending. |
+| Life List | Reduced intro/list spacing16px; final measurement/filter/drawer check pending. |
+| Quiz | Reduced meta/prompt/photo spacing;22px medium prompt. Final image offset and grading/Next check pending. |
+| Messages | Actual updatedAt date displayed compactly; full timestamp accessible and privacy statement preserved. Final bounds/composer check pending. |
+| Profile | Compacted identity/action/statistic offsets; preview/focus/rig access must be checked after spacing changes. |
+| Search / Notifications | Search retained PR46 behavior. Notifications now has inline compact date/full accessible timestamp and unclamped body; final narrow review pending. |
 | Settings | Sheet matches measured target; review behind-sheet account/privacy row density. |
 
 Authentication has only raster-sensitive1–3px text residuals; avoid arbitrary per-glyph positioning. Missing source images/maps/statistics, real names/counts and extra delivered controls remain the explicit data/state boundaries above. Physical acceptance and exact visual sign-off remain open.

@@ -161,7 +161,7 @@ export const BirdQuizScreen: React.FC<BirdQuizScreenProps> = ({
     <div className="flex flex-col w-full pb-28 pt-2 px-4">
       {issue}
       {/* Quiz Meta & Progress Header */}
-      <section className="flex flex-col gap-2.5">
+      <section className="flex flex-col gap-1.5">
         <div className="flex items-center justify-between">
           <div className="flex items-baseline gap-1.5">
             <span className="text-[17px] font-bold text-[#181c20]">Question {question.questionNumber}</span>
@@ -189,13 +189,13 @@ export const BirdQuizScreen: React.FC<BirdQuizScreenProps> = ({
       </section>
 
       {/* Question Prompt */}
-      <section className="pt-4 pb-1">
-        <h2 className="text-[20px] font-bold text-[#181c20]">{question.prompt}</h2>
+      <section className="pt-3 pb-1">
+        <h2 className="text-[22px] font-medium text-[#181c20]">{question.prompt}</h2>
         <p className="text-[12px] text-[#42493e] mt-0.5">{question.subPrompt}</p>
       </section>
 
       {/* Observation Photo Card */}
-      <figure className="relative py-2.5">
+      <figure className="relative pb-2.5">
         <div className="relative w-full rounded-lg overflow-hidden bg-[#ebeef3] shadow-sm aspect-[4/3]">
           <img
             key={`${question.imageUrl}:${photoAttempt}`}

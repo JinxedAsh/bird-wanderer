@@ -29,7 +29,7 @@ export function ObservationConditionsPanel({ point, observedAt, utcOffset, disab
   const data = result?.key === key ? result.conditions : null;
   return <section className="bg-[#f1f4f9] p-3.5 rounded-xl mb-4 space-y-2 text-[12px]">
     <div className="flex items-center justify-between gap-2">
-      <h3 className="text-[16px] font-semibold">Conditions</h3>
+      <h3 className="text-[18px] font-medium">Conditions</h3>
       <span className="text-[10px] text-[#42493e]">Historical estimate</span>
       <InformationDisclosure label="Weather source, privacy and options">
         <p>Only coordinates rounded to 0.1° (roughly 11 km latitude), date and time are sent to Open-Meteo. No photograph or account identity is sent. Weather models are not verified measurements at your camera.</p>

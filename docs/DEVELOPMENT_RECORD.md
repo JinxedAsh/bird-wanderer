@@ -62,7 +62,7 @@ Phase 1 is **not certified complete** against every detailed evidence/manual cri
 
 Presentation update (3 November): all reference screens were compared with running baseline screenshots; compact source/configuration controls and upload ordering are implemented. Independent 390/320 screenshots and scoped functional checks are recorded; exact design sign-off remains open. See [Design fidelity checklist](DESIGN_FIDELITY.md).
 
-A subsequent geometry pass is in progress on `ui-reference-geometry` (Entry61); it is not yet merged.
+The measured geometry pass (Entry61) is merged through PR46/main7968821 with both main workflows passing. A focused density continuation (Entry62) is in progress on `ui-reference-density`; exact design sign-off remains open.
 
 ## 3. Chronological development history
 
@@ -926,6 +926,22 @@ The header logo now uses a bundled SVG following the supplied green bird emblem,
 **Controlled failure check:** a separate temporary loopback proxy returned503 before one private observation write. The browser retained the photo, species, location, date, notes and private draft. One retry saved successfully; Journal reload and an authenticated API read confirmed exactly one private disposable observation. This is desktop controlled-server-error evidence, not a network-block, real outage, phone or lost-response-after-commit claim. The proxy is stopped and normal demo services are unchanged.
 
 **Viva Notes:** CSS layers decide which group of rules wins before ordinary selector specificity is considered. The font provider's default was winning over the intended size utilities; the fix restores those existing declarations. Typography and border radius change appearance, while the same React state and event handlers keep behaviour. A screenshot must be checked at the same width as the design; a passing TypeScript check cannot prove visual geometry.
+
+**Delivery outcome:** PR46 merged at7968821 after all4 checks passed exact final heade51042c; both main workflows passed. The independent review accepted the scoped interactions and identified the precise remaining density work continued in Entry62. Full one-to-one parity was not claimed.
+
+### Entry 62 — Responsive density and readable source states
+
+**Date/group:** 3 November 2026 IST; follows PR46, merged at7968821 after4 exact-head checks on e51042c and2 successful main workflows. All14 unrelated local files were preserved byte-for-byte while advancing main. New branch: `ui-reference-density`.
+
+**Why:** the independent paired review identified concrete remaining vertical offsets, heading weights and unreadable timestamp/camera fields. Unknown weather added a second row; a long status badge pushed species facts down. These are presentation issues, not reasons to replace real data with screenshot examples.
+
+**Changes:** Explore keeps weather in one readable row, removes empty separators, compacts greeting/section/action spacing and keeps full regional/nearby meaning in accessible text. Species uses a short truthful Unknown badge with full status-unavailable label; responsive title/guide sizes fit320px, with corrected hero/title spacing. Life List intro/control spacing and Quiz prompt/photo offset are reduced. Photo Details, Conditions and hotspot sections use18px medium headings. Journal names/heading are lighter and its selected outline is subtle. Profile identity/actions are compacted without replacing its editor. Chat shows a compact date from the existing actual timestamp, preserving the full timestamp in title/accessible text; the privacy statement retains the exact GPS protection. Notification date sits beside the title; body copy wraps without a2-line clamp. Community camera/lens text wraps instead of truncating to a few characters; unavailable exposure values use dashes with explicit accessible labels. Hotspot card padding is reduced by1px per edge; all real pins remain.
+
+**Verification checkpoint:**171 tests, TypeScript and production build pass; latest asset `index-CfVareHe.js`. Initial content assertions caught shortened evidence/privacy labels; full existing meaning was restored in accessible text and the GPS sentence, without weakening those tests. Root browser measured Explore first discovery card233.5px versus approximately234px reference and Quick actions601.5px. At320 the species title/Unknown share one row, the guide title is one line at17px and page width equals320. Independent final affected-screen review and properly framed upload captures are in progress; this is not yet visual acceptance or GitHub delivery.
+
+**Beginner explanation / Viva Notes:** this pass changes CSS spacing, font sizes and responsive presentation. A minimum-width media utility gives the species title26px on normal phone widths and22px on a narrow phone. Actual values and event handlers stay intact. A compact visible label can retain its full explanation through an accessible label; unavailable camera values are still unavailable. Dates are formatted from the existing timestamp, not invented relative events. Tests protect honest missing-data and privacy wording as well as behavior.
+
+**Likely viva questions:** Why compact unknown states? To preserve the designed hierarchy without pretending data exists. Why responsive font sizes? Narrow phones have less horizontal space. Did we change timestamps? Only their visible formatting; the full value remains accessible. Why retain all map pins? The live dataset, rather than the example drawing, determines real locations. Why were tests rerun? Layout changes can accidentally alter important evidence/privacy messages, and existing tests caught that.
 
 ## 4. How the current application fits together
 

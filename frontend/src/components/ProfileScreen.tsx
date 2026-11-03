@@ -55,9 +55,9 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   };
 
   return (
-    <div className="flex flex-col w-full pb-40 pt-1">
+    <div className="flex flex-col w-full pb-40">
       {/* Top Utility Context Bar */}
-      <div className="flex items-center justify-between px-4 py-2 bg-[#f7f9ff]">
+      <div className="flex items-center justify-between px-4 py-1.5 bg-[#f7f9ff]">
         <div className="flex items-center gap-1.5 text-[#42493e]">
           <span className="material-symbols-outlined text-[18px]">verified_user</span>
           <span className="text-[11px] font-bold uppercase tracking-wider">Field Naturalist</span>
@@ -82,8 +82,8 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
       </div>
 
       {/* Header Section */}
-      <div className="px-4 pt-1 pb-4 flex flex-col items-center text-center">
-        <div className="relative mb-2.5">
+      <div className="px-4 pt-1 pb-3 flex flex-col items-center text-center">
+        <div className="relative mb-2">
           <div className="w-20 h-20 rounded-lg overflow-hidden bg-[#e0e3e8]">
             <img
               src={userProfile.avatarUrl}
@@ -97,7 +97,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
         </div>
 
         <div className="flex items-center justify-center gap-1.5 mb-0.5">
-          <h2 className="text-[22px] font-bold text-[#181c20]">{userProfile.name}</h2>
+          <h2 className="text-[22px] font-medium text-[#181c20]">{userProfile.name}</h2>
           <span
             className="material-symbols-outlined text-[#fe932c] text-[18px]"
             title="Field Contributor"
@@ -118,7 +118,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
         </p>
 
         {/* Quick Action Row */}
-        <div className="grid grid-cols-3 gap-1.5 w-full mt-4 max-w-sm">
+        <div className="grid grid-cols-3 gap-1.5 w-full mt-3 max-w-sm">
           <button
             onClick={handleOpenProfile}
             className="h-11 px-2 bg-[#2d5a27] hover:bg-[#154212] text-white rounded-lg text-[12px] font-semibold flex items-center justify-center gap-1 shadow-xs active:scale-[0.98] transition-transform"

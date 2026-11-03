@@ -504,8 +504,8 @@ export const FieldChatScreen: React.FC<FieldChatScreenProps> = ({
                         </span>
                       )}
                     </div>
-                    <span title={conv.timeAgo} className="text-[11px] text-[#904d00] font-semibold max-w-20 truncate shrink-0">
-                      {conv.timeAgo}
+                    <span title={conv.timeAgo} aria-label={`Conversation updated ${conv.timeAgo}`} className="text-[11px] text-[#904d00] font-medium shrink-0">
+                      {conv.updatedAt ? new Date(conv.updatedAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) : conv.timeAgo}
                     </span>
                   </div>
 
@@ -549,9 +549,8 @@ export const FieldChatScreen: React.FC<FieldChatScreenProps> = ({
               </span>
             </div>
             <p className="text-[12px] text-[#42493e] leading-snug">
-              Messages are stored for participants. Photo access follows
-              observation privacy. Attach public hotspots explicitly; precise
-              GPS is never attached automatically.
+              Messages stay with participants and photo privacy is preserved.
+              Public hotspot attachments are optional; precise GPS is never attached automatically.
             </p>
           </div>
         </section>

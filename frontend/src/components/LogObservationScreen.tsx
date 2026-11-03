@@ -270,7 +270,7 @@ export const LogObservationScreen: React.FC<LogObservationScreenProps> = ({
         />
       </label>
       <section className="bg-[#f1f4f9] p-3.5 rounded-xl mb-4">
-        <div className="flex items-center justify-between mb-2"><h3 className="text-[16px] font-semibold">Photo Details</h3><InformationDisclosure className="reference-info-inline" label="Photo metadata and provenance">
+        <div className="flex items-center justify-between mb-2"><h3 className="text-[18px] font-medium">Photo Details</h3><InformationDisclosure className="reference-info-inline" label="Photo metadata and provenance">
         {uploaded ? (
           <>
             <PhotoMetadata exif={uploaded.exif} source="upload" />

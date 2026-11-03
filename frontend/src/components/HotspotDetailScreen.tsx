@@ -198,7 +198,7 @@ export const HotspotDetailScreen: React.FC<HotspotDetailScreenProps> = ({
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-[#154212]"></span>
-            <h3 className="text-[17px] font-bold text-[#181c20]">Recent Sightings</h3>
+            <h3 className="text-[18px] font-medium text-[#181c20]">Recent Sightings</h3>
             <InformationDisclosure className="reference-info-inline" label="Hotspot alerts and report information">
       {hotspot.source&&onToggleSubscription&&<button type="button" aria-pressed={subscribed} onClick={onToggleSubscription} className="mx-4 my-2 min-h-11 rounded-xl bg-white text-[#154212] text-[13px] font-semibold">{subscribed?'Unsubscribe from hotspot alerts':'Subscribe to hotspot alerts'}</button>}
           {hotspot.source && <p className="text-[12px] text-[#42493e]">Latest report per species at this hotspot, not total sightings or a complete history.</p>}
@@ -253,7 +253,7 @@ export const HotspotDetailScreen: React.FC<HotspotDetailScreenProps> = ({
       {/* Section 2: Recent Photographs Strip */}
       <div className="pt-5">
         <div className="px-4 flex items-center justify-between mb-2">
-          <h3 className="text-[17px] font-bold text-[#181c20]">Recent Field Photographs</h3>
+          <h3 className="text-[18px] font-medium text-[#181c20]">Recent Field Photographs</h3>
           <span className="text-[11px] text-[#42493e] font-semibold">Local birders</span>
         </div>
 
@@ -278,7 +278,7 @@ export const HotspotDetailScreen: React.FC<HotspotDetailScreenProps> = ({
         <div className="p-4 bg-[#f1f4f9] rounded-2xl shadow-xs space-y-3">
           <div className="flex items-center gap-2 mb-1">
             <span className="material-symbols-outlined text-[20px] text-[#2d5a27]">hiking</span>
-            <h3 className="text-[16px] font-bold text-[#181c20]">Field Notes & Gear</h3>
+            <h3 className="text-[18px] font-medium text-[#181c20]">Field Notes & Gear</h3>
           </div>
 
           <div className="flex items-start gap-2.5">
@@ -482,7 +482,7 @@ export const HotspotDetailScreen: React.FC<HotspotDetailScreenProps> = ({
       </div>
       </>}
       {hotspot.source && <div className="mx-4 mt-4 rounded-xl bg-white p-4 text-[13px] text-[#42493e]">
-        <div className="mb-2 flex flex-wrap items-center justify-between gap-2"><h3 className="font-semibold text-[#181c20]">Sanctuary Map &amp; Access</h3><span className="text-[11px] font-mono">{hotspot.coordinates}</span></div>
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-2"><h3 className="text-[18px] font-medium text-[#181c20]">Sanctuary Map &amp; Access</h3><span className="text-[11px] font-mono">{hotspot.coordinates}</span></div>
         <HotspotMap hotspots={mapHotspots} label={`Map of ${hotspot.name}`} selectedId={hotspot.id} />
         {directionsUrl ? <a href={directionsUrl} target="_blank" rel="noreferrer" className="mt-3 flex h-11 items-center justify-center gap-2 rounded-xl bg-[#2d5a27] font-semibold text-white"><span className="material-symbols-outlined text-[18px]">directions</span>Open directions</a> : <p role="status" className="mt-2">Directions unavailable: this hotspot has no valid coordinates.</p>}
         <p className="mt-2 text-[11px]">Directions open Google Maps at the hotspot coordinates. Entry-gate information remains unavailable.</p>
