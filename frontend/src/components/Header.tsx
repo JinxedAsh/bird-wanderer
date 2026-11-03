@@ -100,7 +100,7 @@ export const Header: React.FC<HeaderProps> = ({
             <span className="text-[10px] font-semibold tracking-wider uppercase text-[#42493e] truncate">
               Bird Wanderer
             </span>
-            <h1 className="text-[17px] font-semibold text-[#181c20] truncate leading-tight">
+            <h1 className="text-[15px] min-[360px]:text-[17px] font-semibold text-[#181c20] line-clamp-2 min-[360px]:truncate leading-tight">
               {getScreenTitle()}
             </h1>
           </div>

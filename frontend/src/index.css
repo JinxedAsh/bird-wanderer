@@ -50,6 +50,10 @@
 /* Keep map layers beneath the app header, dialogs and bottom navigation. */
 .hotspot-map.leaflet-container { z-index: 0; font-family: inherit; }
 .hotspot-map .leaflet-control-attribution { font-size: 10px; }
+@media (max-width: 359px) {
+  /* Keep compact-map popup text clear of the retained zoom controls. */
+  .hotspot-map-compact .leaflet-popup-content { box-sizing: border-box; max-width: 220px; padding-left: 24px; }
+}
 .hotspot-map-pin {
   display: flex;
   align-items: center;
