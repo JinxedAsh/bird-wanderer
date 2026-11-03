@@ -326,11 +326,11 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
             </button>
           </div>
 
-          <div className="flex gap-1.5 pt-0.5 overflow-x-auto no-scrollbar">
+          <div className="flex flex-wrap gap-x-2 gap-y-4 py-2">
             {recentSearches.map((term) => (
               <div
                 key={term}
-                className="inline-flex shrink-0 max-w-full items-center gap-1.5 bg-[#f1f4f9] text-[#181c20] px-3 py-1 rounded-full text-[12px] font-medium"
+                className="inline-flex max-w-full items-center gap-1.5 bg-[#f1f4f9] text-[#181c20] px-3 rounded-full text-[12px] font-medium"
               >
                 <button
                   type="button"
@@ -339,7 +339,7 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
                     setQuery(term);
                     onRecordSearch?.(term);
                   }}
-                  className="min-h-11 min-w-0 text-left break-words cursor-pointer hover:text-[#154212]"
+                  className="reference-filter min-h-7 min-w-0 text-left break-words cursor-pointer hover:text-[#154212]"
                 >
                   {term}
                 </button>
@@ -348,7 +348,7 @@ export const GlobalSearchScreen: React.FC<GlobalSearchScreenProps> = ({
                   aria-label={`Remove ${term} from recent searches`}
                   disabled={historyDisabled}
                   onClick={() => onRemoveSearch?.(term)}
-                  className="h-11 w-11 shrink-0 flex items-center justify-center text-[#72796e] hover:text-[#181c20]"
+                  className="reference-filter h-7 w-11 shrink-0 flex items-center justify-center text-[#72796e] hover:text-[#181c20]"
                 >
                   <span className="material-symbols-outlined text-[14px]">
                     close

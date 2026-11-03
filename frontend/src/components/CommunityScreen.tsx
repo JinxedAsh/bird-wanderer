@@ -188,7 +188,7 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
         {pullDistance >= 64 ? 'Release to refresh' : 'Pull to refresh'}
       </div>}
       {/* Search and Action Hub */}
-      <div className="px-4 pt-2 pb-2 flex flex-col gap-2.5 bg-[#f7f9ff] sticky top-16 z-20">
+      <div className="px-4 pt-2 pb-1.5 flex flex-col gap-1.5 bg-[#f7f9ff] sticky top-16 z-20">
         <div className="flex items-center gap-2">
           <div className="relative flex-1 min-w-0">
             <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#42493e] text-[20px] pointer-events-none">
