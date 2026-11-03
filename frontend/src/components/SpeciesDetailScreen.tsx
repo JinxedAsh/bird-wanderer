@@ -77,8 +77,8 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
 
       {/* Top Action Rail */}
       <div className="px-4 py-1.5 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#ffdcc3] text-[#6e3900] text-[12px] font-medium uppercase tracking-wide">
+        <div className="flex min-w-0 items-center gap-1 min-[360px]:gap-2">
+          <span className="inline-flex shrink-0 items-center gap-1.5 px-1.5 min-[360px]:px-2.5 py-1 rounded-full bg-[#ffdcc3] text-[#6e3900] text-[10px] min-[360px]:text-[12px] whitespace-nowrap font-medium uppercase tracking-wide">
             <span
               className="material-symbols-outlined text-[14px]"
               style={{ fontVariationSettings: "'FILL' 1" }}
@@ -87,18 +87,18 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
             </span>
             Target Species
           </span>
-          <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-[#ebeef3] text-[#42493e] text-[11px] font-semibold">
+          <span title={species.orderFamily || 'Coraciiformes'} className="min-w-0 truncate px-2 min-[360px]:px-2.5 py-1 rounded-full bg-[#ebeef3] text-[#42493e] text-[11px] font-semibold">
             {species.orderFamily || 'Coraciiformes'}
           </span>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-1 min-[360px]:gap-2">
           <button
             onClick={toggleBookmark}
             disabled={saveDisabled}
             aria-pressed={isBookmarked}
             aria-label="Bookmark species"
-            className={`w-11 h-11 shrink-0 rounded-full flex items-center justify-center transition-all ${
+            className={`w-11 h-11 shrink-0 rounded-xl flex items-center justify-center transition-all ${
               isBookmarked
                 ? 'bg-[#ffdcc3] text-[#6e3900]'
                 : 'bg-[#ebeef3] text-[#181c20] hover:bg-[#e0e3e8]'
@@ -112,7 +112,7 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
             </span>
           </button>
 
-          <button type="button" onClick={() => focusSection('species-recording')} aria-label="Recorded calls" className="w-11 h-11 shrink-0 rounded-full flex items-center justify-center bg-[#ebeef3] text-[#181c20] hover:bg-[#e0e3e8]">
+          <button type="button" onClick={() => focusSection('species-recording')} aria-label="Recorded calls" className="w-11 h-11 shrink-0 rounded-xl flex items-center justify-center bg-[#ebeef3] text-[#181c20] hover:bg-[#e0e3e8]">
             <span className="material-symbols-outlined text-[20px]">volume_down</span>
           </button>
         </div>
@@ -433,14 +433,16 @@ export const SpeciesDetailScreen: React.FC<SpeciesDetailScreenProps> = ({
         <section id="sightings-sheet-anchor" tabIndex={-1} className="w-full rounded-t-3xl border-t border-[#f1f4f9] bg-white pt-3 pb-6 text-[13px] text-[#42493e] shadow-md">
           <div aria-hidden="true" className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-[#e0e3e8]" />
           <button type="button" aria-expanded={isSightingsExpanded} aria-controls="species-reported-hotspots" onClick={() => setIsSightingsExpanded((value) => !value)} className="flex min-h-11 w-full items-center justify-between gap-2 px-4 text-left">
-            <span><span className="block text-[17px] font-medium text-[#181c20]">Sightings &amp; Field Map</span><span className="text-[11px]">Reported hotspots · past 14 days</span></span>
+            <span><span className="block text-[17px] min-[360px]:text-[18px] font-medium text-[#181c20]">Sightings &amp; Field Map</span><span className="text-[11px]">Reported hotspots · past 14 days</span></span>
             <span aria-hidden="true" className={`material-symbols-outlined text-[20px] ${isSightingsExpanded ? 'rotate-180' : ''}`}>expand_more</span>
           </button>
           {isSightingsExpanded && <div id="species-reported-hotspots" className="px-4 pt-2">
-            {locations && mappedHotspots.length > 0 && <HotspotMap hotspots={mappedHotspots} label={`Reported hotspots for ${species.name}`} onOpen={onSelectHotspotById} />}
-            {locations && locations.locations.length > 0 && <p className="mt-2 text-[12px]">{mappedHotspots.length} of {locations.locations.length} reported hotspots have coordinates in the loaded catalogue. All reports remain listed below.</p>}
-            <InformationDisclosure label="Sighting sources and map limits" className="mt-2"><p>Latest report at each matching hotspot in {species.region}, within 14 days. Select a location for its map, weather and directions. Reports do not guarantee a sighting; the reported point is not a verified entrance.</p>
-            {locations && <p className="mt-2 text-[11px]">Retrieved {new Date(locations.fetchedAt).toLocaleString()}{locations.cached ? ' (cached)' : ''}. Observation times below are local to the location.</p>}</InformationDisclosure>
+            {locations && mappedHotspots.length > 0 && <HotspotMap hotspots={mappedHotspots} frameClassName="hotspot-map-compact aspect-[337/166]" label={`Reported hotspots for ${species.name}`} onOpen={onSelectHotspotById} />}
+            <div className="mt-2 flex items-start gap-1">
+              {locations && locations.locations.length > 0 && <p className="flex-1 text-[12px]">{mappedHotspots.length} of {locations.locations.length} reported hotspots have coordinates in the loaded catalogue. All reports remain listed below.</p>}
+              <InformationDisclosure label="Sighting sources and map limits" className="ml-auto"><p>Latest report at each matching hotspot in {species.coverageLabel || species.region || 'the loaded region'}, within 14 days. Select a location for its map, weather and directions. Reports do not guarantee a sighting; the reported point is not a verified entrance.</p>
+              {locations && <p className="mt-2 text-[11px]">Retrieved {new Date(locations.fetchedAt).toLocaleString()}{locations.cached ? ' (cached)' : ''}. Observation times below are local to the location.</p>}</InformationDisclosure>
+            </div>
             {!locations && !locationsError && <p role="status" className="mt-2">Loading locations for {species.name}...</p>}
             {locationsError && <div role="alert" className="mt-2"><p>{locationsError}</p><button type="button" onClick={onRetryLocations} className="mt-2 font-semibold text-[#154212] underline">Try again</button></div>}
             {locations?.locations.length === 0 && <p className="mt-2">No recent reports at hotspots in the loaded region. This does not establish that the species is absent.</p>}

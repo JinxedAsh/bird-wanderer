@@ -511,12 +511,13 @@ test('real map area and directions use source coordinates; missing coordinates p
 
 test('external species details show genuine reports without fabricated photos, conservation status or map locations', () => {
   const html = render('SpeciesDetailScreen', {
-    species: { id: 'indrol2', name: 'Indian Roller', scientificName: 'Coracias benghalensis', source: 'eBird', sourceUrl: 'https://ebird.org/species/indrol2', image: '/discovery-placeholder.svg', habitat: 'Not available from eBird', habitatDetail: 'Not available from eBird', bestTime: 'Not available from eBird', bestTimeDetail: 'Not available from eBird', fieldGuideNotes: 'Not available from eBird', audioCallDuration: 'Unavailable', recentObservations: [{ hotspotId: 'L123', location: 'Test Wetland', observedAt: '2026-10-04 07:15' }] },
+    species: { id: 'indrol2', name: 'Indian Roller', scientificName: 'Coracias benghalensis', source: 'eBird', sourceUrl: 'https://ebird.org/species/indrol2', region: 'IN-DL', coverageLabel: 'IN-DL + IN-UP-GB', image: '/discovery-placeholder.svg', habitat: 'Not available from eBird', habitatDetail: 'Not available from eBird', bestTime: 'Not available from eBird', bestTimeDetail: 'Not available from eBird', fieldGuideNotes: 'Not available from eBird', audioCallDuration: 'Unavailable', recentObservations: [{ hotspotId: 'L123', location: 'Test Wetland', observedAt: '2026-10-04 07:15' }] },
     onNavigate: noop, onQuickLog: noop, showToast: noop,
     locations: { speciesId: 'indrol2', locations: [{ hotspotId: 'L123', name: 'Test Wetland', coordinates: '28.5, 77.2', observedAt: '2026-10-04 07:15', count: 3 }], fetchedAt: '2026-10-04T00:00:00Z', cached: false }, onSelectHotspotById: noop,
   });
   assert.match(html, /Test Wetland/);
   assert.match(html, /aria-label="Open hotspot Test Wetland"/);
+  assert.match(html, /Latest report at each matching hotspot in IN-DL \+ IN-UP-GB, within 14 days/);
   assert.match(html, /Status unavailable/);
   assert.match(html, /Loading photo metadata/);
   assert.doesNotMatch(html, /Verified Field Shot|1\/2500|32 uploads|Okhla|Yamuna Bio-Diversity/);
