@@ -54,7 +54,7 @@ export const ExploreScreen: React.FC<ExploreScreenProps> = ({
               </span>
               {externalDiscovery ? location ? `${location.source} location · ${discoveryRegion || 'Region not loaded'}` : `${discoveryRegion || 'Region not loaded'} · Choose location` : 'Delhi, India'}
             </button>
-            <h2 className="text-[26px] leading-tight font-bold text-[#181c20] tracking-tight">
+            <h2 className="text-[22px] min-[360px]:text-[26px] leading-tight font-bold text-[#181c20] tracking-tight">
               Good morning, {observerName.trim().split(/\s+/)[0]}
             </h2>
           </div>

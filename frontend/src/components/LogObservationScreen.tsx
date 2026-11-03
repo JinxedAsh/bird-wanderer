@@ -151,8 +151,8 @@ export const LogObservationScreen: React.FC<LogObservationScreenProps> = ({
   const site = hotspots.find(hotspot => hotspot.id === hotspotId);
   const weatherPoint = point || (typeof site?.latitude === 'number' && typeof site.longitude === 'number' ? { latitude: site.latitude, longitude: site.longitude } : null);
   return (
-    <div className="relative flex flex-col w-full px-4 pb-28 pt-2">
-      <div className="relative w-full rounded-2xl overflow-hidden shadow-sm bg-[#ebeef3] aspect-[4/3] mb-4">
+    <div className="relative flex flex-col w-full px-4 pb-28 pt-4">
+      <div className="relative w-full rounded-2xl overflow-hidden shadow-sm bg-[#ebeef3] aspect-[4/3] mb-6">
         <img
           src={preview || '/discovery-placeholder.svg'}
           alt={preview ? 'Your selected photograph' : 'Choose your photograph'}
@@ -197,9 +197,13 @@ export const LogObservationScreen: React.FC<LogObservationScreenProps> = ({
       </p>
       </InformationDisclosure>
       <section className="space-y-3 mb-4">
-        <h2 className="text-[18px] font-bold text-[#181c20]">Field Identification</h2>
+        <h2 className="text-[20px] font-medium text-[#181c20]">Field Identification</h2>
         <details open={!speciesId || undefined} className="bg-[#f1f4f9] p-3 rounded-xl space-y-2">
-          <summary className="list-none cursor-pointer min-h-11 flex items-center justify-between gap-2"><span><span className="block text-[11px] mb-2">Bird Species</span><span className="block text-[15px]">{selected?.name || 'Choose a species'}</span>{selected && <span className="block text-[12px] italic">{selected.scientificName}</span>}</span><span aria-hidden="true" className="material-symbols-outlined text-[20px] text-[#154212]">edit</span><span className="sr-only">Edit species selection</span></summary>
+          <summary className="list-none cursor-pointer space-y-2">
+            <span className="flex items-center gap-1.5 text-[12px]"><span aria-hidden="true" className="material-symbols-outlined text-[16px] text-[#154212]">flutter_dash</span>Bird Species</span>
+            <span className="flex min-h-11 items-center justify-between gap-2 rounded bg-white p-3"><span className="min-w-0"><span className="block text-[15px]">{selected?.name || 'Choose a species'}</span>{selected && <span className="block text-[12px] italic">{selected.scientificName}</span>}</span><span aria-hidden="true" className="material-symbols-outlined text-[20px] text-[#154212]">edit</span></span>
+            <span className="sr-only">Edit species selection</span>
+          </summary>
           <label className="block text-[12px] font-bold" htmlFor="observation-species-search">
             Find bird species
           </label>
@@ -235,7 +239,11 @@ export const LogObservationScreen: React.FC<LogObservationScreenProps> = ({
           <p className="text-[11px]">{selected ? `Selected: ${selected.name} (${selected.scientificName})` : `${search.total} catalogue matches. Type a common or scientific name, then choose a result. Only the first 50 matches are listed.`}</p>
         </details>
         <div className="flex flex-col gap-3">
-          <details open={(!hotspotId && !point) || undefined} className="rounded-xl bg-[#f1f4f9] p-3"><summary className="min-h-11 cursor-pointer list-none flex items-center justify-between gap-2"><span><span className="block text-[11px] mb-2">Location</span><span className="block text-[14px]">{point ? point.label || 'Chosen observation point' : site?.name || 'Choose location'}</span></span><span aria-hidden="true" className="material-symbols-outlined text-[20px]">location_on</span><span className="sr-only">Edit observation location</span></summary>
+          <details open={(!hotspotId && !point) || undefined} className="rounded-xl bg-[#f1f4f9] p-3"><summary className="cursor-pointer list-none space-y-2">
+            <span className="flex items-center gap-1.5 text-[12px]"><span aria-hidden="true" className="material-symbols-outlined text-[16px] text-[#154212]">near_me</span>Location</span>
+            <span className="flex min-h-11 items-center justify-between gap-2 rounded bg-white p-3"><span className="min-w-0 break-words text-[14px]">{point ? point.label || 'Chosen observation point' : site?.name || 'Choose location'}</span><span aria-hidden="true" className="material-symbols-outlined text-[20px]">location_on</span></span>
+            <span className="sr-only">Edit observation location</span>
+          </summary>
           <ObservationLocationFields resetKey={locationReset} hotspots={hotspots} hotspotId={hotspotId} point={point} disabled={published || saving} onChange={(id, next) => { locationEdited.current = true; setHotspotId(id); setPoint(next);  }} />
           </details>
           <div className="bg-[#f1f4f9] p-3 rounded-xl text-[12px] font-bold">
