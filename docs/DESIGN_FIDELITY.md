@@ -1,16 +1,16 @@
 # Design comparison and acceptance
 
-Updated 3 November 2026. PR [#45](https://github.com/JinxedAsh/bird-wanderer/pull/45) delivered the initial layout pass at main `63fe074`. PR [#46](https://github.com/JinxedAsh/bird-wanderer/pull/46) is merged at main7968821 after4 exact-head checks and2 passing main workflows. The density and graded-feedback continuation is tracked in PR47 on `ui-reference-density` (Development Record Entry62). The original mapping is in [design-reference/README.md](design-reference/README.md).
+Updated 3 November 2026. PR [#45](https://github.com/JinxedAsh/bird-wanderer/pull/45) delivered the initial layout pass at main `63fe074`. PR [#46](https://github.com/JinxedAsh/bird-wanderer/pull/46) is merged at main 7968821 after 4 exact-head checks and 2 passing main workflows. The density and graded-feedback continuation is tracked in PR47 on `ui-reference-density` (Development Record Entry62). The original mapping is in [design-reference/README.md](design-reference/README.md).
 
 ## Scope and evidence
 
 All 16 original PNGs were opened and compared with 15 running screen types. Capture widths are 390 and 320 CSS pixels; reference heights are proportionally normalized. Upload has two reference views. Screenshots and disposable accounts stay outside Git. Real source data, unknown values, privacy defaults and working actions are preserved. This pass adds no backend, API, schema, environment or dependency changes.
 
-Independent QA captured a consistent 32-view matrix on `index-CgVTSSnf.js`, then recaptured changed screens on dated later assets. PR46 final production candidate was `index-Cp5Fm5PR.js`; the final density candidate is `index-CxiIwUMM.js`. These are mixed-build observations, not one atomic final-build end-to-end acceptance run. Independent latest-asset keyboard checks passed for all3 strips; source-owner narrow-layout/history checks are attributed separately below.
+Independent QA captured a consistent 32-view matrix on `index-CgVTSSnf.js`, then recaptured changed screens on dated later assets. PR46 final production candidate was `index-Cp5Fm5PR.js`; the final density candidate is `index-CxiIwUMM.js`. These are mixed-build observations, not one atomic final-build end-to-end acceptance run. Independent latest-asset keyboard checks passed for all 3 strips; source-owner narrow-layout/history checks are attributed separately below.
 
 ## Final density verification outcome
 
-Local171/171 tests, TypeScript and production build pass on `index-CxiIwUMM.js` (489.24kB main bundle). The implementation session captured and visually reviewed22 settled views for11 changed screen types at320/390 on `index-BSzpwD3y.js`. Actual native dimensions are320x884 and mostly390x883, recorded rather than assumed. Upload has separate correctly framed top/lower captures onD5P0qccP. Quiz/Profile/hotspot refinements have later CM0YJBNX overrides; finalCxi changes only an equivalent marker expression and the narrow gallery heading, whose16.5px caption clearance was measured again. This is mixed-build evidence, not one atomic final-build32-view run.
+Local 171/171 tests, TypeScript and production build pass on `index-CxiIwUMM.js` (489.24kB main bundle). The implementation session captured and visually reviewed 22 settled views for 11 changed screen types at 320/390 on `index-BSzpwD3y.js`. Actual native dimensions are320x884 and mostly390x883, recorded rather than assumed. Upload has separate correctly framed top/lower captures on D5P0qccP. Quiz/Profile/hotspot refinements have later CM0YJBNX overrides; finalCxi changes only an equivalent marker expression and the narrow gallery heading, whose 16.5px caption clearance was measured again. This is mixed-build evidence, not one atomic final-build 32-view run.
 
 Earlier independent density frames showing loading/previous pages or wrong dimensions were rejected. The independent review remained partial after browser disconnection. Replacement implementation-session captures checked the intended page and loaded content, with preparation and capture in separate calls so the rendered frame caught up. Private images/accounts/databases remain outside Git.
 
@@ -93,4 +93,3 @@ CSS spacing, readable metadata, known narrow-control wrapping and contradictory 
 Authentication has only raster-sensitive1–3px text residuals; avoid arbitrary per-glyph positioning. Missing source images/maps/statistics, real names/counts and extra delivered controls remain the explicit data/state boundaries above. Physical acceptance and exact visual sign-off remain open.
 
 Quiz Viva addition: `isRightAnswer` and `isWrongAnswer` now read existing server feedback separately from selection. Before grading a radio marker describes selection; afterward cancel/red describes a wrong choice and check/green identifies the server-correct option. `aria-pressed` still describes the actual choice. No grading, XP or API code changed, and the correct answer is not revealed before feedback.
-
